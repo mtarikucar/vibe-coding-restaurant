@@ -14,15 +14,27 @@ const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
     return <Navigate to="/" replace />;
   }
 
+  // Super admins have access to everything
+  if (user.isSuperAdmin || user.role === "super_admin") {
+    return <Outlet />;
+  }
+
   // Check if the user has the required role
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     // Redirect to the appropriate page based on the user's role
-    if (user.role === "kitchen") {
-      return <Navigate to="/app/kitchen" replace />;
-    } else if (user.role === "cashier") {
-      return <Navigate to="/app/payments" replace />;
-    } else {
-      return <Navigate to="/app/dashboard" replace />;
+    switch (user.role) {
+      case "kitchen":
+        return <Navigate to="/app/kitchen" replace />;
+      case "cashier":
+        return <Navigate to="/app/payments" replace />;
+      case "inventory":
+        return <Navigate to="/app/stock" replace />;
+      case "manager":
+        return <Navigate to="/app/dashboard" replace />;
+      case "marketing":
+        return <Navigate to="/app/campaigns" replace />;
+      default:
+        return <Navigate to="/app/dashboard" replace />;
     }
   }
 

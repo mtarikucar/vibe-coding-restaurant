@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   PlusIcon,
   PencilIcon,
@@ -7,6 +8,9 @@ import {
   ArrowPathIcon,
   ExclamationCircleIcon,
   XMarkIcon,
+  TruckIcon,
+  BuildingStorefrontIcon,
+  ChartBarIcon,
 } from "@heroicons/react/24/outline";
 import { stockAPI } from "../../services/api";
 import { formatDate } from "../../utils/formatters";
@@ -183,6 +187,54 @@ const Stock = () => {
         </div>
       )}
 
+      {/* Advanced Stock Management Navigation */}
+      <div className="bg-white rounded-lg shadow p-4 mb-6">
+        <h3 className="text-lg font-semibold text-gray-800 mb-3">
+          Advanced Stock Management
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Link
+            to="/app/stock/suppliers"
+            className="flex items-center p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+          >
+            <BuildingStorefrontIcon className="h-6 w-6 text-blue-600 mr-2" />
+            <div>
+              <h4 className="font-medium text-blue-800">Suppliers</h4>
+              <p className="text-sm text-blue-600">Manage your suppliers</p>
+            </div>
+          </Link>
+
+          <Link
+            to="/app/stock/purchase-orders"
+            className="flex items-center p-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
+          >
+            <TruckIcon className="h-6 w-6 text-green-600 mr-2" />
+            <div>
+              <h4 className="font-medium text-green-800">Purchase Orders</h4>
+              <p className="text-sm text-green-600">Create and track orders</p>
+            </div>
+          </Link>
+
+          <button
+            onClick={() =>
+              stockAPI
+                .getPurchaseSuggestions()
+                .then((data) => console.log(data))
+            }
+            className="flex items-center p-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
+          >
+            <ChartBarIcon className="h-6 w-6 text-purple-600 mr-2" />
+            <div>
+              <h4 className="font-medium text-purple-800">
+                Inventory Forecast
+              </h4>
+              <p className="text-sm text-purple-600">View stock predictions</p>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {/* Filters */}
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
           <div className="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-4">

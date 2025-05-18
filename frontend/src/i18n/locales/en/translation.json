@@ -28,8 +28,18 @@
     "user": "User",
     "role": "Role",
     "language": "Language",
+    "selectLanguage": "Select Your Language",
+    "selectLanguageDescription": "Choose your preferred language for the application interface.",
+    "confirm": "Confirm",
+    "refresh": "Refresh data",
+    "tryAgain": "Try Again",
     "notifications": "Notifications",
     "viewAllNotifications": "View all notifications",
+    "time": {
+      "minutes": "min",
+      "hours": "hr",
+      "days": "days"
+    },
     "languages": {
       "en": "English",
       "es": "Spanish",
@@ -86,7 +96,17 @@
     "dailySales": "Daily Sales",
     "weeklySales": "Weekly Sales",
     "monthlySales": "Monthly Sales",
-    "yearlySales": "Yearly Sales"
+    "yearlySales": "Yearly Sales",
+    "overview": "Overview",
+    "avgPrepTime": "Avg. Preparation Time",
+    "customers": "Customers",
+    "noActiveOrders": "No active orders at the moment.",
+    "noPopularItems": "No data available for popular items.",
+    "periods": {
+      "day": "Day",
+      "week": "Week",
+      "month": "Month"
+    }
   },
   "menu": {
     "title": "Menu",
@@ -224,6 +244,42 @@
     "notFound": "Resource not found",
     "validationError": "Validation error"
   },
+  "performance": {
+    "title": "Performance Monitoring",
+    "dashboard": "Dashboard",
+    "settings": "Settings",
+    "metrics": {
+      "apiRequests": "API Requests",
+      "avgApiTime": "Avg API Response Time",
+      "avgPageLoad": "Avg Page Load Time",
+      "slowRequests": "Slow Requests",
+      "componentRenders": "Component Renders"
+    },
+    "filters": {
+      "all": "All",
+      "api": "API",
+      "pageLoad": "Page Load",
+      "components": "Components",
+      "interactions": "Interactions"
+    },
+    "table": {
+      "type": "Type",
+      "name": "Name",
+      "duration": "Duration",
+      "timestamp": "Timestamp",
+      "details": "Details",
+      "noMetrics": "No metrics available"
+    },
+    "settings": {
+      "enableMonitoring": "Performance Monitoring",
+      "enableDescription": "Enable or disable performance monitoring across the application",
+      "debugMode": "Debug Mode",
+      "debugDescription": "Log all performance metrics to the console",
+      "clearMetrics": "Clear All Metrics",
+      "about": "About Performance Monitoring",
+      "aboutDescription": "Performance monitoring collects data about API requests, page loads, and component renders. This data helps identify performance bottlenecks in the application. Disable this feature in production if you notice any performance impact."
+    }
+  },
   "subscription": {
     "plans": "Subscription Plans",
     "currentPlan": "Current Subscription",
@@ -270,5 +326,91 @@
     "paymentSuccessful": "Payment Successful!",
     "redirecting": "You will be redirected to your subscription page shortly.",
     "backToPlans": "Back to Plans"
+  },
+  "campaigns": {
+    "title": "Campaigns",
+    "newCampaign": "New Campaign",
+    "editCampaign": "Edit Campaign",
+    "deleteCampaign": "Delete Campaign",
+    "campaignDetails": "Campaign Details",
+    "campaignName": "Campaign Name",
+    "campaignType": "Campaign Type",
+    "campaignStatus": "Campaign Status",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "code": "Code",
+    "value": "Value",
+    "description": "Description",
+    "applicability": "Applicability",
+    "createCampaign": "Create Campaign",
+    "updateCampaign": "Update Campaign",
+    "confirmDelete": "Are you sure you want to delete this campaign?",
+    "campaignDeleted": "Campaign deleted successfully",
+    "campaignCreated": "Campaign created successfully",
+    "campaignUpdated": "Campaign updated successfully",
+    "campaignActivated": "Campaign activated successfully",
+    "campaignDeactivated": "Campaign deactivated successfully",
+    "campaignsRefreshed": "Campaigns refreshed",
+    "failedToRefresh": "Failed to refresh campaigns",
+    "noCampaignsFound": "No campaigns found",
+    "getStarted": "Get started by creating a new campaign.",
+    "adjustFilters": "Try adjusting your search or filter criteria.",
+    "filters": "Filters",
+    "searchCampaigns": "Search campaigns",
+    "allStatuses": "All Statuses",
+    "allTypes": "All Types",
+    "types": {
+      "percentage": "Percentage Discount",
+      "fixedAmount": "Fixed Amount Discount",
+      "buyXGetY": "Buy X Get Y",
+      "freeItem": "Free Item"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "scheduled": "Scheduled",
+      "expired": "Expired"
+    },
+    "actions": {
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "edit": "Edit",
+      "delete": "Delete",
+      "refresh": "Refresh"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "settings": "Notification Settings",
+    "preferences": "Notification Preferences",
+    "createDefaultPreferences": "Create Default Preferences",
+    "noPreferences": "You don't have any notification preferences set up yet.",
+    "createDefaultMessage": "Click the button above to create default preferences.",
+    "notificationType": "Notification Type",
+    "channel": "Channel",
+    "status": "Status",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "preferencesCreated": "Default notification preferences created",
+    "preferencesUpdated": "Notification preference updated",
+    "failedToCreate": "Failed to create default preferences",
+    "failedToUpdate": "Failed to update preference",
+    "failedToLoad": "Failed to load notification preferences",
+    "types": {
+      "system": "System Notifications",
+      "order": "Order Updates",
+      "kitchen": "Kitchen Alerts",
+      "payment": "Payment Notifications",
+      "stock": "Stock Alerts",
+      "user": "User Notifications",
+      "campaign": "Campaign Updates",
+      "subscription": "Subscription Notifications"
+    },
+    "channels": {
+      "inApp": "In-App",
+      "email": "Email",
+      "push": "Push Notifications",
+      "sms": "SMS"
+    }
   }
 }

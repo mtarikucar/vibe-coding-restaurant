@@ -1,13 +1,31 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
-export type UserRole = 'admin' | 'waiter' | 'kitchen' | 'cashier';
+export type UserRole =
+  | "super_admin"
+  | "admin"
+  | "manager"
+  | "waiter"
+  | "kitchen"
+  | "cashier"
+  | "inventory"
+  | "marketing";
+
+interface Tenant {
+  id: string;
+  name: string;
+  displayName?: string;
+  logo?: string;
+}
 
 interface User {
   id: string;
   username: string;
   fullName: string;
   role: UserRole;
+  tenantId?: string;
+  isSuperAdmin?: boolean;
+  tenant?: Tenant | null;
 }
 
 interface AuthState {
@@ -28,7 +46,7 @@ const useAuthStore = create<AuthState>()(
       logout: () => set({ user: null, token: null, isAuthenticated: false }),
     }),
     {
-      name: 'auth-storage',
+      name: "auth-storage",
     }
   )
 );

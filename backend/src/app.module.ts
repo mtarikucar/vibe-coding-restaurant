@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { Module, MiddlewareConsumer, RequestMethod } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AuthModule } from "./auth/auth.module";
@@ -12,6 +12,10 @@ import { StockModule } from "./stock/stock.module";
 import { EventsModule } from "./events/events.module";
 import { SharedModule } from "./shared/shared.module";
 import { SubscriptionModule } from "./subscription/subscription.module";
+import { TenantModule } from "./tenant/tenant.module";
+import { CampaignModule } from "./campaign/campaign.module";
+import { NotificationModule } from "./notification/notification.module";
+import { TenantMiddleware } from "./tenant/tenant.middleware";
 import { ServeStaticModule } from "@nestjs/serve-static";
 import { join } from "path";
 
@@ -46,6 +50,7 @@ import { join } from "path";
 
     // Application modules
     SharedModule,
+    TenantModule, // Must be before other modules that use tenant
     AuthModule,
     MenuModule,
     OrderModule,
@@ -56,6 +61,20 @@ import { join } from "path";
     StockModule,
     EventsModule,
     SubscriptionModule,
+    CampaignModule,
+    NotificationModule,
   ],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(TenantMiddleware)
+      .exclude(
+        { path: "api/auth/login", method: RequestMethod.POST },
+        { path: "api/auth/register", method: RequestMethod.POST },
+        { path: "api/auth/forgot-password", method: RequestMethod.POST },
+        { path: "api/auth/reset-password", method: RequestMethod.POST }
+      )
+      .forRoutes("*");
+  }
+}

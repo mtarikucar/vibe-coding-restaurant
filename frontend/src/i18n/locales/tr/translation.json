@@ -28,8 +28,18 @@
     "user": "Kullanıcı",
     "role": "Rol",
     "language": "Dil",
+    "selectLanguage": "Dilinizi Seçin",
+    "selectLanguageDescription": "Uygulama arayüzü için tercih ettiğiniz dili seçin.",
+    "confirm": "Onayla",
+    "refresh": "Verileri Yenile",
+    "tryAgain": "Tekrar Dene",
     "notifications": "Bildirimler",
     "viewAllNotifications": "Tüm bildirimleri görüntüle",
+    "time": {
+      "minutes": "dk",
+      "hours": "sa",
+      "days": "gün"
+    },
     "languages": {
       "en": "İngilizce",
       "es": "İspanyolca",
@@ -86,7 +96,17 @@
     "dailySales": "Günlük Satışlar",
     "weeklySales": "Haftalık Satışlar",
     "monthlySales": "Aylık Satışlar",
-    "yearlySales": "Yıllık Satışlar"
+    "yearlySales": "Yıllık Satışlar",
+    "overview": "Genel Bakış",
+    "avgPrepTime": "Ort. Hazırlama Süresi",
+    "customers": "Müşteriler",
+    "noActiveOrders": "Şu anda aktif sipariş bulunmamaktadır.",
+    "noPopularItems": "Popüler ürünler için veri bulunmamaktadır.",
+    "periods": {
+      "day": "Gün",
+      "week": "Hafta",
+      "month": "Ay"
+    }
   },
   "menu": {
     "title": "Menü",
@@ -270,5 +290,91 @@
     "paymentSuccessful": "Ödeme Başarılı!",
     "redirecting": "Kısa süre içinde abonelik sayfanıza yönlendirileceksiniz.",
     "backToPlans": "Planlara Geri Dön"
+  },
+  "campaigns": {
+    "title": "Kampanyalar",
+    "newCampaign": "Yeni Kampanya",
+    "editCampaign": "Kampanya Düzenle",
+    "deleteCampaign": "Kampanya Sil",
+    "campaignDetails": "Kampanya Detayları",
+    "campaignName": "Kampanya Adı",
+    "campaignType": "Kampanya Türü",
+    "campaignStatus": "Kampanya Durumu",
+    "startDate": "Başlangıç Tarihi",
+    "endDate": "Bitiş Tarihi",
+    "code": "Kod",
+    "value": "Değer",
+    "description": "Açıklama",
+    "applicability": "Uygulanabilirlik",
+    "createCampaign": "Kampanya Oluştur",
+    "updateCampaign": "Kampanya Güncelle",
+    "confirmDelete": "Bu kampanyayı silmek istediğinizden emin misiniz?",
+    "campaignDeleted": "Kampanya başarıyla silindi",
+    "campaignCreated": "Kampanya başarıyla oluşturuldu",
+    "campaignUpdated": "Kampanya başarıyla güncellendi",
+    "campaignActivated": "Kampanya başarıyla aktifleştirildi",
+    "campaignDeactivated": "Kampanya başarıyla devre dışı bırakıldı",
+    "campaignsRefreshed": "Kampanyalar yenilendi",
+    "failedToRefresh": "Kampanyalar yenilenemedi",
+    "noCampaignsFound": "Kampanya bulunamadı",
+    "getStarted": "Yeni bir kampanya oluşturarak başlayın.",
+    "adjustFilters": "Arama veya filtre kriterlerinizi ayarlamayı deneyin.",
+    "filters": "Filtreler",
+    "searchCampaigns": "Kampanya ara",
+    "allStatuses": "Tüm Durumlar",
+    "allTypes": "Tüm Türler",
+    "types": {
+      "percentage": "Yüzde İndirim",
+      "fixedAmount": "Sabit Tutar İndirim",
+      "buyXGetY": "X Al Y Bedava",
+      "freeItem": "Bedava Ürün"
+    },
+    "status": {
+      "active": "Aktif",
+      "inactive": "Pasif",
+      "scheduled": "Planlanmış",
+      "expired": "Süresi Dolmuş"
+    },
+    "actions": {
+      "activate": "Aktifleştir",
+      "deactivate": "Devre Dışı Bırak",
+      "edit": "Düzenle",
+      "delete": "Sil",
+      "refresh": "Yenile"
+    }
+  },
+  "notifications": {
+    "title": "Bildirimler",
+    "settings": "Bildirim Ayarları",
+    "preferences": "Bildirim Tercihleri",
+    "createDefaultPreferences": "Varsayılan Tercihleri Oluştur",
+    "noPreferences": "Henüz ayarlanmış bildirim tercihiniz yok.",
+    "createDefaultMessage": "Varsayılan tercihleri oluşturmak için yukarıdaki düğmeye tıklayın.",
+    "notificationType": "Bildirim Türü",
+    "channel": "Kanal",
+    "status": "Durum",
+    "enabled": "Etkin",
+    "disabled": "Devre Dışı",
+    "preferencesCreated": "Varsayılan bildirim tercihleri oluşturuldu",
+    "preferencesUpdated": "Bildirim tercihi güncellendi",
+    "failedToCreate": "Varsayılan tercihler oluşturulamadı",
+    "failedToUpdate": "Tercih güncellenemedi",
+    "failedToLoad": "Bildirim tercihleri yüklenemedi",
+    "types": {
+      "system": "Sistem Bildirimleri",
+      "order": "Sipariş Güncellemeleri",
+      "kitchen": "Mutfak Uyarıları",
+      "payment": "Ödeme Bildirimleri",
+      "stock": "Stok Uyarıları",
+      "user": "Kullanıcı Bildirimleri",
+      "campaign": "Kampanya Güncellemeleri",
+      "subscription": "Abonelik Bildirimleri"
+    },
+    "channels": {
+      "inApp": "Uygulama İçi",
+      "email": "E-posta",
+      "push": "Push Bildirimleri",
+      "sms": "SMS"
+    }
   }
 }

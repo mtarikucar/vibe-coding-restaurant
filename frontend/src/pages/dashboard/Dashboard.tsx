@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   CurrencyDollarIcon,
   ShoppingCartIcon,
@@ -6,11 +7,16 @@ import {
   ClockIcon,
   ArrowPathIcon,
 } from "@heroicons/react/24/outline";
+import usePerformanceMonitoring from "../../hooks/usePerformanceMonitoring";
 import { dashboardAPI } from "../../services/api";
 import {
   formatCurrency,
   formatDate,
   formatTimeAgo,
+  formatDateFns,
+  formatNumber,
+  formatPercentage,
+  getCurrencySymbol,
 } from "../../utils/formatters";
 
 // Stats card component
@@ -55,6 +61,7 @@ interface PopularItem {
 }
 
 const Dashboard = () => {
+  const { t } = useTranslation();
   const [period, setPeriod] = useState<"day" | "week" | "month">("day");
   const [loading, setLoading] = useState({
     stats: false,
@@ -73,32 +80,58 @@ const Dashboard = () => {
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [popularItems, setPopularItems] = useState<PopularItem[]>([]);
 
+  // Initialize performance monitoring
+  const { trackAsyncOperation } = usePerformanceMonitoring("Dashboard", {
+    trackMount: true,
+    trackRender: true,
+    metadata: { component: "Dashboard" },
+  });
+
   const fetchDashboardData = async () => {
     setError(null);
 
     try {
-      // Fetch stats
-      setLoading((prev) => ({ ...prev, stats: true }));
-      const statsData = await dashboardAPI.getStats(period);
-      setStats({
-        dailySales: formatCurrency(statsData.totalSales || 0),
-        activeOrders: statsData.activeOrdersCount?.toString() || "0",
-        customers: statsData.orderCount?.toString() || "0",
-        avgTime: "18 min", // This would come from the API in a real implementation
+      await trackAsyncOperation("fetchDashboardData", async () => {
+        // Fetch stats
+        setLoading((prev) => ({ ...prev, stats: true }));
+        const statsData = await trackAsyncOperation(
+          "fetchStats",
+          () => dashboardAPI.getStats(period),
+          { period }
+        );
+
+        setStats({
+          dailySales: formatCurrency(statsData.totalSales || 0),
+          activeOrders: formatNumber(statsData.activeOrdersCount || 0),
+          customers: formatNumber(statsData.orderCount || 0),
+          avgTime: statsData.avgPrepTime
+            ? `${formatNumber(statsData.avgPrepTime)} ${t(
+                "common.time.minutes"
+              )}`
+            : "18 min",
+        });
+        setLoading((prev) => ({ ...prev, stats: false }));
+
+        // Fetch active orders
+        setLoading((prev) => ({ ...prev, orders: true }));
+        const ordersData = await trackAsyncOperation("fetchActiveOrders", () =>
+          dashboardAPI.getActiveOrders()
+        );
+
+        setRecentOrders(ordersData);
+        setLoading((prev) => ({ ...prev, orders: false }));
+
+        // Fetch popular items
+        setLoading((prev) => ({ ...prev, popularItems: true }));
+        const popularItemsData = await trackAsyncOperation(
+          "fetchPopularItems",
+          () => dashboardAPI.getPopularItems(5),
+          { limit: 5 }
+        );
+
+        setPopularItems(popularItemsData);
+        setLoading((prev) => ({ ...prev, popularItems: false }));
       });
-      setLoading((prev) => ({ ...prev, stats: false }));
-
-      // Fetch active orders
-      setLoading((prev) => ({ ...prev, orders: true }));
-      const ordersData = await dashboardAPI.getActiveOrders();
-      setRecentOrders(ordersData);
-      setLoading((prev) => ({ ...prev, orders: false }));
-
-      // Fetch popular items
-      setLoading((prev) => ({ ...prev, popularItems: true }));
-      const popularItemsData = await dashboardAPI.getPopularItems(5);
-      setPopularItems(popularItemsData);
-      setLoading((prev) => ({ ...prev, popularItems: false }));
     } catch (err) {
       console.error("Error fetching dashboard data:", err);
       setError("Failed to load dashboard data. Please try again.");
@@ -145,7 +178,9 @@ const Dashboard = () => {
     <div>
       {/* Header with period selector and refresh button */}
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Dashboard</h2>
+        <h2 className="text-2xl font-bold text-gray-800">
+          {t("dashboard.title")}
+        </h2>
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
             <button
@@ -156,7 +191,7 @@ const Dashboard = () => {
                   : "bg-gray-200 text-gray-700 hover:bg-gray-300"
               }`}
             >
-              Day
+              {t("dashboard.periods.day")}
             </button>
             <button
               onClick={() => handlePeriodChange("week")}
@@ -166,7 +201,7 @@ const Dashboard = () => {
                   : "bg-gray-200 text-gray-700 hover:bg-gray-300"
               }`}
             >
-              Week
+              {t("dashboard.periods.week")}
             </button>
             <button
               onClick={() => handlePeriodChange("month")}
@@ -176,13 +211,13 @@ const Dashboard = () => {
                   : "bg-gray-200 text-gray-700 hover:bg-gray-300"
               }`}
             >
-              Month
+              {t("dashboard.periods.month")}
             </button>
           </div>
           <button
             onClick={handleRefresh}
             className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700"
-            title="Refresh data"
+            title={t("common.refresh")}
           >
             <ArrowPathIcon className="h-5 w-5" />
           </button>
@@ -197,7 +232,7 @@ const Dashboard = () => {
             onClick={handleRefresh}
             className="mt-2 bg-red-200 hover:bg-red-300 text-red-700 px-3 py-1 rounded text-sm"
           >
-            Try Again
+            {t("common.tryAgain")}
           </button>
         </div>
       )}

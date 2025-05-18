@@ -5,13 +5,20 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  ManyToOne,
+  JoinColumn,
 } from "typeorm";
+import { Tenant } from "../../tenant/entities/tenant.entity";
 
 export enum UserRole {
-  ADMIN = "admin",
+  SUPER_ADMIN = "super_admin", // System-wide admin
+  ADMIN = "admin", // Restaurant admin
+  MANAGER = "manager", // Restaurant manager
   WAITER = "waiter",
   KITCHEN = "kitchen",
   CASHIER = "cashier",
+  INVENTORY = "inventory", // Inventory manager
+  MARKETING = "marketing", // Marketing manager
 }
 
 export enum UserSubscriptionStatus {
@@ -82,6 +89,17 @@ export class User {
 
   @Column({ nullable: true, type: "jsonb" })
   billingDetails: Record<string, any>;
+
+  // Tenant relationship
+  @ManyToOne(() => Tenant, (tenant) => tenant.users)
+  @JoinColumn({ name: "tenantId" })
+  tenant: Tenant;
+
+  @Column({ nullable: true })
+  tenantId: string;
+
+  @Column({ default: false })
+  isSuperAdmin: boolean;
 
   @CreateDateColumn()
   createdAt: Date;

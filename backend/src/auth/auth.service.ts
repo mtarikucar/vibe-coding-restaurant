@@ -4,9 +4,10 @@ import {
   UnauthorizedException,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository, MoreThan } from "typeorm";
+import { Repository, MoreThan, DataSource } from "typeorm";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import * as bcrypt from "bcrypt";
@@ -20,44 +21,95 @@ import {
   ResetPasswordDto,
   VerifyPasswordResetTokenDto,
 } from "./dto/password-reset.dto";
+import { Tenant } from "../tenant/entities/tenant.entity";
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Tenant)
+    private readonly tenantRepository: Repository<Tenant>,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-    private readonly emailService: EmailService
+    private readonly emailService: EmailService,
+    private readonly dataSource: DataSource
   ) {}
 
   async register(
-    createUserDto: CreateUserDto
+    createUserDto: CreateUserDto,
+    tenantId?: string
   ): Promise<Omit<User, "password">> {
-    // Check if user already exists
-    const existingUser = await this.userRepository.findOne({
-      where: { username: createUserDto.username },
-    });
+    // Start a transaction
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    if (existingUser) {
-      throw new ConflictException("Username already exists");
+    try {
+      // Check if user already exists in the tenant
+      const existingUser = await queryRunner.manager.findOne(User, {
+        where: {
+          username: createUserDto.username,
+          ...(tenantId ? { tenantId } : {}),
+        },
+      });
+
+      if (existingUser) {
+        throw new ConflictException("Username already exists");
+      }
+
+      // Hash the password
+      const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+
+      // Find tenant if tenantId is provided
+      let tenant = null;
+      if (tenantId) {
+        tenant = await queryRunner.manager.findOne(Tenant, {
+          where: { id: tenantId },
+        });
+
+        if (!tenant) {
+          throw new NotFoundException(`Tenant with ID ${tenantId} not found`);
+        }
+      } else {
+        // If no tenantId provided, try to find the default tenant
+        tenant = await queryRunner.manager.findOne(Tenant, {
+          where: { schema: "public" },
+        });
+      }
+
+      // Create new user
+      const user = queryRunner.manager.create(User, {
+        ...createUserDto,
+        password: hashedPassword,
+        tenantId: tenant?.id,
+        // Set as super admin if it's the first user in the system
+        isSuperAdmin: createUserDto.role === UserRole.SUPER_ADMIN,
+      });
+
+      // Save the user
+      const savedUser = await queryRunner.manager.save(user);
+
+      // Commit transaction
+      await queryRunner.commitTransaction();
+
+      // Remove password from response
+      const { password, ...result } = savedUser;
+      return result;
+    } catch (error) {
+      // Rollback transaction on error
+      await queryRunner.rollbackTransaction();
+      this.logger.error(
+        `Failed to register user: ${error.message}`,
+        error.stack
+      );
+      throw error;
+    } finally {
+      // Release query runner
+      await queryRunner.release();
     }
-
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-
-    // Create new user
-    const user = this.userRepository.create({
-      ...createUserDto,
-      password: hashedPassword,
-    });
-
-    // Save the user
-    const savedUser = await this.userRepository.save(user);
-
-    // Remove password from response
-    const { password, ...result } = savedUser;
-    return result;
   }
 
   async validateUser(username: string, password: string): Promise<any> {
@@ -80,13 +132,38 @@ export class AuthService {
   }
 
   async login(user: any) {
-    const payload = { username: user.username, sub: user.id, role: user.role };
+    // Get tenant information if available
+    let tenant = null;
+    if (user.tenantId) {
+      tenant = await this.tenantRepository.findOne({
+        where: { id: user.tenantId },
+      });
+    }
+
+    const payload = {
+      username: user.username,
+      sub: user.id,
+      role: user.role,
+      tenantId: user.tenantId,
+      isSuperAdmin: user.isSuperAdmin,
+    };
+
     return {
       user: {
         id: user.id,
         username: user.username,
         fullName: user.fullName,
         role: user.role,
+        tenantId: user.tenantId,
+        isSuperAdmin: user.isSuperAdmin,
+        tenant: tenant
+          ? {
+              id: tenant.id,
+              name: tenant.name,
+              displayName: tenant.displayName,
+              logo: tenant.logo,
+            }
+          : null,
       },
       token: this.jwtService.sign(payload),
     };
@@ -106,43 +183,125 @@ export class AuthService {
   }
 
   async createInitialUsers() {
-    // Check if admin user already exists
-    const adminExists = await this.userRepository.findOne({
-      where: { username: "admin" },
-    });
-
-    if (!adminExists) {
-      // Create admin user
-      await this.register({
-        username: "admin",
-        password: "password",
-        fullName: "Admin User",
-        role: UserRole.ADMIN,
+    try {
+      // Find the default tenant
+      const defaultTenant = await this.tenantRepository.findOne({
+        where: { schema: "public" },
       });
 
-      // Create waiter user
-      await this.register({
-        username: "waiter",
-        password: "password",
-        fullName: "Waiter User",
-        role: UserRole.WAITER,
+      if (!defaultTenant) {
+        this.logger.warn(
+          "Default tenant not found. Cannot create initial users."
+        );
+        return;
+      }
+
+      // Check if super admin user already exists
+      const superAdminExists = await this.userRepository.findOne({
+        where: { username: "superadmin" },
       });
 
-      // Create kitchen user
-      await this.register({
-        username: "kitchen",
-        password: "password",
-        fullName: "Kitchen User",
-        role: UserRole.KITCHEN,
+      if (!superAdminExists) {
+        // Create super admin user (system-wide admin)
+        await this.register({
+          username: "superadmin",
+          password: "password",
+          fullName: "Super Admin User",
+          role: UserRole.SUPER_ADMIN,
+          email: "superadmin@example.com",
+        });
+
+        this.logger.log("Super admin user created");
+      }
+
+      // Check if tenant admin user already exists
+      const adminExists = await this.userRepository.findOne({
+        where: {
+          username: "admin",
+          tenantId: defaultTenant.id,
+        },
       });
 
-      // Create cashier user
-      await this.register({
-        username: "cashier",
-        password: "password",
-        fullName: "Cashier User",
-        role: UserRole.CASHIER,
-      });
+      if (!adminExists) {
+        // Create admin user (tenant admin)
+        await this.register(
+          {
+            username: "admin",
+            password: "password",
+            fullName: "Admin User",
+            role: UserRole.ADMIN,
+            email: "admin@example.com",
+          },
+          defaultTenant.id
+        );
+
+        // Create manager user
+        await this.register(
+          {
+            username: "manager",
+            password: "password",
+            fullName: "Manager User",
+            role: UserRole.MANAGER,
+            email: "manager@example.com",
+          },
+          defaultTenant.id
+        );
+
+        // Create waiter user
+        await this.register(
+          {
+            username: "waiter",
+            password: "password",
+            fullName: "Waiter User",
+            role: UserRole.WAITER,
+            email: "waiter@example.com",
+          },
+          defaultTenant.id
+        );
+
+        // Create kitchen user
+        await this.register(
+          {
+            username: "kitchen",
+            password: "password",
+            fullName: "Kitchen User",
+            role: UserRole.KITCHEN,
+            email: "kitchen@example.com",
+          },
+          defaultTenant.id
+        );
+
+        // Create cashier user
+        await this.register(
+          {
+            username: "cashier",
+            password: "password",
+            fullName: "Cashier User",
+            role: UserRole.CASHIER,
+            email: "cashier@example.com",
+          },
+          defaultTenant.id
+        );
+
+        // Create inventory manager
+        await this.register(
+          {
+            username: "inventory",
+            password: "password",
+            fullName: "Inventory Manager",
+            role: UserRole.INVENTORY,
+            email: "inventory@example.com",
+          },
+          defaultTenant.id
+        );
+
+        this.logger.log("Initial tenant users created");
+      }
+    } catch (error) {
+      this.logger.error(
+        `Failed to create initial users: ${error.message}`,
+        error.stack
+      );
     }
   }
 

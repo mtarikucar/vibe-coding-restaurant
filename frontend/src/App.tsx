@@ -9,6 +9,9 @@ import { Suspense, lazy } from "react";
 import MainLayout from "./components/layout/MainLayout";
 import AuthLayout from "./components/layout/AuthLayout";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import SocketInitializer from "./components/common/SocketInitializer";
+import ToastProvider from "./components/common/ToastProvider";
+import LanguageManager from "./components/common/LanguageManager";
 
 // Import the test component for debugging
 import TestApp from "./TestApp";
@@ -26,14 +29,24 @@ const Tables = lazy(() => import("./pages/table/Tables"));
 const Payments = lazy(() => import("./pages/payment/Payments"));
 const PaymentPage = lazy(() => import("./pages/payment/PaymentPage"));
 const Stock = lazy(() => import("./pages/stock/Stock"));
+const Suppliers = lazy(() => import("./pages/stock/Suppliers"));
+const PurchaseOrders = lazy(() => import("./pages/stock/PurchaseOrders"));
 const Reports = lazy(() => import("./pages/reports/Reports"));
 const UserManagement = lazy(() => import("./pages/admin/UserManagement"));
+const PerformanceMonitoring = lazy(
+  () => import("./pages/admin/PerformanceMonitoring")
+);
 const SubscriptionPlans = lazy(
   () => import("./pages/subscription/SubscriptionPlans")
 );
 const SubscriptionCheckout = lazy(
   () => import("./pages/subscription/SubscriptionCheckout")
 );
+const NotificationSettings = lazy(
+  () => import("./pages/settings/NotificationSettings")
+);
+const Campaigns = lazy(() => import("./pages/marketing/Campaigns"));
+const CampaignForm = lazy(() => import("./pages/marketing/CampaignForm"));
 
 // Loading component
 const Loading = () => (
@@ -191,6 +204,26 @@ const router = createBrowserRouter([
             handle: { allowedRoles: ["admin"] },
           },
           {
+            path: "stock/suppliers",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <Suppliers />
+              </Suspense>
+            ),
+            // Only admin can access supplier management
+            handle: { allowedRoles: ["admin"] },
+          },
+          {
+            path: "stock/purchase-orders",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <PurchaseOrders />
+              </Suspense>
+            ),
+            // Only admin can access purchase order management
+            handle: { allowedRoles: ["admin"] },
+          },
+          {
             path: "reports",
             element: (
               <Suspense fallback={<Loading />}>
@@ -211,6 +244,16 @@ const router = createBrowserRouter([
             handle: { allowedRoles: ["admin"] },
           },
           {
+            path: "performance",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <PerformanceMonitoring />
+              </Suspense>
+            ),
+            // Only admin can access performance monitoring
+            handle: { allowedRoles: ["admin"] },
+          },
+          {
             path: "subscription",
             element: (
               <Suspense fallback={<Loading />}>
@@ -228,6 +271,45 @@ const router = createBrowserRouter([
             ),
             // All authenticated users can access subscription checkout
           },
+          {
+            path: "settings/notifications",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <NotificationSettings />
+              </Suspense>
+            ),
+            // All authenticated users can access notification settings
+          },
+          {
+            path: "campaigns",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <Campaigns />
+              </Suspense>
+            ),
+            // Only admin and marketing roles can access campaigns
+            handle: { allowedRoles: ["admin", "marketing", "manager"] },
+          },
+          {
+            path: "campaigns/new",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <CampaignForm />
+              </Suspense>
+            ),
+            // Only admin and marketing roles can access campaign form
+            handle: { allowedRoles: ["admin", "marketing", "manager"] },
+          },
+          {
+            path: "campaigns/edit/:id",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <CampaignForm />
+              </Suspense>
+            ),
+            // Only admin and marketing roles can access campaign form
+            handle: { allowedRoles: ["admin", "marketing", "manager"] },
+          },
         ],
       },
     ],
@@ -243,7 +325,15 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <>
+      <SocketInitializer />
+      <ToastProvider>
+        <LanguageManager />
+        <RouterProvider router={router} />
+      </ToastProvider>
+    </>
+  );
 }
 
 export default App;

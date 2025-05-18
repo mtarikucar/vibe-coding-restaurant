@@ -1,30 +1,41 @@
-import { io, Socket } from 'socket.io-client';
+import { io, Socket } from "socket.io-client";
 
 class SocketService {
   private socket: Socket | null = null;
   private listeners: Map<string, Set<Function>> = new Map();
 
-  connect() {
+  connect(userId?: string, tenantId?: string) {
     if (!this.socket) {
-      this.socket = io('/', {
-        transports: ['websocket'],
+      this.socket = io("/", {
+        transports: ["websocket"],
         autoConnect: true,
+        auth: {
+          userId,
+          tenantId,
+        },
       });
 
-      this.socket.on('connect', () => {
-        console.log('Socket connected');
+      this.socket.on("connect", () => {
+        console.log("Socket connected");
       });
 
-      this.socket.on('disconnect', () => {
-        console.log('Socket disconnected');
+      this.socket.on("disconnect", () => {
+        console.log("Socket disconnected");
       });
 
-      this.socket.on('error', (error) => {
-        console.error('Socket error:', error);
+      this.socket.on("error", (error) => {
+        console.error("Socket error:", error);
       });
 
       // Set up event listeners
       this.setupEventListeners();
+    } else if (userId && tenantId) {
+      // Update auth if socket already exists but user/tenant changed
+      this.socket.auth = { userId, tenantId };
+      if (this.socket.connected) {
+        // Reconnect to apply new auth
+        this.socket.disconnect().connect();
+      }
     }
     return this.socket;
   }
@@ -40,21 +51,63 @@ class SocketService {
     if (!this.socket) return;
 
     // Order events
-    this.socket.on('order:created', (data) => this.notifyListeners('order:created', data));
-    this.socket.on('order:updated', (data) => this.notifyListeners('order:updated', data));
-    this.socket.on('order:status', (data) => this.notifyListeners('order:status', data));
-    this.socket.on('order:item:status', (data) => this.notifyListeners('order:item:status', data));
+    this.socket.on("order:created", (data) =>
+      this.notifyListeners("order:created", data)
+    );
+    this.socket.on("order:updated", (data) =>
+      this.notifyListeners("order:updated", data)
+    );
+    this.socket.on("order:status", (data) =>
+      this.notifyListeners("order:status", data)
+    );
+    this.socket.on("order:item:status", (data) =>
+      this.notifyListeners("order:item:status", data)
+    );
 
     // Table events
-    this.socket.on('table:status', (data) => this.notifyListeners('table:status', data));
+    this.socket.on("table:status", (data) =>
+      this.notifyListeners("table:status", data)
+    );
 
     // Payment events
-    this.socket.on('payment:created', (data) => this.notifyListeners('payment:created', data));
-    this.socket.on('payment:status', (data) => this.notifyListeners('payment:status', data));
+    this.socket.on("payment:created", (data) =>
+      this.notifyListeners("payment:created", data)
+    );
+    this.socket.on("payment:status", (data) =>
+      this.notifyListeners("payment:status", data)
+    );
 
     // Stock events
-    this.socket.on('stock:updated', (data) => this.notifyListeners('stock:updated', data));
-    this.socket.on('stock:low', (data) => this.notifyListeners('stock:low', data));
+    this.socket.on("stock:updated", (data) =>
+      this.notifyListeners("stock:updated", data)
+    );
+    this.socket.on("stock:low", (data) =>
+      this.notifyListeners("stock:low", data)
+    );
+
+    // Notification events
+    this.socket.on("notification:new", (data) =>
+      this.notifyListeners("notification:new", data)
+    );
+    this.socket.on("notification:broadcast", (data) =>
+      this.notifyListeners("notification:broadcast", data)
+    );
+
+    // Campaign events
+    this.socket.on("campaign:created", (data) =>
+      this.notifyListeners("campaign:created", data)
+    );
+    this.socket.on("campaign:updated", (data) =>
+      this.notifyListeners("campaign:updated", data)
+    );
+    this.socket.on("campaign:status", (data) =>
+      this.notifyListeners("campaign:status", data)
+    );
+
+    // Tenant events
+    this.socket.on("tenant:updated", (data) =>
+      this.notifyListeners("tenant:updated", data)
+    );
   }
 
   on(event: string, callback: Function) {

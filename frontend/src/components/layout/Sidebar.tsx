@@ -12,6 +12,13 @@ import {
   UserGroupIcon,
   DocumentTextIcon,
   CreditCardIcon,
+  TagIcon,
+  Cog6ToothIcon,
+  BellIcon,
+  BuildingStorefrontIcon,
+  TruckIcon,
+  DocumentDuplicateIcon,
+  ChartPieIcon,
 } from "@heroicons/react/24/outline";
 import useAuthStore from "../../store/authStore";
 import type { UserRole } from "../../store/authStore";
@@ -73,10 +80,36 @@ const navigationItems = [
     roles: ["admin"],
   },
   {
+    name: "Performance",
+    href: "/app/performance",
+    icon: ChartPieIcon,
+    roles: ["admin"],
+  },
+  {
+    name: "Campaigns",
+    href: "/app/campaigns",
+    icon: TagIcon,
+    roles: ["admin", "marketing", "manager"],
+  },
+  {
     name: "Subscription",
     href: "/app/subscription",
     icon: CreditCardIcon,
     roles: ["admin", "waiter", "kitchen", "cashier"],
+  },
+  {
+    name: "Notifications",
+    href: "/app/settings/notifications",
+    icon: BellIcon,
+    roles: [
+      "admin",
+      "waiter",
+      "kitchen",
+      "cashier",
+      "manager",
+      "marketing",
+      "inventory",
+    ],
   },
 ];
 

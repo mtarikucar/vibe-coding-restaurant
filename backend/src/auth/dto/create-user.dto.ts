@@ -5,6 +5,8 @@ import {
   MinLength,
   IsEmail,
   IsOptional,
+  IsUUID,
+  IsBoolean,
 } from "class-validator";
 import { UserRole } from "../entities/user.entity";
 
@@ -32,4 +34,12 @@ export class CreateUserDto {
   @IsString()
   @IsOptional()
   preferredLanguage?: string;
+
+  @IsUUID()
+  @IsOptional()
+  tenantId?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isSuperAdmin?: boolean;
 }

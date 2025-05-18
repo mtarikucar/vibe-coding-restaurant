@@ -7,6 +7,7 @@ import { MenuService } from "./menu/menu.service";
 import { TableService } from "./table/table.service";
 import { StockService } from "./stock/stock.service";
 import { SubscriptionService } from "./subscription/subscription.service";
+import { TenantService } from "./tenant/tenant.service";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -40,6 +41,11 @@ async function bootstrap() {
 
 async function initializeData(app: any) {
   try {
+    // Create initial tenant
+    const tenantService = app.get(TenantService);
+    await tenantService.createInitialTenant();
+    console.log("Initial tenant created");
+
     // Create initial users
     const authService = app.get(AuthService);
     await authService.createInitialUsers();

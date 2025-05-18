@@ -1,5 +1,9 @@
+/* eslint-disable no-useless-catch */
 import axios from "axios";
+import type { AxiosError } from "axios";
 import useAuthStore from "../store/authStore";
+import errorHandlingService, { ErrorType } from "./errorHandling";
+import performanceMonitoringService from "./performanceMonitoring";
 
 // Create an axios instance
 const api = axios.create({
@@ -7,33 +11,92 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  timeout: 30000, // 30 seconds timeout
 });
 
 // Add a request interceptor to add the auth token to requests
 api.interceptors.request.use(
   (config) => {
+    // Add auth token
     const token = useAuthStore.getState().token;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Add request ID for tracking
+    const requestId = `${config.method}-${config.url}-${Date.now()}`;
+    config.headers["X-Request-ID"] = requestId;
+
+    // Track request start time with performance monitoring service
+    performanceMonitoringService.startApiRequest(requestId);
+
+    // Log request
+    console.debug(
+      `API Request: ${config.method?.toUpperCase()} ${config.url}`,
+      {
+        data: config.data,
+        params: config.params,
+        requestId,
+      }
+    );
+
     return config;
   },
   (error) => {
+    errorHandlingService.handleApiError(error, { phase: "request" });
     return Promise.reject(error);
   }
 );
 
-// Add a response interceptor to handle auth errors
+// Add a response interceptor to handle auth errors and log responses
 api.interceptors.response.use(
   (response) => {
+    // Calculate request duration using performance monitoring service
+    const requestId = response.config.headers["X-Request-ID"] as string;
+    const duration = performanceMonitoringService.endApiRequest(requestId, {
+      url: response.config.url,
+      method: response.config.method?.toUpperCase(),
+      status: response.status,
+      size: JSON.stringify(response.data).length,
+    });
+
+    if (duration) {
+      // Log response
+      console.debug(
+        `API Response: ${response.config.method?.toUpperCase()} ${
+          response.config.url
+        }`,
+        {
+          status: response.status,
+          data: response.data,
+          duration: `${duration.toFixed(2)}ms`,
+          requestId,
+        }
+      );
+    }
+
     return response;
   },
-  (error) => {
-    if (error.response && error.response.status === 401) {
+  (error: AxiosError) => {
+    // Handle authentication errors
+    if (error.response?.status === 401) {
       // Unauthorized, log out the user
       useAuthStore.getState().logout();
       window.location.href = "/";
     }
+
+    // Log error with our error handling service
+    const appError = errorHandlingService.handleApiError(error, {
+      url: error.config?.url,
+      method: error.config?.method,
+      phase: "response",
+    });
+
+    // Show error toast for non-validation errors
+    if (appError.type !== ErrorType.VALIDATION) {
+      errorHandlingService.showErrorToast(appError);
+    }
+
     return Promise.reject(error);
   }
 );
@@ -491,9 +554,19 @@ export const dashboardAPI = {
 
 // Stock API
 export const stockAPI = {
+  // Stock Items
   getStocks: async () => {
     try {
       const response = await api.get("/stock");
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getStock: async (id: string) => {
+    try {
+      const response = await api.get(`/stock/${id}`);
       return response.data;
     } catch (error) {
       throw error;
@@ -509,9 +582,327 @@ export const stockAPI = {
     }
   },
 
+  getCriticalStock: async () => {
+    try {
+      const response = await api.get("/stock/critical-stock");
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
   adjustStock: async (id: string, data: any) => {
     try {
       const response = await api.patch(`/stock/${id}/adjust`, data);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getStockHistory: async (id: string) => {
+    try {
+      const response = await api.get(`/stock/${id}/history`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getStockUsage: async (id: string, startDate?: string, endDate?: string) => {
+    try {
+      let url = `/stock/${id}/usage`;
+      if (startDate && endDate) {
+        url += `?startDate=${startDate}&endDate=${endDate}`;
+      }
+      const response = await api.get(url);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getStockForecast: async (id: string, days?: number) => {
+    try {
+      let url = `/stock/${id}/forecast`;
+      if (days) {
+        url += `?days=${days}`;
+      }
+      const response = await api.get(url);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getStockValuation: async () => {
+    try {
+      const response = await api.get("/stock/valuation");
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getPurchaseSuggestions: async () => {
+    try {
+      const response = await api.get("/stock/purchase-suggestions");
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Suppliers
+  getSuppliers: async () => {
+    try {
+      const response = await api.get("/suppliers");
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getSupplier: async (id: string) => {
+    try {
+      const response = await api.get(`/suppliers/${id}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  createSupplier: async (data: any) => {
+    try {
+      const response = await api.post("/suppliers", data);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  updateSupplier: async (id: string, data: any) => {
+    try {
+      const response = await api.patch(`/suppliers/${id}`, data);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  deleteSupplier: async (id: string) => {
+    try {
+      const response = await api.delete(`/suppliers/${id}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Purchase Orders
+  getPurchaseOrders: async () => {
+    try {
+      const response = await api.get("/purchase-orders");
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getPurchaseOrder: async (id: string) => {
+    try {
+      const response = await api.get(`/purchase-orders/${id}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  createPurchaseOrder: async (data: any) => {
+    try {
+      const response = await api.post("/purchase-orders", data);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  updatePurchaseOrder: async (id: string, data: any) => {
+    try {
+      const response = await api.patch(`/purchase-orders/${id}`, data);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  deletePurchaseOrder: async (id: string) => {
+    try {
+      const response = await api.delete(`/purchase-orders/${id}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  receivePurchaseOrder: async (id: string, data: any) => {
+    try {
+      const response = await api.patch(`/purchase-orders/${id}/receive`, data);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+};
+
+// Campaign API
+export const campaignAPI = {
+  getCampaigns: async () => {
+    try {
+      const response = await api.get("/campaigns");
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getActiveCampaigns: async () => {
+    try {
+      const response = await api.get("/campaigns/active");
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getCampaign: async (id: string) => {
+    try {
+      const response = await api.get(`/campaigns/${id}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  createCampaign: async (data: any) => {
+    try {
+      const response = await api.post("/campaigns", data);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  updateCampaign: async (id: string, data: any) => {
+    try {
+      const response = await api.patch(`/campaigns/${id}`, data);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  deleteCampaign: async (id: string) => {
+    try {
+      const response = await api.delete(`/campaigns/${id}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  validateCampaignCode: async (code: string) => {
+    try {
+      const response = await api.post("/campaigns/validate-code", { code });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  applyCampaignToOrder: async (campaignId: string, orderId: string) => {
+    try {
+      const response = await api.post(
+        `/campaigns/apply/${campaignId}/order/${orderId}`
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+};
+
+// Notification API
+export const notificationAPI = {
+  getNotifications: async () => {
+    try {
+      const response = await api.get("/notifications");
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getUnreadNotifications: async () => {
+    try {
+      const response = await api.get("/notifications/unread");
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  markAsRead: async (id: string) => {
+    try {
+      const response = await api.patch(`/notifications/${id}/read`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  markAllAsRead: async () => {
+    try {
+      const response = await api.post("/notifications/read-all");
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  archiveNotification: async (id: string) => {
+    try {
+      const response = await api.patch(`/notifications/${id}/archive`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getNotificationPreferences: async () => {
+    try {
+      const response = await api.get("/notifications/preferences");
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  updateNotificationPreference: async (id: string, data: any) => {
+    try {
+      const response = await api.patch(
+        `/notifications/preferences/${id}`,
+        data
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  createDefaultPreferences: async () => {
+    try {
+      const response = await api.post("/notifications/preferences/default");
       return response.data;
     } catch (error) {
       throw error;
