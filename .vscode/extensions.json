@@ -1,0 +1,19 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "bradlc.vscode-tailwindcss",
+    "ms-azuretools.vscode-docker",
+    "ms-vscode.vscode-typescript-next",
+    "formulahendry.auto-rename-tag",
+    "naumovs.color-highlight",
+    "mikestead.dotenv",
+    "dsznajder.es7-react-js-snippets",
+    "mhutchie.git-graph",
+    "eamodio.gitlens",
+    "christian-kohler.path-intellisense",
+    "rangav.vscode-thunder-client",
+    "gruntfuggly.todo-tree",
+    "redhat.vscode-yaml"
+  ]
+}
