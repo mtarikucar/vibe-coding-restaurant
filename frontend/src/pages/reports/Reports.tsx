@@ -4,6 +4,7 @@ import {
   DocumentTextIcon,
   DocumentArrowDownIcon,
   CalendarIcon,
+  ChartBarIcon,
 } from "@heroicons/react/24/outline";
 import { dashboardAPI } from "../../services/api";
 import { formatCurrency, formatDate } from "../../utils/formatters";
@@ -148,6 +149,13 @@ const Reports = () => {
           >
             <ArrowPathIcon className="h-5 w-5" />
           </button>
+          <a
+            href="/app/reports/advanced"
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center"
+          >
+            <ChartBarIcon className="h-5 w-5 mr-2" />
+            Advanced Reports
+          </a>
           <div className="relative inline-block text-left">
             <div>
               <button
