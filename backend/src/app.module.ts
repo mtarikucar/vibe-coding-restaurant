@@ -15,6 +15,7 @@ import { SubscriptionModule } from "./subscription/subscription.module";
 import { TenantModule } from "./tenant/tenant.module";
 import { CampaignModule } from "./campaign/campaign.module";
 import { NotificationModule } from "./notification/notification.module";
+import { ReportModule } from "./report/report.module";
 import { TenantMiddleware } from "./tenant/tenant.middleware";
 import { ServeStaticModule } from "@nestjs/serve-static";
 import { join } from "path";
@@ -63,6 +64,7 @@ import { join } from "path";
     SubscriptionModule,
     CampaignModule,
     NotificationModule,
+    ReportModule,
   ],
 })
 export class AppModule {

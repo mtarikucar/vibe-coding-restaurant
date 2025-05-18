@@ -32,6 +32,7 @@ const Stock = lazy(() => import("./pages/stock/Stock"));
 const Suppliers = lazy(() => import("./pages/stock/Suppliers"));
 const PurchaseOrders = lazy(() => import("./pages/stock/PurchaseOrders"));
 const Reports = lazy(() => import("./pages/reports/Reports"));
+const AdvancedReports = lazy(() => import("./pages/reports/AdvancedReports"));
 const UserManagement = lazy(() => import("./pages/admin/UserManagement"));
 const PerformanceMonitoring = lazy(
   () => import("./pages/admin/PerformanceMonitoring")
@@ -231,6 +232,16 @@ const router = createBrowserRouter([
               </Suspense>
             ),
             // Only admin can access reports
+            handle: { allowedRoles: ["admin"] },
+          },
+          {
+            path: "reports/advanced",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <AdvancedReports />
+              </Suspense>
+            ),
+            // Only admin can access advanced reports
             handle: { allowedRoles: ["admin"] },
           },
           {
