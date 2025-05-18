@@ -1,8 +1,10 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { authAPI } from "../../services/api";
-import useAuthStore from "../../store/authStore";
+import useAuthStore, { AuthProvider } from "../../store/authStore";
+import { FcGoogle } from "react-icons/fc";
+import { FaGithub } from "react-icons/fa";
 
 // Define error type for API errors
 interface ApiError {
@@ -20,9 +22,71 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const login = useAuthStore((state) => state.login);
+
+  // Check for OAuth callback parameters
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const accessToken = params.get("access_token");
+    const refreshToken = params.get("refresh_token");
+    const expiresIn = params.get("expires_in");
+    const error = params.get("error");
+
+    if (error) {
+      setError(decodeURIComponent(error));
+      // Clean up the URL
+      navigate("/", { replace: true });
+      return;
+    }
+
+    if (accessToken && refreshToken && expiresIn) {
+      // We have OAuth tokens, get user profile
+      const fetchUserProfile = async () => {
+        try {
+          setOauthLoading(true);
+          // Set the token temporarily to make the API call
+          localStorage.setItem("temp_token", accessToken);
+
+          const user = await authAPI.getProfile();
+
+          // Store in auth store
+          login(
+            user,
+            accessToken,
+            refreshToken,
+            parseInt(expiresIn, 10),
+            AuthProvider.GOOGLE // Assuming Google for now
+          );
+
+          // Remove temp token
+          localStorage.removeItem("temp_token");
+
+          // Redirect based on user role
+          if (user.role === "kitchen") {
+            navigate("/app/kitchen", { replace: true });
+          } else if (user.role === "cashier") {
+            navigate("/app/payments", { replace: true });
+          } else {
+            navigate("/app/dashboard", { replace: true });
+          }
+        } catch (error) {
+          console.error("Failed to get user profile:", error);
+          setError("Failed to complete OAuth login. Please try again.");
+          localStorage.removeItem("temp_token");
+        } finally {
+          setOauthLoading(false);
+          // Clean up the URL
+          navigate("/", { replace: true });
+        }
+      };
+
+      fetchUserProfile();
+    }
+  }, [location, navigate, login]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,10 +94,22 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const { user, token } = await authAPI.login(username, password);
+      const response = await authAPI.login(username, password);
 
-      // Store user and token in Zustand store
-      login(user, token);
+      // Handle both old and new API response formats
+      const user = response.user;
+
+      // Check if we have the new token format or the old one
+      if (response.accessToken && response.refreshToken && response.expiresIn) {
+        // New format
+        const { accessToken, refreshToken, expiresIn } = response;
+        login(user, accessToken, refreshToken, expiresIn);
+      } else if (response.token) {
+        // Old format - use default values for refresh token
+        login(user, response.token, "", 86400, AuthProvider.LOCAL); // 24 hours expiry
+      } else {
+        throw new Error("Invalid response format from server");
+      }
 
       // Redirect based on user role with replace: true to avoid history issues
       if (user.role === "kitchen") {
@@ -54,6 +130,11 @@ const Login = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoogleLogin = () => {
+    // Redirect to Google OAuth endpoint
+    window.location.href = "/api/auth/oauth/google";
   };
 
   return (
@@ -109,12 +190,46 @@ const Login = () => {
             className={`btn btn-primary w-full ${
               loading ? "opacity-50 cursor-not-allowed" : ""
             }`}
-            disabled={loading}
+            disabled={loading || oauthLoading}
           >
             {loading ? t("common.loading") : t("auth.signIn")}
           </button>
         </div>
       </form>
+
+      <div className="mt-6">
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-white text-gray-500">
+              {t("auth.orContinueWith")}
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-6 grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={handleGoogleLogin}
+            disabled={loading || oauthLoading}
+            className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+          >
+            <FcGoogle className="h-5 w-5" />
+            <span className="ml-2">Google</span>
+          </button>
+
+          <button
+            type="button"
+            disabled={true} // Not implemented yet
+            className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 opacity-50 cursor-not-allowed"
+          >
+            <FaGithub className="h-5 w-5" />
+            <span className="ml-2">GitHub</span>
+          </button>
+        </div>
+      </div>
 
       <div className="mt-6 text-center">
         <p className="text-sm text-gray-600">

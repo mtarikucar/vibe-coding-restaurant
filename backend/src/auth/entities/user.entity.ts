@@ -9,6 +9,7 @@ import {
   JoinColumn,
 } from "typeorm";
 import { Tenant } from "../../tenant/entities/tenant.entity";
+import { RefreshToken } from "./refresh-token.entity";
 
 export enum UserRole {
   SUPER_ADMIN = "super_admin", // System-wide admin
@@ -26,6 +27,14 @@ export enum UserSubscriptionStatus {
   ACTIVE = "active",
   EXPIRED = "expired",
   CANCELED = "canceled",
+}
+
+export enum OAuthProvider {
+  GOOGLE = "google",
+  FACEBOOK = "facebook",
+  APPLE = "apple",
+  GITHUB = "github",
+  LOCAL = "local",
 }
 
 @Entity()
@@ -100,6 +109,24 @@ export class User {
 
   @Column({ default: false })
   isSuperAdmin: boolean;
+
+  // OAuth related fields
+  @Column({
+    type: "enum",
+    enum: OAuthProvider,
+    default: OAuthProvider.LOCAL,
+  })
+  provider: OAuthProvider;
+
+  @Column({ nullable: true })
+  providerId: string;
+
+  @Column({ nullable: true, type: "jsonb" })
+  providerData: Record<string, any>;
+
+  // Refresh tokens relationship
+  @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)
+  refreshTokens: RefreshToken[];
 
   @CreateDateColumn()
   createdAt: Date;

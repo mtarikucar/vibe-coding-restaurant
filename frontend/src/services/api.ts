@@ -16,10 +16,34 @@ const api = axios.create({
 
 // Add a request interceptor to add the auth token to requests
 api.interceptors.request.use(
-  (config) => {
-    // Add auth token
-    const token = useAuthStore.getState().token;
-    if (token) {
+  async (config) => {
+    const authStore = useAuthStore.getState();
+
+    // For backward compatibility - check both token and accessToken
+    const token = authStore.accessToken || authStore.token;
+
+    // Check if token is expired and needs refresh
+    if (token && authStore.expiresAt) {
+      // Add 30 seconds buffer to ensure token doesn't expire during request
+      const isExpiringSoon = authStore.expiresAt < Date.now() + 30000;
+
+      if (isExpiringSoon && authStore.refreshToken) {
+        // Try to refresh the token
+        const newToken = await authStore.refreshAccessToken();
+        if (newToken) {
+          // Use the new token
+          config.headers.Authorization = `Bearer ${newToken}`;
+        } else {
+          // If refresh failed, redirect to login
+          window.location.href = "/";
+          return Promise.reject(new Error("Session expired"));
+        }
+      } else {
+        // Use existing token
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    } else if (token) {
+      // For backward compatibility with old token format
       config.headers.Authorization = `Bearer ${token}`;
     }
 
@@ -77,11 +101,32 @@ api.interceptors.response.use(
 
     return response;
   },
-  (error: AxiosError) => {
+  async (error: AxiosError) => {
     // Handle authentication errors
     if (error.response?.status === 401) {
-      // Unauthorized, log out the user
-      useAuthStore.getState().logout();
+      const authStore = useAuthStore.getState();
+
+      // If we have a refresh token, try to refresh the access token
+      if (
+        authStore.refreshToken &&
+        !error.config?.url?.includes("/auth/refresh")
+      ) {
+        try {
+          // Try to refresh the token
+          const newToken = await authStore.refreshAccessToken();
+
+          if (newToken && error.config) {
+            // Retry the original request with the new token
+            error.config.headers.Authorization = `Bearer ${newToken}`;
+            return axios(error.config);
+          }
+        } catch (refreshError) {
+          console.error("Token refresh failed:", refreshError);
+        }
+      }
+
+      // If refresh failed or no refresh token, log out
+      await authStore.logout();
       window.location.href = "/";
     }
 
@@ -135,10 +180,35 @@ export const authAPI = {
     }
   },
 
-  logout: async () => {
+  logout: async (refreshToken?: string) => {
     try {
-      // Just clear the token, no need for a server call
+      // Call the server to revoke the refresh token
+      await api.post("/auth/logout", { refreshToken });
       return { success: true };
+    } catch (error) {
+      console.error("Error during logout:", error);
+      // Even if the server call fails, consider it a success from the client perspective
+      return { success: true };
+    }
+  },
+
+  refreshToken: async (refreshToken: string) => {
+    try {
+      const response = await api.post("/auth/refresh", { refreshToken });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  oauthLogin: async (provider: string, code: string, redirectUri?: string) => {
+    try {
+      const response = await api.post("/auth/oauth/login", {
+        provider,
+        code,
+        redirectUri,
+      });
+      return response.data;
     } catch (error) {
       throw error;
     }

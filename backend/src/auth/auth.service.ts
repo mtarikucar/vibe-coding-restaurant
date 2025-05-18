@@ -5,14 +5,18 @@ import {
   NotFoundException,
   BadRequestException,
   Logger,
+  ForbiddenException,
+  InternalServerErrorException,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository, MoreThan, DataSource } from "typeorm";
+import { Repository, MoreThan, DataSource, LessThan } from "typeorm";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
+import { HttpService } from "@nestjs/axios";
 import * as bcrypt from "bcrypt";
 import * as crypto from "crypto";
-import { User, UserRole } from "./entities/user.entity";
+import { User, UserRole, OAuthProvider } from "./entities/user.entity";
+import { RefreshToken } from "./entities/refresh-token.entity";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { EmailService } from "../shared/services/email.service";
@@ -21,7 +25,11 @@ import {
   ResetPasswordDto,
   VerifyPasswordResetTokenDto,
 } from "./dto/password-reset.dto";
+import { RefreshTokenDto, TokenResponseDto } from "./dto/refresh-token.dto";
+import { OAuthLoginDto, OAuthUserInfoDto } from "./dto/oauth.dto";
 import { Tenant } from "../tenant/entities/tenant.entity";
+import { firstValueFrom } from "rxjs";
+import { TokenBlacklistService } from "./services/token-blacklist.service";
 
 @Injectable()
 export class AuthService {
@@ -32,11 +40,25 @@ export class AuthService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Tenant)
     private readonly tenantRepository: Repository<Tenant>,
+    @InjectRepository(RefreshToken)
+    private readonly refreshTokenRepository: Repository<RefreshToken>,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly emailService: EmailService,
-    private readonly dataSource: DataSource
+    private readonly dataSource: DataSource,
+    private readonly httpService: HttpService,
+    private readonly tokenBlacklistService: TokenBlacklistService
   ) {}
+
+  /**
+   * Get a configuration value
+   * @param key The configuration key
+   * @param defaultValue The default value if not found
+   * @returns The configuration value
+   */
+  getConfig<T>(key: string, defaultValue?: T): T {
+    return this.configService.get<T>(key, defaultValue as T);
+  }
 
   async register(
     createUserDto: CreateUserDto,
@@ -131,7 +153,7 @@ export class AuthService {
     return null;
   }
 
-  async login(user: any) {
+  async login(user: any, userAgent?: string, ipAddress?: string) {
     // Get tenant information if available
     let tenant = null;
     if (user.tenantId) {
@@ -147,6 +169,22 @@ export class AuthService {
       tenantId: user.tenantId,
       isSuperAdmin: user.isSuperAdmin,
     };
+
+    // Generate access token with shorter expiration
+    const accessToken = this.jwtService.sign(payload);
+
+    // Generate refresh token
+    const refreshToken = await this.generateRefreshToken(
+      user.id,
+      userAgent,
+      ipAddress
+    );
+
+    // Get token expiration time from config
+    const expiresIn = parseInt(
+      this.configService.get("JWT_EXPIRATION", "900"),
+      10
+    ); // Default to 15 minutes (900 seconds)
 
     return {
       user: {
@@ -165,7 +203,10 @@ export class AuthService {
             }
           : null,
       },
-      token: this.jwtService.sign(payload),
+      accessToken,
+      refreshToken,
+      expiresIn,
+      tokenType: "Bearer",
     };
   }
 
@@ -488,5 +529,381 @@ export class AuthService {
     await this.userRepository.save(user);
 
     return { message: "Password has been reset successfully" };
+  }
+
+  /**
+   * Generate a refresh token for a user
+   * @param userId The user ID
+   * @param userAgent The user agent string
+   * @param ipAddress The IP address
+   * @returns The refresh token string
+   */
+  async generateRefreshToken(
+    userId: string,
+    userAgent?: string,
+    ipAddress?: string
+  ): Promise<string> {
+    // Generate a random token
+    const tokenString = crypto.randomBytes(40).toString("hex");
+
+    // Calculate expiration date (default: 30 days)
+    const refreshTokenExpiration = this.configService.get<number>(
+      "REFRESH_TOKEN_EXPIRATION",
+      30 * 24 * 60 * 60 * 1000
+    );
+    const expiresAt = new Date(Date.now() + refreshTokenExpiration);
+
+    // Create and save the refresh token
+    const refreshToken = this.refreshTokenRepository.create({
+      token: tokenString,
+      userId,
+      expiresAt,
+      userAgent,
+      ipAddress,
+    });
+
+    await this.refreshTokenRepository.save(refreshToken);
+    return tokenString;
+  }
+
+  /**
+   * Refresh an access token using a refresh token
+   * @param refreshTokenDto The refresh token DTO
+   * @param userAgent The user agent string
+   * @param ipAddress The IP address
+   * @returns A new token response
+   */
+  async refreshToken(
+    refreshTokenDto: RefreshTokenDto,
+    userAgent?: string,
+    ipAddress?: string
+  ): Promise<TokenResponseDto> {
+    const { refreshToken } = refreshTokenDto;
+
+    // Find the refresh token in the database
+    const storedToken = await this.refreshTokenRepository.findOne({
+      where: { token: refreshToken },
+      relations: ["user"],
+    });
+
+    // Check if token exists and is valid
+    if (!storedToken) {
+      throw new UnauthorizedException("Invalid refresh token");
+    }
+
+    if (storedToken.isRevoked) {
+      // Revoke all tokens for this user as this might be a token reuse attack
+      await this.revokeAllUserTokens(storedToken.userId);
+      throw new ForbiddenException("Refresh token has been revoked");
+    }
+
+    if (storedToken.isExpired()) {
+      throw new UnauthorizedException("Refresh token has expired");
+    }
+
+    // Get the user
+    const user = storedToken.user;
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+
+    // Revoke the current refresh token (one-time use)
+    await this.revokeRefreshToken(storedToken.id);
+
+    // Create new tokens
+    const payload = {
+      username: user.username,
+      sub: user.id,
+      role: user.role,
+      tenantId: user.tenantId,
+      isSuperAdmin: user.isSuperAdmin,
+    };
+
+    // Generate new access token
+    const accessToken = this.jwtService.sign(payload);
+
+    // Generate new refresh token
+    const newRefreshToken = await this.generateRefreshToken(
+      user.id,
+      userAgent,
+      ipAddress
+    );
+
+    // Get token expiration time from config
+    const expiresIn = parseInt(
+      this.configService.get("JWT_EXPIRATION", "900"),
+      10
+    ); // Default to 15 minutes (900 seconds)
+
+    return {
+      accessToken,
+      refreshToken: newRefreshToken,
+      expiresIn,
+      tokenType: "Bearer",
+    };
+  }
+
+  /**
+   * Revoke a refresh token
+   * @param tokenId The token ID
+   */
+  async revokeRefreshToken(tokenId: string): Promise<void> {
+    const token = await this.refreshTokenRepository.findOne({
+      where: { id: tokenId },
+    });
+
+    if (token) {
+      token.isRevoked = true;
+      token.revokedAt = new Date();
+      await this.refreshTokenRepository.save(token);
+    }
+  }
+
+  /**
+   * Revoke all refresh tokens for a user
+   * @param userId The user ID
+   */
+  async revokeAllUserTokens(userId: string): Promise<void> {
+    const tokens = await this.refreshTokenRepository.find({
+      where: { userId, isRevoked: false },
+    });
+
+    for (const token of tokens) {
+      token.isRevoked = true;
+      token.revokedAt = new Date();
+    }
+
+    await this.refreshTokenRepository.save(tokens);
+  }
+
+  /**
+   * Find a refresh token by its value
+   * @param tokenValue The token value
+   * @returns The refresh token entity or null
+   */
+  async findRefreshTokenByValue(
+    tokenValue: string
+  ): Promise<RefreshToken | null> {
+    return this.refreshTokenRepository.findOne({
+      where: { token: tokenValue },
+    });
+  }
+
+  /**
+   * Decode a JWT token
+   * @param token The token to decode
+   * @returns The decoded token payload
+   */
+  decodeToken(token: string): any {
+    try {
+      return this.jwtService.decode(token);
+    } catch (error) {
+      this.logger.error(
+        `Failed to decode token: ${error.message}`,
+        error.stack
+      );
+      return null;
+    }
+  }
+
+  /**
+   * Blacklist a token
+   * @param token The token to blacklist
+   * @param expiresIn Time in seconds until the token expires
+   */
+  async blacklistToken(token: string, expiresIn: number): Promise<void> {
+    await this.tokenBlacklistService.addToBlacklist(token, expiresIn);
+  }
+
+  /**
+   * Check if a token is blacklisted
+   * @param token The token to check
+   * @returns True if the token is blacklisted
+   */
+  async isTokenBlacklisted(token: string): Promise<boolean> {
+    return this.tokenBlacklistService.isBlacklisted(token);
+  }
+
+  /**
+   * Clean up expired refresh tokens
+   */
+  async cleanupExpiredTokens(): Promise<void> {
+    try {
+      // Find tokens that have expired
+      const expiredTokens = await this.refreshTokenRepository.find({
+        where: { expiresAt: LessThan(new Date()) },
+      });
+
+      if (expiredTokens.length > 0) {
+        await this.refreshTokenRepository.remove(expiredTokens);
+        this.logger.log(
+          `Removed ${expiredTokens.length} expired refresh tokens`
+        );
+      }
+    } catch (error) {
+      this.logger.error("Failed to clean up expired tokens", error.stack);
+    }
+  }
+
+  /**
+   * Handle OAuth2 login
+   * @param oauthLoginDto The OAuth login data
+   * @param userAgent The user agent string
+   * @param ipAddress The IP address
+   * @returns Token response
+   */
+  async oauthLogin(
+    oauthLoginDto: OAuthLoginDto,
+    userAgent?: string,
+    ipAddress?: string
+  ): Promise<TokenResponseDto> {
+    const { provider, code, redirectUri } = oauthLoginDto;
+
+    // Get user info from OAuth provider
+    let userInfo: OAuthUserInfoDto;
+
+    try {
+      switch (provider) {
+        case OAuthProvider.GOOGLE:
+          userInfo = await this.getGoogleUserInfo(code, redirectUri);
+          break;
+        // Add other providers as needed
+        default:
+          throw new BadRequestException(
+            `Unsupported OAuth provider: ${provider}`
+          );
+      }
+    } catch (error) {
+      this.logger.error(
+        `OAuth authentication error: ${error.message}`,
+        error.stack
+      );
+      throw new UnauthorizedException(
+        "Failed to authenticate with OAuth provider"
+      );
+    }
+
+    // Find or create user
+    let user = await this.userRepository.findOne({
+      where: [
+        { email: userInfo.email, provider },
+        { providerId: userInfo.id, provider },
+      ],
+    });
+
+    if (!user) {
+      // Create new user
+      user = this.userRepository.create({
+        username: userInfo.email, // Use email as username for OAuth users
+        email: userInfo.email,
+        fullName: userInfo.name,
+        // Generate a random password for OAuth users
+        password: await bcrypt.hash(crypto.randomBytes(32).toString("hex"), 10),
+        provider,
+        providerId: userInfo.id,
+        providerData: userInfo.raw,
+        role: UserRole.WAITER, // Default role, can be changed later
+      });
+
+      try {
+        user = await this.userRepository.save(user);
+      } catch (error) {
+        this.logger.error(
+          `Failed to create OAuth user: ${error.message}`,
+          error.stack
+        );
+        throw new InternalServerErrorException("Failed to create user account");
+      }
+    } else {
+      // Update provider data
+      user.providerData = userInfo.raw;
+      await this.userRepository.save(user);
+    }
+
+    // Generate tokens
+    const payload = {
+      username: user.username,
+      sub: user.id,
+      role: user.role,
+      tenantId: user.tenantId,
+      isSuperAdmin: user.isSuperAdmin,
+    };
+
+    const accessToken = this.jwtService.sign(payload);
+    const refreshToken = await this.generateRefreshToken(
+      user.id,
+      userAgent,
+      ipAddress
+    );
+    const expiresIn = parseInt(
+      this.configService.get("JWT_EXPIRATION", "900"),
+      10
+    );
+
+    return {
+      accessToken,
+      refreshToken,
+      expiresIn,
+      tokenType: "Bearer",
+    };
+  }
+
+  /**
+   * Get user info from Google
+   * @param code Authorization code
+   * @param redirectUri Redirect URI
+   * @returns User info
+   */
+  private async getGoogleUserInfo(
+    code: string,
+    redirectUri?: string
+  ): Promise<OAuthUserInfoDto> {
+    // Get OAuth configuration
+    const clientId = this.configService.get<string>("GOOGLE_CLIENT_ID");
+    const clientSecret = this.configService.get<string>("GOOGLE_CLIENT_SECRET");
+
+    if (!clientId || !clientSecret) {
+      throw new InternalServerErrorException(
+        "Google OAuth configuration is missing"
+      );
+    }
+
+    // Exchange code for tokens
+    try {
+      const tokenResponse = await firstValueFrom(
+        this.httpService.post("https://oauth2.googleapis.com/token", {
+          code,
+          client_id: clientId,
+          client_secret: clientSecret,
+          redirect_uri:
+            redirectUri ||
+            this.configService.get<string>("GOOGLE_REDIRECT_URI"),
+          grant_type: "authorization_code",
+        })
+      );
+
+      const { access_token } = tokenResponse.data;
+
+      // Get user info
+      const userInfoResponse = await firstValueFrom(
+        this.httpService.get("https://www.googleapis.com/oauth2/v3/userinfo", {
+          headers: { Authorization: `Bearer ${access_token}` },
+        })
+      );
+
+      const userData = userInfoResponse.data;
+
+      return {
+        id: userData.sub,
+        email: userData.email,
+        name: userData.name,
+        picture: userData.picture,
+        provider: OAuthProvider.GOOGLE,
+        raw: userData,
+      };
+    } catch (error) {
+      this.logger.error(`Google OAuth error: ${error.message}`, error.stack);
+      throw new UnauthorizedException("Failed to authenticate with Google");
+    }
   }
 }
