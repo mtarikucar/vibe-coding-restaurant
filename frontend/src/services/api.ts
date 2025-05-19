@@ -546,6 +546,65 @@ export const orderAPI = {
 };
 
 // Kitchen API
+// Tenant API
+export const tenantAPI = {
+  registerTenant: async (tenantData: any, adminData: any) => {
+    try {
+      // First create the tenant
+      const tenantResponse = await api.post("/tenants", tenantData);
+
+      // Then create the admin user for this tenant
+      const adminResponse = await api.post("/auth/register", {
+        ...adminData,
+        tenantId: tenantResponse.data.id,
+      });
+
+      return {
+        tenant: tenantResponse.data,
+        admin: adminResponse.data,
+      };
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getTenants: async () => {
+    try {
+      const response = await api.get("/tenants");
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getTenant: async (id: string) => {
+    try {
+      const response = await api.get(`/tenants/${id}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  updateTenant: async (id: string, data: any) => {
+    try {
+      const response = await api.patch(`/tenants/${id}`, data);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  deleteTenant: async (id: string) => {
+    try {
+      const response = await api.delete(`/tenants/${id}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+};
+
 /* export const kitchenAPI = {
   getActiveOrders: async () => {
     try {

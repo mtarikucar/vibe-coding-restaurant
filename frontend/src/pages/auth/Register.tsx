@@ -32,14 +32,14 @@ const Register = () => {
     setLoading(true);
 
     // Validate form
-    if (!username || !password || !confirmPassword || !fullName) {
+    if (!username || !password || !confirmPassword || !fullName || !email) {
       setError("All fields are required");
       setLoading(false);
       return;
     }
 
-    // Email is optional but if provided, should be valid
-    if (email && !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+    // Email validation
+    if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
       setError("Please enter a valid email address");
       setLoading(false);
       return;
@@ -120,7 +120,7 @@ const Register = () => {
 
         <div>
           <label htmlFor="email" className="form-label">
-            Email (for password recovery)
+            Email <span className="text-red-500">*</span>
           </label>
           <input
             id="email"
@@ -196,7 +196,7 @@ const Register = () => {
         </div>
       </form>
 
-      <div className="mt-4 text-center">
+      <div className="mt-4 text-center space-y-2">
         <p className="text-sm text-gray-600">
           Already have an account?{" "}
           <Link
@@ -204,6 +204,15 @@ const Register = () => {
             className="font-medium text-blue-600 hover:text-blue-500"
           >
             Sign in
+          </Link>
+        </p>
+        <p className="text-sm text-gray-600">
+          Are you a restaurant owner?{" "}
+          <Link
+            to="/register-restaurant"
+            className="font-medium text-blue-600 hover:text-blue-500"
+          >
+            Register your restaurant
           </Link>
         </p>
       </div>

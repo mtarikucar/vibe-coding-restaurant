@@ -79,7 +79,8 @@ export class AppModule {
         { path: "api/auth/login", method: RequestMethod.POST },
         { path: "api/auth/register", method: RequestMethod.POST },
         { path: "api/auth/forgot-password", method: RequestMethod.POST },
-        { path: "api/auth/reset-password", method: RequestMethod.POST }
+        { path: "api/auth/reset-password", method: RequestMethod.POST },
+        { path: "api/tenants", method: RequestMethod.POST }
       )
       .forRoutes("*");
   }

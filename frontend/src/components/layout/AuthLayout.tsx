@@ -6,6 +6,7 @@ const AuthLayout = () => {
   const location = useLocation();
   // Update the condition to match the exact path
   const isRegisterPage = location.pathname === "/register";
+  const isTenantRegisterPage = location.pathname === "/register-restaurant";
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -15,7 +16,11 @@ const AuthLayout = () => {
             {t("common.appName")}
           </h1>
           <p className="text-gray-600">
-            {isRegisterPage ? t("auth.createAccount") : t("auth.accessAccount")}
+            {isRegisterPage
+              ? t("auth.createAccount")
+              : isTenantRegisterPage
+              ? t("auth.registerRestaurantSubtitle")
+              : t("auth.accessAccount")}
           </p>
         </div>
         <Outlet />

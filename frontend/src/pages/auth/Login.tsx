@@ -245,7 +245,7 @@ const Login = () => {
         </div>
       </Card>
 
-      <div className="text-center animate-fadeIn">
+      <div className="text-center animate-fadeIn space-y-2">
         <p className="text-sm text-gray-600">
           {t("auth.dontHaveAccount")}{" "}
           <Link
@@ -253,6 +253,15 @@ const Login = () => {
             className="font-medium text-primary-600 hover:text-primary-700 transition-colors"
           >
             {t("auth.registerNow")}
+          </Link>
+        </p>
+        <p className="text-sm text-gray-600">
+          {t("auth.areYouRestaurant")}{" "}
+          <Link
+            to="/register-restaurant"
+            className="font-medium text-primary-600 hover:text-primary-700 transition-colors"
+          >
+            {t("auth.registerRestaurantNow")}
           </Link>
         </p>
       </div>

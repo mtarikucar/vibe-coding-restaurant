@@ -26,30 +26,33 @@ const UserManagement = () => {
   const [error, setError] = useState<string | null>(null);
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
-  
+
   // Modal states
   const [showUserModal, setShowUserModal] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  
+
   // Form states
   const [formUsername, setFormUsername] = useState("");
   const [formPassword, setFormPassword] = useState("");
   const [formFullName, setFormFullName] = useState("");
-  const [formRole, setFormRole] = useState<"admin" | "waiter" | "kitchen" | "cashier">("waiter");
+  const [formEmail, setFormEmail] = useState("");
+  const [formRole, setFormRole] = useState<
+    "admin" | "waiter" | "kitchen" | "cashier"
+  >("waiter");
   const [formIsActive, setFormIsActive] = useState(true);
   const [formError, setFormError] = useState<string | null>(null);
 
   const fetchUsers = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const data = await authAPI.getUsers();
       setUsers(data);
     } catch (err) {
-      console.error('Error fetching users:', err);
-      setError('Failed to load users. Please try again.');
+      console.error("Error fetching users:", err);
+      setError("Failed to load users. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -61,61 +64,80 @@ const UserManagement = () => {
 
   const handleCreateUser = async () => {
     setFormError(null);
-    
-    if (!formUsername || !formPassword || !formFullName) {
+
+    if (!formUsername || !formPassword || !formFullName || !formEmail) {
       setFormError("All fields are required");
       return;
     }
-    
+
+    // Email validation
+    if (!formEmail.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+      setFormError("Please enter a valid email address");
+      return;
+    }
+
     try {
-      await authAPI.register(formUsername, formPassword, formFullName, formRole);
+      await authAPI.register(
+        formUsername,
+        formPassword,
+        formFullName,
+        formRole,
+        formEmail
+      );
       resetForm();
       setShowUserModal(false);
       fetchUsers();
     } catch (err: any) {
-      console.error('Error creating user:', err);
-      setFormError(err.response?.data?.message || 'Failed to create user');
+      console.error("Error creating user:", err);
+      setFormError(err.response?.data?.message || "Failed to create user");
     }
   };
 
   const handleUpdateUser = async () => {
     if (!selectedUser) return;
-    
+
     setFormError(null);
-    
-    if (!formUsername || !formFullName) {
-      setFormError("Username and full name are required");
+
+    if (!formUsername || !formFullName || !formEmail) {
+      setFormError("Username, full name, and email are required");
       return;
     }
-    
+
+    // Email validation
+    if (!formEmail.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+      setFormError("Please enter a valid email address");
+      return;
+    }
+
     try {
       const updateData = {
         username: formUsername,
         fullName: formFullName,
+        email: formEmail,
         role: formRole,
         isActive: formIsActive,
-        ...(formPassword ? { password: formPassword } : {})
+        ...(formPassword ? { password: formPassword } : {}),
       };
-      
+
       await authAPI.updateUser(selectedUser.id, updateData);
       resetForm();
       setShowUserModal(false);
       fetchUsers();
     } catch (err: any) {
-      console.error('Error updating user:', err);
-      setFormError(err.response?.data?.message || 'Failed to update user');
+      console.error("Error updating user:", err);
+      setFormError(err.response?.data?.message || "Failed to update user");
     }
   };
 
   const handleDeleteUser = async (userId: string) => {
     if (!confirm("Are you sure you want to delete this user?")) return;
-    
+
     try {
       await authAPI.deleteUser(userId);
       fetchUsers();
     } catch (err) {
-      console.error('Error deleting user:', err);
-      setError('Failed to delete user. Please try again.');
+      console.error("Error deleting user:", err);
+      setError("Failed to delete user. Please try again.");
     }
   };
 
@@ -130,6 +152,7 @@ const UserManagement = () => {
     setFormUsername(user.username);
     setFormPassword("");
     setFormFullName(user.fullName);
+    setFormEmail(user.email || "");
     setFormRole(user.role);
     setFormIsActive(user.isActive);
     setModalMode("edit");
@@ -140,6 +163,7 @@ const UserManagement = () => {
     setFormUsername("");
     setFormPassword("");
     setFormFullName("");
+    setFormEmail("");
     setFormRole("waiter");
     setFormIsActive(true);
     setFormError(null);
@@ -148,7 +172,7 @@ const UserManagement = () => {
 
   const filteredUsers = users.filter((user) => {
     const matchesRole = roleFilter === "all" || user.role === roleFilter;
-    const matchesSearch = 
+    const matchesSearch =
       user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.fullName.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesRole && matchesSearch;
@@ -166,7 +190,7 @@ const UserManagement = () => {
           >
             <ArrowPathIcon className="h-5 w-5" />
           </button>
-          <button 
+          <button
             onClick={openCreateModal}
             className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center"
           >
@@ -192,7 +216,10 @@ const UserManagement = () => {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
           <div className="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-4">
             <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="role"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Role
               </label>
               <select
@@ -209,7 +236,10 @@ const UserManagement = () => {
               </select>
             </div>
             <div>
-              <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="search"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 Search
               </label>
               <input
@@ -258,7 +288,9 @@ const UserManagement = () => {
               {filteredUsers.map((user) => (
                 <tr key={user.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{user.username}</div>
+                    <div className="text-sm font-medium text-gray-900">
+                      {user.username}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-500">{user.fullName}</div>
@@ -280,7 +312,9 @@ const UserManagement = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{formatDate(user.createdAt)}</div>
+                    <div className="text-sm text-gray-500">
+                      {formatDate(user.createdAt)}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
@@ -335,7 +369,10 @@ const UserManagement = () => {
 
             <div className="space-y-4">
               <div>
-                <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="username"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Username
                 </label>
                 <input
@@ -348,8 +385,12 @@ const UserManagement = () => {
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                  Password {modalMode === "edit" && "(leave blank to keep current)"}
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Password{" "}
+                  {modalMode === "edit" && "(leave blank to keep current)"}
                 </label>
                 <input
                   type="password"
@@ -361,7 +402,10 @@ const UserManagement = () => {
               </div>
 
               <div>
-                <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="fullName"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Full Name
                 </label>
                 <input
@@ -374,7 +418,26 @@ const UserManagement = () => {
               </div>
 
               <div>
-                <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Email <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  className="border border-gray-300 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  value={formEmail}
+                  onChange={(e) => setFormEmail(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="role"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   Role
                 </label>
                 <select
@@ -399,7 +462,10 @@ const UserManagement = () => {
                     checked={formIsActive}
                     onChange={(e) => setFormIsActive(e.target.checked)}
                   />
-                  <label htmlFor="isActive" className="ml-2 block text-sm text-gray-900">
+                  <label
+                    htmlFor="isActive"
+                    className="ml-2 block text-sm text-gray-900"
+                  >
                     Active
                   </label>
                 </div>
@@ -414,7 +480,9 @@ const UserManagement = () => {
                 Cancel
               </button>
               <button
-                onClick={modalMode === "create" ? handleCreateUser : handleUpdateUser}
+                onClick={
+                  modalMode === "create" ? handleCreateUser : handleUpdateUser
+                }
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md text-sm font-medium text-white"
               >
                 {modalMode === "create" ? "Create User" : "Update User"}
