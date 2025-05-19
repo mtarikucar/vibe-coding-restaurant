@@ -32,6 +32,9 @@
     "selectLanguageDescription": "Choose your preferred language for the application interface.",
     "version": "Version 1.0.0",
     "confirm": "Confirm",
+    "download": "Download",
+    "print": "Print",
+    "close": "Close",
     "refresh": "Refresh data",
     "tryAgain": "Try Again",
     "notNow": "Not Now",
@@ -126,7 +129,14 @@
     "unavailable": "Unavailable",
     "search": "Search menu",
     "allCategories": "All Categories",
-    "noItems": "No menu items found"
+    "noItems": "No menu items found",
+    "qrCode": "Menu QR Code",
+    "qrCodeGenerator": "Menu QR Code Generator",
+    "qrCodeSize": "QR Code Size",
+    "qrCodeInstructions": "Place this QR code on your tables or at the entrance for customers to scan and view your menu.",
+    "scanInstructions": "Scan this QR code to view our menu on your device",
+    "qrCodePrint": "Restaurant Menu QR Code",
+    "defaultRestaurantName": "Restaurant Menu"
   },
   "orders": {
     "title": "Orders",
@@ -143,6 +153,8 @@
     "addItem": "Add Item",
     "removeItem": "Remove Item",
     "notes": "Notes",
+    "noItems": "No order items found",
+    "item": "item",
     "items": "Items",
     "tableNumber": "Table {{number}}",
     "active": "Active Orders",
@@ -168,7 +180,20 @@
     "markCompleted": "Mark Completed",
     "cancel": "Cancel Order",
     "actions": "Actions",
+    "table": "Table",
+    "total": "Total",
+    "time": "Time",
+    "allStatuses": "All Statuses",
+    "searchPlaceholder": "Search by order # or table...",
     "status": {
+      "pending": "Pending",
+      "preparing": "Preparing",
+      "ready": "Ready",
+      "served": "Served",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "statuses": {
       "pending": "Pending",
       "preparing": "Preparing",
       "ready": "Ready",
@@ -182,7 +207,8 @@
       "ready": "Ready",
       "served": "Served",
       "cancelled": "Cancelled"
-    }
+    },
+    "waiter": "Waiter"
   },
   "kitchen": {
     "title": "Kitchen",
@@ -192,31 +218,51 @@
     "markAsPreparing": "Mark as Preparing",
     "markAsReady": "Mark as Ready",
     "orderTime": "Order Time",
-    "estimatedTime": "Estimated Time"
+    "estimatedTime": "Estimated Time",
+    "noOrders": "No active orders at the moment",
+    "fetchError": "Failed to load orders. Please try again.",
+    "updateError": "Failed to update order. Please try again."
   },
   "tables": {
     "title": "Tables",
+    "management": "Table Management",
     "addTable": "Add Table",
-    "editTable": "Edit Table",
+    "editTable": "Edit Table {{number}}",
     "deleteTable": "Delete Table",
     "tableNumber": "Table {{number}}",
     "tableStatus": "Table Status",
+    "tableDetails": "Table {{number}} Details",
     "capacity": "{{count}} person",
     "capacity_plural": "{{count}} people",
+    "location": "Location",
     "status": {
+      "label": "Status",
       "available": "Available",
       "occupied": "Occupied",
       "reserved": "Reserved",
       "maintenance": "Maintenance"
     },
     "all": "All Tables",
+    "allStatuses": "All Statuses",
     "available": "Available",
     "occupied": "Occupied",
     "reserved": "Reserved",
     "notFound": "Table not found",
     "fetchError": "Error fetching table details",
     "seatGuests": "Seat Guests",
-    "clearTable": "Clear Table"
+    "clearTable": "Clear Table",
+    "details": "Details",
+    "occupiedFor": "Occupied for",
+    "order": "Order",
+    "errors": {
+      "numberRequired": "Table number is required",
+      "capacityRequired": "Capacity is required",
+      "createFailed": "Failed to create table. Please try again.",
+      "updateFailed": "Failed to update table. Please try again.",
+      "deleteFailed": "Failed to delete table. Please try again.",
+      "fetchOrderFailed": "Failed to fetch order details. Please try again.",
+      "updateStatusFailed": "Failed to update table status. Please try again."
+    }
   },
   "payments": {
     "title": "Payments",

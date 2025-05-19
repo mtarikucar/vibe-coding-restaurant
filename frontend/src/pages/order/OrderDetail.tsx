@@ -7,7 +7,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { orderAPI } from '../../services/api';
 import { formatCurrency, formatDate, formatTimeAgo } from '../../utils/formatters';
-import { Order, OrderStatus } from '../../types/order';
+import { type Order, OrderStatus } from '../../types/order';
 import { useToast } from '../../components/common/ToastProvider';
 import InvoiceButton from '../../components/invoice/InvoiceButton';
 

@@ -6,8 +6,12 @@ import {
 } from "@heroicons/react/24/outline";
 import { invoiceAPI } from "../../services/invoiceAPI";
 import { useToast } from "../common/ToastProvider";
-// Import types from Invoices component
-import { Invoice } from "../../pages/invoice/Invoices";
+// Define Invoice interface directly here
+interface Invoice {
+  id: string;
+  invoiceNumber: string;
+  status: string;
+}
 
 interface InvoiceButtonProps {
   orderId: string;

@@ -310,28 +310,78 @@ export const authAPI = {
 
 // Menu API
 export const menuAPI = {
-  getCategories: async () => {
+  getCategories: async (tenantId?: string) => {
     try {
-      const response = await api.get("/menu/categories");
-      return response.data;
+      // If tenantId is provided, use it for public access
+      if (tenantId) {
+        // Create a new axios instance for public access without auth headers
+        const publicApi = axios.create({
+          baseURL: "/api",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Tenant-ID": tenantId,
+          },
+          timeout: 30000,
+        });
+        const response = await publicApi.get("/menu/categories");
+        return response.data;
+      } else {
+        // Use authenticated API
+        const response = await api.get("/menu/categories");
+        return response.data;
+      }
     } catch (error) {
       throw error;
     }
   },
 
-  getMenuItems: async () => {
+  getMenuItems: async (tenantId?: string) => {
     try {
-      const response = await api.get("/menu/items");
-      return response.data;
+      // If tenantId is provided, use it for public access
+      if (tenantId) {
+        // Create a new axios instance for public access without auth headers
+        const publicApi = axios.create({
+          baseURL: "/api",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Tenant-ID": tenantId,
+          },
+          timeout: 30000,
+        });
+        const response = await publicApi.get("/menu/items");
+        return response.data;
+      } else {
+        // Use authenticated API
+        const response = await api.get("/menu/items");
+        return response.data;
+      }
     } catch (error) {
       throw error;
     }
   },
 
-  getMenuItemsByCategory: async (categoryId: string) => {
+  getMenuItemsByCategory: async (categoryId: string, tenantId?: string) => {
     try {
-      const response = await api.get(`/menu/categories/${categoryId}/items`);
-      return response.data;
+      // If tenantId is provided, use it for public access
+      if (tenantId) {
+        // Create a new axios instance for public access without auth headers
+        const publicApi = axios.create({
+          baseURL: "/api",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Tenant-ID": tenantId,
+          },
+          timeout: 30000,
+        });
+        const response = await publicApi.get(
+          `/menu/categories/${categoryId}/items`
+        );
+        return response.data;
+      } else {
+        // Use authenticated API
+        const response = await api.get(`/menu/categories/${categoryId}/items`);
+        return response.data;
+      }
     } catch (error) {
       throw error;
     }
@@ -394,9 +444,45 @@ export const tableAPI = {
     }
   },
 
+  createTable: async (tableData: any) => {
+    try {
+      const response = await api.post("/tables", tableData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  updateTable: async (id: string, tableData: any) => {
+    try {
+      const response = await api.patch(`/tables/${id}`, tableData);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  deleteTable: async (id: string) => {
+    try {
+      const response = await api.delete(`/tables/${id}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
   updateTableStatus: async (id: string, status: string) => {
     try {
       const response = await api.patch(`/tables/${id}/status`, { status });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getTablesByStatus: async (status: string) => {
+    try {
+      const response = await api.get(`/tables/status/${status}`);
       return response.data;
     } catch (error) {
       throw error;
@@ -460,7 +546,7 @@ export const orderAPI = {
 };
 
 // Kitchen API
-export const kitchenAPI = {
+/* export const kitchenAPI = {
   getActiveOrders: async () => {
     try {
       const response = await api.get("/kitchen/orders");
@@ -486,7 +572,7 @@ export const kitchenAPI = {
     }
   },
 };
-
+ */
 // Payment API
 export const paymentAPI = {
   getPayments: async () => {
@@ -1108,6 +1194,52 @@ export const notificationAPI = {
       return response.data;
     } catch (error) {
       throw error;
+    }
+  },
+};
+
+// Kitchen API
+export const kitchenAPI = {
+  getActiveOrders: async () => {
+    try {
+      const response = await api.get("/kitchen/orders");
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching active orders:", error);
+      // Fallback to orderAPI if kitchen endpoint fails
+      const allOrders = await orderAPI.getOrders();
+      return allOrders.filter(
+        (order) => order.status === "pending" || order.status === "preparing"
+      );
+    }
+  },
+  updateOrderStatus: async (orderId: string, status: string) => {
+    try {
+      const response = await api.patch(`/kitchen/orders/${orderId}/status`, {
+        status,
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error updating order status in kitchen API:", error);
+      // Fallback to orderAPI
+      return orderAPI.updateOrderStatus(orderId, status);
+    }
+  },
+  updateOrderItemStatus: async (
+    orderId: string,
+    itemId: string,
+    status: string
+  ) => {
+    try {
+      const response = await api.patch(
+        `/kitchen/orders/${orderId}/items/${itemId}/status`,
+        { status }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error updating order item status in kitchen API:", error);
+      // Fallback to orderAPI
+      return orderAPI.updateOrderItemStatus(orderId, itemId, status);
     }
   },
 };

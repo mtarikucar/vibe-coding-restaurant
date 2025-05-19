@@ -1,12 +1,13 @@
-import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { OrderController } from './order.controller';
-import { OrderService } from './order.service';
-import { Order } from './entities/order.entity';
-import { OrderItem } from './entities/order-item.entity';
-import { MenuModule } from '../menu/menu.module';
-import { TableModule } from '../table/table.module';
-import { StockModule } from '../stock/stock.module';
+import { Module } from "@nestjs/common";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { OrderController } from "./order.controller";
+import { OrderService } from "./order.service";
+import { Order } from "./entities/order.entity";
+import { OrderItem } from "./entities/order-item.entity";
+import { MenuModule } from "../menu/menu.module";
+import { TableModule } from "../table/table.module";
+import { StockModule } from "../stock/stock.module";
+import { EventsModule } from "../events/events.module";
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { StockModule } from '../stock/stock.module';
     MenuModule,
     TableModule,
     StockModule,
+    EventsModule,
   ],
   controllers: [OrderController],
   providers: [OrderService],

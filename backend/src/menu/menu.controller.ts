@@ -7,6 +7,8 @@ import {
   Param,
   Delete,
   UseGuards,
+  Headers,
+  Request,
 } from "@nestjs/common";
 import { MenuService } from "./menu.service";
 import { CreateCategoryDto } from "./dto/create-category.dto";
@@ -32,13 +34,21 @@ export class MenuController {
   }
 
   @Get("categories")
-  findAllCategories() {
-    return this.menuService.findAllCategories();
+  findAllCategories(@Headers("x-tenant-id") tenantId: string, @Request() req) {
+    // Use tenant ID from headers for public access, or from request for authenticated access
+    const effectiveTenantId = tenantId || (req.user && req.user.tenantId);
+    return this.menuService.findAllCategories(effectiveTenantId);
   }
 
   @Get("categories/:id")
-  findOneCategory(@Param("id") id: string) {
-    return this.menuService.findOneCategory(id);
+  findOneCategory(
+    @Param("id") id: string,
+    @Headers("x-tenant-id") tenantId: string,
+    @Request() req
+  ) {
+    // Use tenant ID from headers for public access, or from request for authenticated access
+    const effectiveTenantId = tenantId || (req.user && req.user.tenantId);
+    return this.menuService.findOneCategory(id, effectiveTenantId);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -76,13 +86,21 @@ export class MenuController {
   }
 
   @Get("items")
-  findAllMenuItems() {
-    return this.menuService.findAllMenuItems();
+  findAllMenuItems(@Headers("x-tenant-id") tenantId: string, @Request() req) {
+    // Use tenant ID from headers for public access, or from request for authenticated access
+    const effectiveTenantId = tenantId || (req.user && req.user.tenantId);
+    return this.menuService.findAllMenuItems(effectiveTenantId);
   }
 
   @Get("items/:id")
-  findOneMenuItem(@Param("id") id: string) {
-    return this.menuService.findOneMenuItem(id);
+  findOneMenuItem(
+    @Param("id") id: string,
+    @Headers("x-tenant-id") tenantId: string,
+    @Request() req
+  ) {
+    // Use tenant ID from headers for public access, or from request for authenticated access
+    const effectiveTenantId = tenantId || (req.user && req.user.tenantId);
+    return this.menuService.findOneMenuItem(id, effectiveTenantId);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -104,7 +122,16 @@ export class MenuController {
 
   // Get menu items by category
   @Get("categories/:id/items")
-  findMenuItemsByCategory(@Param("id") categoryId: string) {
-    return this.menuService.findMenuItemsByCategory(categoryId);
+  findMenuItemsByCategory(
+    @Param("id") categoryId: string,
+    @Headers("x-tenant-id") tenantId: string,
+    @Request() req
+  ) {
+    // Use tenant ID from headers for public access, or from request for authenticated access
+    const effectiveTenantId = tenantId || (req.user && req.user.tenantId);
+    return this.menuService.findMenuItemsByCategory(
+      categoryId,
+      effectiveTenantId
+    );
   }
 }

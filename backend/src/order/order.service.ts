@@ -14,6 +14,7 @@ import { MenuService } from "../menu/menu.service";
 import { StockService } from "../stock/stock.service";
 import { TableStatus } from "../table/entities/table.entity";
 import { StockActionType } from "../stock/entities/stock-history.entity";
+import { EventsGateway } from "../events/events.gateway";
 
 @Injectable()
 export class OrderService {
@@ -25,7 +26,8 @@ export class OrderService {
     private readonly tableService: TableService,
     private readonly menuService: MenuService,
     private readonly stockService: StockService,
-    private readonly dataSource: DataSource
+    private readonly dataSource: DataSource,
+    private eventsGateway: EventsGateway
   ) {}
 
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
@@ -220,8 +222,13 @@ export class OrderService {
       // Commit transaction
       await queryRunner.commitTransaction();
 
-      // Return updated order
-      return this.findOne(order.id);
+      // Get the updated order with relations
+      const updatedOrder = await this.findOne(order.id);
+
+      // Emit socket event for order creation
+      this.eventsGateway.emitOrderCreated(updatedOrder);
+
+      return updatedOrder;
     } catch (error) {
       // Rollback transaction on error
       await queryRunner.rollbackTransaction();
@@ -294,7 +301,12 @@ export class OrderService {
       );
     }
 
-    return this.orderRepository.save(order);
+    const updatedOrder = await this.orderRepository.save(order);
+
+    // Emit socket event for order status change
+    this.eventsGateway.emitOrderStatusChanged(updatedOrder);
+
+    return updatedOrder;
   }
 
   async updateOrderItemStatus(
@@ -312,7 +324,15 @@ export class OrderService {
     }
 
     orderItem.status = status;
-    return this.orderItemRepository.save(orderItem);
+    const updatedItem = await this.orderItemRepository.save(orderItem);
+
+    // Emit socket event for order item status change
+    this.eventsGateway.emitOrderItemStatusChanged({
+      orderId,
+      item: updatedItem,
+    });
+
+    return updatedItem;
   }
 
   async findByStatus(status: string): Promise<Order[]> {

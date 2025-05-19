@@ -20,6 +20,9 @@ import TestApp from "./TestApp";
 // Mobile Layout
 import MobileLayout from "./components/layout/MobileLayout";
 
+// Public Pages
+const PublicMenu = lazy(() => import("./pages/public/PublicMenu"));
+
 // Pages
 const Login = lazy(() => import("./pages/auth/Login"));
 const Register = lazy(() => import("./pages/auth/Register"));
@@ -30,6 +33,7 @@ const Dashboard = lazy(() => import("./pages/dashboard/DashboardNew"));
 const Menu = lazy(() => import("./pages/menu/Menu"));
 const Orders = lazy(() => import("./pages/order/Orders"));
 const OrderDetail = lazy(() => import("./pages/order/OrderDetail"));
+const NewOrder = lazy(() => import("./pages/order/NewOrder"));
 const Kitchen = lazy(() => import("./pages/kitchen/Kitchen"));
 const Tables = lazy(() => import("./pages/table/Tables"));
 const Payments = lazy(() => import("./pages/payment/Payments"));
@@ -184,6 +188,16 @@ const router = createBrowserRouter([
               </Suspense>
             ),
             // Admin, waiter, and cashier can access orders
+            handle: { allowedRoles: ["admin", "waiter", "cashier"] },
+          },
+          {
+            path: "orders/new",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <NewOrder />
+              </Suspense>
+            ),
+            // Admin, waiter, and cashier can access new order form
             handle: { allowedRoles: ["admin", "waiter", "cashier"] },
           },
           {
@@ -504,6 +518,14 @@ const router = createBrowserRouter([
         ],
       },
     ],
+  },
+  {
+    path: "/menu/:tenantId",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <PublicMenu />
+      </Suspense>
+    ),
   },
   {
     path: "/test",

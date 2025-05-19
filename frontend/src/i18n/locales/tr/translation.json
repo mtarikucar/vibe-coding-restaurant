@@ -33,6 +33,9 @@
     "confirm": "Onayla",
     "refresh": "Verileri Yenile",
     "tryAgain": "Tekrar Dene",
+    "download": "İndir",
+    "print": "Yazdır",
+    "close": "Kapat",
     "notifications": "Bildirimler",
     "viewAllNotifications": "Tüm bildirimleri görüntüle",
     "time": {
@@ -120,7 +123,17 @@
     "deleteCategory": "Kategori Sil",
     "availability": "Kullanılabilirlik",
     "available": "Mevcut",
-    "unavailable": "Mevcut Değil"
+    "unavailable": "Mevcut Değil",
+    "search": "Menüde ara",
+    "allCategories": "Tüm Kategoriler",
+    "noItems": "Menü öğesi bulunamadı",
+    "qrCode": "Menü QR Kodu",
+    "qrCodeGenerator": "Menü QR Kodu Oluşturucu",
+    "qrCodeSize": "QR Kod Boyutu",
+    "qrCodeInstructions": "Müşterilerin tarayıp menünüzü görüntüleyebilmesi için bu QR kodu masalarınıza veya girişe yerleştirin.",
+    "scanInstructions": "Menümüzü cihazınızda görüntülemek için bu QR kodu tarayın",
+    "qrCodePrint": "Restoran Menü QR Kodu",
+    "defaultRestaurantName": "Restoran Menüsü"
   },
   "orders": {
     "title": "Siparişler",
@@ -137,6 +150,19 @@
     "addItem": "Öğe Ekle",
     "removeItem": "Öğe Kaldır",
     "notes": "Notlar",
+    "noItems": "Sipariş öğesi bulunamadı",
+    "item": "öğe",
+    "items": "öğe",
+    "summary": "Sipariş Özeti",
+    "placeOrder": "Sipariş Ver",
+    "viewOrder": "Siparişi Görüntüle",
+    "createOrder": "Sipariş Oluştur",
+    "createSuccess": "Sipariş başarıyla oluşturuldu",
+    "createError": "Sipariş oluşturulurken hata oluştu",
+    "emptyOrderError": "Sipariş öğesi eklemelisiniz",
+    "table": "Masa",
+    "tableNumber": "Masa {{number}}",
+    "total": "Toplam",
     "status": {
       "pending": "Beklemede",
       "preparing": "Hazırlanıyor",
@@ -144,7 +170,20 @@
       "served": "Servis Edildi",
       "completed": "Tamamlandı",
       "cancelled": "İptal Edildi"
-    }
+    },
+    "statuses": {
+      "pending": "Beklemede",
+      "preparing": "Hazırlanıyor",
+      "ready": "Hazır",
+      "served": "Servis Edildi",
+      "completed": "Tamamlandı",
+      "cancelled": "İptal Edildi"
+    },
+    "allStatuses": "Tüm Durumlar",
+    "searchPlaceholder": "Sipariş # veya masa ara...",
+    "noOrders": "Sipariş bulunamadı.",
+    "time": "Zaman",
+    "waiter": "Garson"
   },
   "kitchen": {
     "title": "Mutfak",
@@ -154,20 +193,50 @@
     "markAsPreparing": "Hazırlanıyor Olarak İşaretle",
     "markAsReady": "Hazır Olarak İşaretle",
     "orderTime": "Sipariş Saati",
-    "estimatedTime": "Tahmini Süre"
+    "estimatedTime": "Tahmini Süre",
+    "noOrders": "Şu anda aktif sipariş bulunmuyor",
+    "fetchError": "Siparişler yüklenirken hata oluştu. Lütfen tekrar deneyin.",
+    "updateError": "Sipariş güncellenirken hata oluştu. Lütfen tekrar deneyin."
   },
   "tables": {
     "title": "Masalar",
+    "management": "Masa Yönetimi",
     "addTable": "Masa Ekle",
-    "editTable": "Masa Düzenle",
+    "editTable": "Masa {{number}} Düzenle",
     "deleteTable": "Masa Sil",
-    "tableNumber": "Masa Numarası",
+    "tableNumber": "Masa {{number}}",
     "tableStatus": "Masa Durumu",
-    "capacity": "Kapasite",
+    "tableDetails": "Masa {{number}} Detayları",
+    "capacity": "{{count}} kişilik",
+    "capacity_plural": "{{count}} kişilik",
+    "location": "Konum",
     "status": {
+      "label": "Durum",
       "available": "Müsait",
       "occupied": "Dolu",
-      "reserved": "Rezerve"
+      "reserved": "Rezerve",
+      "maintenance": "Bakımda"
+    },
+    "all": "Tüm Masalar",
+    "allStatuses": "Tüm Durumlar",
+    "available": "Müsait",
+    "occupied": "Dolu",
+    "reserved": "Rezerve",
+    "notFound": "Masa bulunamadı",
+    "fetchError": "Masa detayları alınırken hata oluştu",
+    "seatGuests": "Misafirleri Oturt",
+    "clearTable": "Masayı Temizle",
+    "details": "Detaylar",
+    "occupiedFor": "Dolu süresi",
+    "order": "Sipariş",
+    "errors": {
+      "numberRequired": "Masa numarası gereklidir",
+      "capacityRequired": "Kapasite gereklidir",
+      "createFailed": "Masa oluşturulurken hata oluştu. Lütfen tekrar deneyin.",
+      "updateFailed": "Masa güncellenirken hata oluştu. Lütfen tekrar deneyin.",
+      "deleteFailed": "Masa silinirken hata oluştu. Lütfen tekrar deneyin.",
+      "fetchOrderFailed": "Sipariş detayları alınırken hata oluştu. Lütfen tekrar deneyin.",
+      "updateStatusFailed": "Masa durumu güncellenirken hata oluştu. Lütfen tekrar deneyin."
     }
   },
   "payments": {

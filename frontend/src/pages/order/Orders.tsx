@@ -1,12 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { PlusIcon, EyeIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
+import {
+  PlusIcon,
+  EyeIcon,
+  ArrowPathIcon,
+  QrCodeIcon,
+} from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
 import { orderAPI } from "../../services/api";
-import {type  Order, OrderStatus } from "../../types/order";
+import { type Order, OrderStatus } from "../../types/order";
 import { formatCurrency, formatTimeAgo } from "../../utils/formatters";
 import { useToast } from "../../components/common/ToastProvider";
 import usePerformanceMonitoring from "../../hooks/usePerformanceMonitoring";
+import QRCodeGenerator from "../../components/menu/QRCodeGenerator";
 
 const Orders = () => {
   const { t } = useTranslation();
@@ -16,19 +22,23 @@ const Orders = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [showQRModal, setShowQRModal] = useState(false);
 
   // Initialize performance monitoring
-  const { trackAsyncOperation } = usePerformanceMonitoring("Orders", {
+  const performanceMonitoring = usePerformanceMonitoring("Orders", {
     trackMount: true,
-    trackRender: true,
+    trackRender: false, // Disable render tracking to reduce unnecessary renders
     metadata: { component: "Orders" },
   });
 
-  const fetchOrders = async () => {
+  // Memoize the fetchOrders function to prevent infinite loops
+  const fetchOrders = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await trackAsyncOperation("fetchOrders", () =>
-        orderAPI.getOrders()
+      // Use a local reference to the trackAsyncOperation function
+      const data = await performanceMonitoring.trackAsyncOperation(
+        "fetchOrders",
+        () => orderAPI.getOrders()
       );
       setOrders(data);
     } catch (err) {
@@ -37,10 +47,12 @@ const Orders = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [error, t, performanceMonitoring]); // Include performanceMonitoring in dependencies
 
+  // Only fetch orders on mount
   useEffect(() => {
     fetchOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const filteredOrders = orders.filter((order) => {
@@ -72,12 +84,20 @@ const Orders = () => {
   };
 
   const handleNewOrder = () => {
-    navigate("/app/tables"); // Navigate to tables to start a new order
+    navigate("/app/orders/new"); // Navigate directly to new order form
   };
 
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     fetchOrders();
-  };
+  }, [fetchOrders]);
+
+  const handleShowQRCode = useCallback(() => {
+    setShowQRModal(true);
+  }, []);
+
+  const handleCloseQRModal = useCallback(() => {
+    setShowQRModal(false);
+  }, []);
 
   return (
     <div>
@@ -92,6 +112,13 @@ const Orders = () => {
             title={t("common.refresh", "Refresh")}
           >
             <ArrowPathIcon className="h-5 w-5" />
+          </button>
+          <button
+            onClick={handleShowQRCode}
+            className="bg-forest-500 hover:bg-forest-600 text-white px-3 py-2 rounded-md flex items-center"
+            title={t("menu.qrCode", "Menu QR Code")}
+          >
+            <QrCodeIcon className="h-5 w-5" />
           </button>
           <button
             onClick={handleNewOrder}
@@ -263,6 +290,9 @@ const Orders = () => {
           )}
         </div>
       )}
+
+      {/* QR Code Generator Modal */}
+      <QRCodeGenerator isOpen={showQRModal} onClose={handleCloseQRModal} />
     </div>
   );
 };

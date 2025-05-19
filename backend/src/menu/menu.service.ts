@@ -40,15 +40,23 @@ export class MenuService {
     return this.categoryRepository.save(category);
   }
 
-  async findAllCategories(): Promise<Category[]> {
+  async findAllCategories(tenantId?: string): Promise<Category[]> {
+    const whereClause = tenantId ? { tenantId } : {};
+
     return this.categoryRepository.find({
+      where: whereClause,
       order: { displayOrder: "ASC", name: "ASC" },
     });
   }
 
-  async findOneCategory(id: string): Promise<Category> {
+  async findOneCategory(id: string, tenantId?: string): Promise<Category> {
+    const whereClause: any = { id };
+    if (tenantId) {
+      whereClause.tenantId = tenantId;
+    }
+
     const category = await this.categoryRepository.findOne({
-      where: { id },
+      where: whereClause,
       relations: ["menuItems"],
     });
 
@@ -203,18 +211,42 @@ export class MenuService {
     return this.menuItemRepository.save(menuItem);
   }
 
-  async findAllMenuItems(): Promise<MenuItem[]> {
-    return this.menuItemRepository.find({
-      relations: ["category"],
-      order: { name: "ASC" },
-    });
+  async findAllMenuItems(tenantId?: string): Promise<MenuItem[]> {
+    if (tenantId) {
+      // For public access with tenant ID, we need to join with categories to filter by tenant
+      return this.menuItemRepository
+        .createQueryBuilder("menuItem")
+        .leftJoinAndSelect("menuItem.category", "category")
+        .where("category.tenantId = :tenantId", { tenantId })
+        .orderBy("menuItem.name", "ASC")
+        .getMany();
+    } else {
+      // For authenticated access, return all items
+      return this.menuItemRepository.find({
+        relations: ["category"],
+        order: { name: "ASC" },
+      });
+    }
   }
 
-  async findOneMenuItem(id: string): Promise<MenuItem> {
-    const menuItem = await this.menuItemRepository.findOne({
-      where: { id },
-      relations: ["category"],
-    });
+  async findOneMenuItem(id: string, tenantId?: string): Promise<MenuItem> {
+    let menuItem: MenuItem;
+
+    if (tenantId) {
+      // For public access with tenant ID
+      menuItem = await this.menuItemRepository
+        .createQueryBuilder("menuItem")
+        .leftJoinAndSelect("menuItem.category", "category")
+        .where("menuItem.id = :id", { id })
+        .andWhere("category.tenantId = :tenantId", { tenantId })
+        .getOne();
+    } else {
+      // For authenticated access
+      menuItem = await this.menuItemRepository.findOne({
+        where: { id },
+        relations: ["category"],
+      });
+    }
 
     if (!menuItem) {
       throw new NotFoundException(`Menu item with ID ${id} not found`);
@@ -255,16 +287,25 @@ export class MenuService {
     await this.menuItemRepository.remove(menuItem);
   }
 
-  async findMenuItemsByCategory(categoryId: string): Promise<MenuItem[]> {
-    // Check if category exists
+  async findMenuItemsByCategory(
+    categoryId: string,
+    tenantId?: string
+  ): Promise<MenuItem[]> {
+    // Check if category exists with optional tenant filter
+    const whereClause: any = { id: categoryId };
+    if (tenantId) {
+      whereClause.tenantId = tenantId;
+    }
+
     const category = await this.categoryRepository.findOne({
-      where: { id: categoryId },
+      where: whereClause,
     });
 
     if (!category) {
       throw new NotFoundException(`Category with ID ${categoryId} not found`);
     }
 
+    // Return menu items for this category
     return this.menuItemRepository.find({
       where: { categoryId },
       order: { name: "ASC" },
