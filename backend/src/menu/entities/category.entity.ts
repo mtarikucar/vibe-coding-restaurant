@@ -1,9 +1,16 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { MenuItem } from './menu-item.entity';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from "typeorm";
+import { MenuItem } from "./menu-item.entity";
 
 @Entity()
 export class Category {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   id: string;
 
   @Column({ unique: true })
@@ -15,7 +22,10 @@ export class Category {
   @Column({ default: 0 })
   displayOrder: number;
 
-  @OneToMany(() => MenuItem, menuItem => menuItem.category)
+  @Column({ default: true })
+  isActive: boolean;
+
+  @OneToMany(() => MenuItem, (menuItem) => menuItem.category)
   menuItems: MenuItem[];
 
   @CreateDateColumn()

@@ -14,29 +14,35 @@ import { LocalStrategy } from "./strategies/local.strategy";
 import { Tenant } from "../tenant/entities/tenant.entity";
 import { TokenBlacklistService } from "./services/token-blacklist.service";
 import { AuthThrottlerGuard } from "./guards/throttle.guard";
+import { RedisModule } from "../redis/redis.module";
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Tenant, RefreshToken]),
     PassportModule,
     HttpModule,
+    RedisModule, // Re-enabled Redis module for token blacklisting and throttling
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get("JWT_SECRET", "secret"),
-        signOptions: {
-          expiresIn: configService.get("JWT_EXPIRATION", "15m"), // Shorter expiration for access tokens
-        },
-      }),
+      useFactory: (configService: ConfigService) => {
+        const jwtExpiration = configService.get("JWT_EXPIRATION", "7d");
+        return {
+          secret: configService.get("JWT_SECRET", "secret"),
+          signOptions: {
+            expiresIn: jwtExpiration, // Use the configured expiration
+          },
+        };
+      },
     }),
-    ThrottlerModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        ttl: configService.get("THROTTLE_TTL", 60), // Time window in seconds
-        limit: configService.get("THROTTLE_LIMIT", 10), // Max requests per time window
-      }),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          name: "auth",
+          ttl: 60, // Time window in seconds
+          limit: 10, // Max requests per time window
+        },
+      ],
     }),
   ],
   controllers: [AuthController],
@@ -45,7 +51,52 @@ import { AuthThrottlerGuard } from "./guards/throttle.guard";
     JwtStrategy,
     LocalStrategy,
     TokenBlacklistService,
-    AuthThrottlerGuard,
+    {
+      provide: "THROTTLER_OPTIONS",
+      useValue: {
+        throttlers: [
+          {
+            name: "auth",
+            ttl: 60,
+            limit: 10,
+          },
+        ],
+      },
+    },
+    {
+      provide: "THROTTLER_STORAGE",
+      useFactory: (redis) => {
+        return {
+          async increment(key: string, ttl: number): Promise<number> {
+            const value = await redis.incr(key);
+            await redis.expire(key, ttl);
+            return value;
+          },
+          async get(key: string): Promise<number> {
+            const value = await redis.get(key);
+            return value ? parseInt(value, 10) : 0;
+          },
+        };
+      },
+      inject: ["IOREDIS_CLIENT"],
+    },
+    {
+      provide: AuthThrottlerGuard,
+      useFactory: (redis, options, storageService, reflector) => {
+        return new AuthThrottlerGuard(
+          redis,
+          options,
+          storageService,
+          reflector
+        );
+      },
+      inject: [
+        "IOREDIS_CLIENT",
+        "THROTTLER_OPTIONS",
+        "THROTTLER_STORAGE",
+        "Reflector",
+      ],
+    },
   ],
   exports: [AuthService, TokenBlacklistService, AuthThrottlerGuard],
 })

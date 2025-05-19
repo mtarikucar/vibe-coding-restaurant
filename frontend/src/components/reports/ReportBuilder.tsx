@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import reportAPI, {
-  Report,
-  ReportTemplate,
   ReportType,
   ReportFormat,
-  CreateReportDto,
-  GenerateReportDto,
+  type CreateReportDto as ReportCreateDto,
+  type ReportGenerateDto,
 } from "../../services/reportApi";
+import type { Report, ReportTemplate } from "../../types/report.types";
 import AdvancedFilters from "./AdvancedFilters";
 import ChartCustomizer from "./ChartCustomizer";
 
@@ -24,7 +23,7 @@ const ReportBuilder: React.FC<ReportBuilderProps> = ({
   onClose,
   onSave,
 }) => {
-  const [formData, setFormData] = useState<CreateReportDto>({
+  const [formData, setFormData] = useState<ReportCreateDto>({
     name: "",
     description: "",
     type: ReportType.SALES,
@@ -38,7 +37,9 @@ const ReportBuilder: React.FC<ReportBuilderProps> = ({
   const [showFilters, setShowFilters] = useState(false);
   const [showChartCustomizer, setShowChartCustomizer] = useState(false);
   const [dateRange, setDateRange] = useState({
-    startDate: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split("T")[0],
+    startDate: new Date(new Date().setDate(new Date().getDate() - 30))
+      .toISOString()
+      .split("T")[0],
     endDate: new Date().toISOString().split("T")[0],
   });
   const [generateAfterSave, setGenerateAfterSave] = useState(false);
@@ -73,7 +74,11 @@ const ReportBuilder: React.FC<ReportBuilderProps> = ({
     }
   }, [report]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -140,7 +145,7 @@ const ReportBuilder: React.FC<ReportBuilderProps> = ({
 
       if (generateAfterSave) {
         // Generate report
-        const generateData: GenerateReportDto = {
+        const generateData: ReportGenerateDto = {
           reportId: savedReport.id,
           type: savedReport.type,
           startDate: dateRange.startDate,

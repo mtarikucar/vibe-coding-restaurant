@@ -9,8 +9,11 @@ import {
   IsEmail,
   IsDateString,
 } from "class-validator";
-import { ScheduleFrequency, DeliveryMethod } from "../entities/report-schedule.entity";
-import { ReportFormat } from "../entities/report.entity";
+import {
+  ScheduleFrequency,
+  DeliveryMethod,
+} from "../entities/report-schedule.entity";
+import { ReportFormat } from "../entities/report.enums";
 
 export class CreateReportScheduleDto {
   @IsString()

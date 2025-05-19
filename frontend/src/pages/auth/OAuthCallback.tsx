@@ -20,6 +20,7 @@ const OAuthCallback = () => {
       const refreshToken = params.get("refresh_token");
       const expiresIn = params.get("expires_in");
       const errorParam = params.get("error");
+      const provider = params.get("provider") || "google"; // Default to Google if not specified
 
       if (errorParam) {
         setError(decodeURIComponent(errorParam));
@@ -38,13 +39,19 @@ const OAuthCallback = () => {
         // Get user profile
         const user = await authAPI.getProfile();
 
+        // Determine the auth provider
+        let authProvider = AuthProvider.GOOGLE;
+        if (provider === "github") {
+          authProvider = AuthProvider.GITHUB;
+        }
+
         // Store in auth store
         login(
           user,
           accessToken,
           refreshToken,
           parseInt(expiresIn, 10),
-          AuthProvider.GOOGLE // Assuming Google for now
+          authProvider
         );
 
         // Remove temp token
@@ -74,10 +81,7 @@ const OAuthCallback = () => {
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 max-w-md w-full">
           {error}
         </div>
-        <button
-          onClick={() => navigate("/")}
-          className="btn btn-primary"
-        >
+        <button onClick={() => navigate("/")} className="btn btn-primary">
           {t("common.backToLogin")}
         </button>
       </div>

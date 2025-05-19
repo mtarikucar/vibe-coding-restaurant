@@ -30,9 +30,12 @@
     "language": "Language",
     "selectLanguage": "Select Your Language",
     "selectLanguageDescription": "Choose your preferred language for the application interface.",
+    "version": "Version 1.0.0",
     "confirm": "Confirm",
     "refresh": "Refresh data",
     "tryAgain": "Try Again",
+    "notNow": "Not Now",
+    "processing": "Processing...",
     "notifications": "Notifications",
     "viewAllNotifications": "View all notifications",
     "time": {
@@ -120,7 +123,10 @@
     "deleteCategory": "Delete Category",
     "availability": "Availability",
     "available": "Available",
-    "unavailable": "Unavailable"
+    "unavailable": "Unavailable",
+    "search": "Search menu",
+    "allCategories": "All Categories",
+    "noItems": "No menu items found"
   },
   "orders": {
     "title": "Orders",
@@ -137,12 +143,44 @@
     "addItem": "Add Item",
     "removeItem": "Remove Item",
     "notes": "Notes",
+    "items": "Items",
+    "tableNumber": "Table {{number}}",
+    "active": "Active Orders",
+    "completed": "Completed Orders",
+    "all": "All Orders",
+    "noOrders": "No orders found",
+    "viewOrder": "View Order",
+    "createOrder": "Create Order",
+    "placeOrder": "Place Order",
+    "summary": "Order Summary",
+    "emptyOrderError": "Cannot place an empty order",
+    "createSuccess": "Order created successfully",
+    "createError": "Error creating order",
+    "fetchError": "Error fetching order details",
+    "notFound": "Order not found",
+    "statusUpdateSuccess": "Order status updated successfully",
+    "statusUpdateError": "Error updating order status",
+    "itemStatusUpdateSuccess": "Item status updated successfully",
+    "itemStatusUpdateError": "Error updating item status",
+    "markPreparing": "Mark Preparing",
+    "markReady": "Mark Ready",
+    "markServed": "Mark Served",
+    "markCompleted": "Mark Completed",
+    "cancel": "Cancel Order",
+    "actions": "Actions",
     "status": {
       "pending": "Pending",
       "preparing": "Preparing",
       "ready": "Ready",
       "served": "Served",
       "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "itemStatus": {
+      "pending": "Pending",
+      "preparing": "Preparing",
+      "ready": "Ready",
+      "served": "Served",
       "cancelled": "Cancelled"
     }
   },
@@ -161,14 +199,24 @@
     "addTable": "Add Table",
     "editTable": "Edit Table",
     "deleteTable": "Delete Table",
-    "tableNumber": "Table Number",
+    "tableNumber": "Table {{number}}",
     "tableStatus": "Table Status",
-    "capacity": "Capacity",
+    "capacity": "{{count}} person",
+    "capacity_plural": "{{count}} people",
     "status": {
       "available": "Available",
       "occupied": "Occupied",
-      "reserved": "Reserved"
-    }
+      "reserved": "Reserved",
+      "maintenance": "Maintenance"
+    },
+    "all": "All Tables",
+    "available": "Available",
+    "occupied": "Occupied",
+    "reserved": "Reserved",
+    "notFound": "Table not found",
+    "fetchError": "Error fetching table details",
+    "seatGuests": "Seat Guests",
+    "clearTable": "Clear Table"
   },
   "payments": {
     "title": "Payments",
@@ -183,7 +231,10 @@
     "methods": {
       "cash": "Cash",
       "creditCard": "Credit Card",
-      "debitCard": "Debit Card"
+      "debitCard": "Debit Card",
+      "stripe": "Stripe",
+      "paypal": "PayPal",
+      "iyzico": "iyzico"
     },
     "status": {
       "pending": "Pending",
@@ -191,6 +242,23 @@
       "failed": "Failed",
       "refunded": "Refunded"
     }
+  },
+  "payment": {
+    "completeYourPayment": "Complete Your Payment",
+    "totalAmount": "Total amount",
+    "mockStripeInterface": "This is a mock Stripe payment interface for demonstration purposes.",
+    "mockPaymentInterface": "This is a mock payment interface for demonstration purposes.",
+    "realImplementationNote": "In a real implementation, this would be replaced with the payment provider's form or redirect.",
+    "simulateSuccess": "Simulate Successful Payment",
+    "simulateFailure": "Simulate Failed Payment",
+    "payWithPayPal": "Pay with PayPal",
+    "redirectedToPayPal": "You will be redirected to PayPal to complete your payment.",
+    "ifNotRedirected": "If you are not automatically redirected, please click the button below.",
+    "goToPayPal": "Go to PayPal",
+    "payAmount": "Pay {{amount}}",
+    "paypalPaymentFailed": "PayPal payment failed. Please try again.",
+    "stripePaymentFailed": "Stripe payment failed. Please try again.",
+    "processingPayment": "Processing payment..."
   },
   "stock": {
     "title": "Stock",
@@ -243,6 +311,31 @@
     "forbidden": "Access forbidden",
     "notFound": "Resource not found",
     "validationError": "Validation error"
+  },
+  "pwa": {
+    "installTitle": "Install Waiter App",
+    "installDescription": "Install this app on your device for quick access and offline use.",
+    "install": "Install",
+    "installed": "App installed successfully",
+    "offlineReady": "App is ready for offline use",
+    "updateAvailable": "Update available",
+    "update": "Update",
+    "redirecting": "Redirecting to the Waiter App..."
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "menu": "Menu",
+    "orders": "Orders",
+    "kitchen": "Kitchen",
+    "tables": "Tables",
+    "payments": "Payments",
+    "reports": "Reports",
+    "stock": "Stock",
+    "users": "Users",
+    "settings": "Settings",
+    "profile": "Profile",
+    "logout": "Logout",
+    "mobileApp": "Mobile App"
   },
   "performance": {
     "title": "Performance Monitoring",
@@ -396,6 +489,13 @@
     "failedToCreate": "Failed to create default preferences",
     "failedToUpdate": "Failed to update preference",
     "failedToLoad": "Failed to load notification preferences",
+    "markAllAsRead": "Mark all as read",
+    "permissionGranted": "Push notifications enabled successfully",
+    "permissionDenied": "Push notification permission denied",
+    "permissionError": "Error requesting notification permission",
+    "subscribe": "Enable push notifications",
+    "unsubscribe": "Disable push notifications",
+    "notSupported": "Push notifications are not supported in this browser",
     "types": {
       "system": "System Notifications",
       "order": "Order Updates",
@@ -412,5 +512,53 @@
       "push": "Push Notifications",
       "sms": "SMS"
     }
+  },
+  "profile": {
+    "title": "Profile",
+    "settings": "Settings",
+    "language": "Language",
+    "notifications": "Notifications",
+    "version": "Version"
+  },
+  "system": {
+    "title": "System Information",
+    "theme": "Theme",
+    "subscription": "Subscription",
+    "profile": "Profile",
+    "access": "Access Types",
+    "tenant": "Tenant",
+    "information": "System Info",
+    "themeSettings": "Theme Settings",
+    "themeDescription": "Customize the appearance of your application by selecting a theme that suits your preferences.",
+    "subscriptionInfo": "Subscription Information",
+    "subscriptionDescription": "View and manage your current subscription plan and billing details.",
+    "profileSettings": "Profile Settings",
+    "profileDescription": "View and manage your user profile information and preferences.",
+    "accessTypes": "Access Types",
+    "accessDescription": "View the different user roles and their access levels in the system.",
+    "tenantInfo": "Tenant Information",
+    "tenantDescription": "View information about your tenant account and configuration.",
+    "systemInfo": "System Information",
+    "systemDescription": "View technical information about the system, including version and status.",
+    "currentPlan": "Current Plan",
+    "status": "Status",
+    "nextBilling": "Next Billing Date",
+    "username": "Username",
+    "role": "Role",
+    "language": "Language",
+    "tenantName": "Tenant Name",
+    "tenantId": "Tenant ID",
+    "country": "Country",
+    "version": "Version",
+    "environment": "Environment",
+    "serverStatus": "Server Status",
+    "lastUpdated": "Last Updated",
+    "fullAccess": "Full Access",
+    "limitedAccess": "Limited Access",
+    "editProfile": "Edit Profile",
+    "manageUsers": "Manage Users",
+    "saveChanges": "Save Changes",
+    "currentTheme": "Current Theme",
+    "themeUpdated": "Theme updated successfully"
   }
 }

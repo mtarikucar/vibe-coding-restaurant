@@ -46,67 +46,9 @@ export enum DeliveryMethod {
   NOTIFICATION = "notification",
 }
 
-export interface Report {
-  id: string;
-  name: string;
-  description?: string;
-  type: ReportType;
-  status: ReportStatus;
-  filters?: Record<string, any>;
-  parameters?: Record<string, any>;
-  data?: Record<string, any>;
-  startDate?: string;
-  endDate?: string;
-  generatedAt?: string;
-  fileUrl?: string;
-  format: ReportFormat;
-  isPublic: boolean;
-  isFavorite: boolean;
-  createdById: string;
-  createdBy?: any;
-  templateId?: string;
-  template?: ReportTemplate;
-  scheduleId?: string;
-  schedule?: ReportSchedule;
-  createdAt: string;
-  updatedAt: string;
-}
+// Report interface moved to types/report.types.ts
 
-export interface ReportTemplate {
-  id: string;
-  name: string;
-  description?: string;
-  type: ReportType;
-  category: TemplateCategory;
-  structure: Record<string, any>;
-  defaultParameters?: Record<string, any>;
-  visualizationOptions?: Record<string, any>;
-  isSystem: boolean;
-  isActive: boolean;
-  createdById: string;
-  createdBy?: any;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ReportSchedule {
-  id: string;
-  name: string;
-  description?: string;
-  frequency: ScheduleFrequency;
-  cronExpression?: Record<string, any>;
-  nextRunDate?: string;
-  lastRunDate?: string;
-  isActive: boolean;
-  deliveryMethod: DeliveryMethod;
-  deliveryConfig?: Record<string, any>;
-  format: ReportFormat;
-  recipients?: string[];
-  createdById: string;
-  createdBy?: any;
-  createdAt: string;
-  updatedAt: string;
-}
+// ReportTemplate and ReportSchedule interfaces moved to types/report.types.ts
 
 export interface CreateReportDto {
   name: string;
@@ -122,7 +64,8 @@ export interface CreateReportDto {
   scheduleId?: string;
 }
 
-export interface GenerateReportDto {
+// Renamed to avoid potential conflicts
+export interface ReportGenerateDto {
   reportId?: string;
   templateId?: string;
   type: ReportType;
@@ -244,7 +187,7 @@ const reportAPI = {
   },
 
   // Report Generation
-  generateReport: async (data: GenerateReportDto) => {
+  generateReport: async (data: ReportGenerateDto) => {
     try {
       const response = await api.post("/reports/generate", data);
       return response.data;

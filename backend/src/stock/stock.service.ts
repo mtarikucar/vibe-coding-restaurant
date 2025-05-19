@@ -239,6 +239,35 @@ export class StockService {
     }
   }
 
+  async increaseStock(
+    stockId: string,
+    quantity: number,
+    purchaseOrderId: string,
+    userId: string,
+    actionType: StockActionType
+  ): Promise<void> {
+    try {
+      // Find stock
+      const stock = await this.stockRepository.findOne({
+        where: { id: stockId },
+      });
+
+      // If stock exists, increase it
+      if (stock) {
+        await this.adjustStock(stock.id, {
+          quantity,
+          actionType,
+          userId,
+          purchaseOrderId,
+          notes: `Purchase Order ${purchaseOrderId}`,
+        });
+      }
+    } catch (error) {
+      // Log error but don't throw
+      console.error(`Error increasing stock with ID ${stockId}:`, error);
+    }
+  }
+
   private async createStockHistory(
     stockId: string,
     actionType: StockActionType,

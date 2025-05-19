@@ -5,6 +5,12 @@ import { authAPI } from "../../services/api";
 import useAuthStore, { AuthProvider } from "../../store/authStore";
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
+import {
+  UserIcon,
+  LockClosedIcon,
+  ExclamationCircleIcon,
+} from "@heroicons/react/24/outline";
+import { Button, Input, Card } from "../../components/ui";
 
 // Define error type for API errors
 interface ApiError {
@@ -137,106 +143,114 @@ const Login = () => {
     window.location.href = "/api/auth/oauth/google";
   };
 
-  return (
-    <div>
-      {error && (
-        <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          {error}
-        </div>
-      )}
+  const handleGithubLogin = () => {
+    // Redirect to GitHub OAuth endpoint
+    window.location.href = "/api/auth/oauth/github";
+  };
 
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label htmlFor="username" className="form-label">
-            {t("auth.username")}
-          </label>
-          <input
-            type="text"
+  return (
+    <div className="animate-fadeIn">
+      <Card variant="default" className="mb-6">
+        {error && (
+          <div className="mb-6 bg-danger-50 border border-danger-200 text-danger-700 px-4 py-3 rounded-lg flex items-center">
+            <ExclamationCircleIcon className="h-5 w-5 text-danger-500 mr-2" />
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <Input
+            label={t("auth.username")}
             id="username"
-            className="form-input"
-            placeholder="Username"
+            type="text"
+            placeholder={t("auth.usernamePlaceholder") || "Username"}
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
+            fullWidth
+            leftIcon={<UserIcon className="h-5 w-5" />}
+            variant="default"
+            size="md"
           />
-        </div>
 
-        <div className="mb-6">
-          <label htmlFor="password" className="form-label">
-            {t("auth.password")}
-          </label>
-          <input
-            type="password"
-            id="password"
-            className="form-input"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          <div className="mt-1 text-right">
-            <Link
-              to="/forgot-password"
-              className="text-sm text-blue-600 hover:text-blue-500"
-            >
-              {t("auth.forgotPasswordQuestion")}
-            </Link>
+          <div>
+            <Input
+              label={t("auth.password")}
+              id="password"
+              type="password"
+              placeholder={t("auth.passwordPlaceholder") || "Password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              fullWidth
+              leftIcon={<LockClosedIcon className="h-5 w-5" />}
+              variant="default"
+              size="md"
+            />
+            <div className="mt-1 text-right">
+              <Link
+                to="/forgot-password"
+                className="text-sm text-primary-600 hover:text-primary-700 transition-colors"
+              >
+                {t("auth.forgotPasswordQuestion")}
+              </Link>
+            </div>
           </div>
-        </div>
 
-        <div className="flex items-center justify-between">
-          <button
+          <Button
             type="submit"
-            className={`btn btn-primary w-full ${
-              loading ? "opacity-50 cursor-not-allowed" : ""
-            }`}
+            variant="primary"
+            fullWidth
+            isLoading={loading}
             disabled={loading || oauthLoading}
+            size="lg"
           >
             {loading ? t("common.loading") : t("auth.signIn")}
-          </button>
-        </div>
-      </form>
+          </Button>
+        </form>
 
-      <div className="mt-6">
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300"></div>
+        <div className="mt-6">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">
+                {t("auth.orContinueWith")}
+              </span>
+            </div>
           </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">
-              {t("auth.orContinueWith")}
-            </span>
+
+          <div className="mt-6 grid grid-cols-2 gap-3">
+            <Button
+              variant="outline"
+              onClick={handleGoogleLogin}
+              disabled={loading || oauthLoading}
+              fullWidth
+              leftIcon={<FcGoogle className="h-5 w-5" />}
+            >
+              Google
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={handleGithubLogin}
+              disabled={loading || oauthLoading}
+              fullWidth
+              leftIcon={<FaGithub className="h-5 w-5" />}
+            >
+              GitHub
+            </Button>
           </div>
         </div>
+      </Card>
 
-        <div className="mt-6 grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={handleGoogleLogin}
-            disabled={loading || oauthLoading}
-            className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-          >
-            <FcGoogle className="h-5 w-5" />
-            <span className="ml-2">Google</span>
-          </button>
-
-          <button
-            type="button"
-            disabled={true} // Not implemented yet
-            className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 opacity-50 cursor-not-allowed"
-          >
-            <FaGithub className="h-5 w-5" />
-            <span className="ml-2">GitHub</span>
-          </button>
-        </div>
-      </div>
-
-      <div className="mt-6 text-center">
+      <div className="text-center animate-fadeIn">
         <p className="text-sm text-gray-600">
           {t("auth.dontHaveAccount")}{" "}
           <Link
             to="/register"
-            className="font-medium text-blue-600 hover:text-blue-500"
+            className="font-medium text-primary-600 hover:text-primary-700 transition-colors"
           >
             {t("auth.registerNow")}
           </Link>

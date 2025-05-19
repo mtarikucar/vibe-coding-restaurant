@@ -1,15 +1,19 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
-import { Order, OrderStatus } from './entities/order.entity';
-import { OrderItem, OrderItemStatus } from './entities/order-item.entity';
-import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
-import { TableService } from '../table/table.service';
-import { MenuService } from '../menu/menu.service';
-import { StockService } from '../stock/stock.service';
-import { TableStatus } from '../table/entities/table.entity';
-import { StockActionType } from '../stock/entities/stock-history.entity';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository, DataSource } from "typeorm";
+import { Order, OrderStatus } from "./entities/order.entity";
+import { OrderItem, OrderItemStatus } from "./entities/order-item.entity";
+import { CreateOrderDto } from "./dto/create-order.dto";
+import { UpdateOrderDto } from "./dto/update-order.dto";
+import { TableService } from "../table/table.service";
+import { MenuService } from "../menu/menu.service";
+import { StockService } from "../stock/stock.service";
+import { TableStatus } from "../table/entities/table.entity";
+import { StockActionType } from "../stock/entities/stock-history.entity";
 
 @Injectable()
 export class OrderService {
@@ -21,7 +25,7 @@ export class OrderService {
     private readonly tableService: TableService,
     private readonly menuService: MenuService,
     private readonly stockService: StockService,
-    private readonly dataSource: DataSource,
+    private readonly dataSource: DataSource
   ) {}
 
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
@@ -33,7 +37,10 @@ export class OrderService {
     try {
       // Check if table exists and is available
       const table = await this.tableService.findOne(createOrderDto.tableId);
-      if (table.status !== TableStatus.AVAILABLE && table.status !== TableStatus.OCCUPIED) {
+      if (
+        table.status !== TableStatus.AVAILABLE &&
+        table.status !== TableStatus.OCCUPIED
+      ) {
         throw new BadRequestException(`Table ${table.number} is not available`);
       }
 
@@ -59,9 +66,13 @@ export class OrderService {
 
       for (const item of createOrderDto.items) {
         // Check if menu item exists
-        const menuItem = await this.menuService.findOneMenuItem(item.menuItemId);
+        const menuItem = await this.menuService.findOneMenuItem(
+          item.menuItemId
+        );
         if (!menuItem.isAvailable) {
-          throw new BadRequestException(`Menu item ${menuItem.name} is not available`);
+          throw new BadRequestException(
+            `Menu item ${menuItem.name} is not available`
+          );
         }
 
         // Create order item
@@ -87,7 +98,7 @@ export class OrderService {
           item.quantity,
           savedOrder.id,
           createOrderDto.waiterId,
-          StockActionType.DECREASE,
+          StockActionType.DECREASE
         );
       }
 
@@ -115,15 +126,15 @@ export class OrderService {
 
   async findAll(): Promise<Order[]> {
     return this.orderRepository.find({
-      relations: ['items', 'items.menuItem', 'table', 'waiter'],
-      order: { createdAt: 'DESC' },
+      relations: ["items", "items.menuItem", "table", "waiter"],
+      order: { createdAt: "DESC" },
     });
   }
 
   async findOne(id: string): Promise<Order> {
     const order = await this.orderRepository.findOne({
       where: { id },
-      relations: ['items', 'items.menuItem', 'table', 'waiter'],
+      relations: ["items", "items.menuItem", "table", "waiter"],
     });
 
     if (!order) {
@@ -163,9 +174,13 @@ export class OrderService {
 
         for (const item of updateOrderDto.items) {
           // Check if menu item exists
-          const menuItem = await this.menuService.findOneMenuItem(item.menuItemId);
+          const menuItem = await this.menuService.findOneMenuItem(
+            item.menuItemId
+          );
           if (!menuItem.isAvailable) {
-            throw new BadRequestException(`Menu item ${menuItem.name} is not available`);
+            throw new BadRequestException(
+              `Menu item ${menuItem.name} is not available`
+            );
           }
 
           // Create order item
@@ -191,7 +206,7 @@ export class OrderService {
             item.quantity,
             order.id,
             order.waiterId,
-            StockActionType.DECREASE,
+            StockActionType.DECREASE
           );
         }
 
@@ -221,8 +236,13 @@ export class OrderService {
     const order = await this.findOne(id);
 
     // Check if order can be deleted
-    if (order.status !== OrderStatus.PENDING && order.status !== OrderStatus.CANCELLED) {
-      throw new BadRequestException(`Cannot delete order with status ${order.status}`);
+    if (
+      order.status !== OrderStatus.PENDING &&
+      order.status !== OrderStatus.CANCELLED
+    ) {
+      throw new BadRequestException(
+        `Cannot delete order with status ${order.status}`
+      );
     }
 
     // Start a transaction
@@ -243,7 +263,10 @@ export class OrderService {
       });
 
       if (activeOrders.length === 0) {
-        await this.tableService.updateStatus(order.tableId, TableStatus.AVAILABLE);
+        await this.tableService.updateStatus(
+          order.tableId,
+          TableStatus.AVAILABLE
+        );
       }
 
       // Commit transaction
@@ -262,20 +285,30 @@ export class OrderService {
     const order = await this.findOne(id);
     order.status = status;
 
-    // If order is completed, update table status
+    // If order is completed, update table status and set completedAt
     if (status === OrderStatus.COMPLETED) {
-      await this.tableService.updateStatus(order.tableId, TableStatus.AVAILABLE);
+      order.completedAt = new Date();
+      await this.tableService.updateStatus(
+        order.tableId,
+        TableStatus.AVAILABLE
+      );
     }
 
     return this.orderRepository.save(order);
   }
 
-  async updateOrderItemStatus(orderId: string, itemId: string, status: OrderItemStatus): Promise<OrderItem> {
+  async updateOrderItemStatus(
+    orderId: string,
+    itemId: string,
+    status: OrderItemStatus
+  ): Promise<OrderItem> {
     const order = await this.findOne(orderId);
-    const orderItem = order.items.find(item => item.id === itemId);
+    const orderItem = order.items.find((item) => item.id === itemId);
 
     if (!orderItem) {
-      throw new NotFoundException(`Order item with ID ${itemId} not found in order ${orderId}`);
+      throw new NotFoundException(
+        `Order item with ID ${itemId} not found in order ${orderId}`
+      );
     }
 
     orderItem.status = status;
@@ -285,24 +318,24 @@ export class OrderService {
   async findByStatus(status: string): Promise<Order[]> {
     return this.orderRepository.find({
       where: { status: status as OrderStatus },
-      relations: ['items', 'items.menuItem', 'table', 'waiter'],
-      order: { createdAt: 'DESC' },
+      relations: ["items", "items.menuItem", "table", "waiter"],
+      order: { createdAt: "DESC" },
     });
   }
 
   async findByTable(tableId: string): Promise<Order[]> {
     return this.orderRepository.find({
       where: { tableId },
-      relations: ['items', 'items.menuItem', 'waiter'],
-      order: { createdAt: 'DESC' },
+      relations: ["items", "items.menuItem", "waiter"],
+      order: { createdAt: "DESC" },
     });
   }
 
   async findByWaiter(waiterId: string): Promise<Order[]> {
     return this.orderRepository.find({
       where: { waiterId },
-      relations: ['items', 'items.menuItem', 'table'],
-      order: { createdAt: 'DESC' },
+      relations: ["items", "items.menuItem", "table"],
+      order: { createdAt: "DESC" },
     });
   }
 }

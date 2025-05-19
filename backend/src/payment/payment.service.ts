@@ -298,4 +298,13 @@ export class PaymentService {
 
     return payment;
   }
+
+  async findByTransactionId(transactionId: string): Promise<Payment | null> {
+    const payment = await this.paymentRepository.findOne({
+      where: { transactionId },
+      relations: ["order"],
+    });
+
+    return payment;
+  }
 }

@@ -2,10 +2,12 @@ import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { ConfigModule } from "@nestjs/config";
 import { PaymentController } from "./payment.controller";
+import { WebhookController } from "./controllers/webhook.controller";
 import { PaymentService } from "./payment.service";
 import { PaymentGatewayService } from "./services/payment-gateway.service";
 import { StripeService } from "./services/stripe.service";
 import { IyzicoService } from "./services/iyzico.service";
+import { PayPalService } from "./services/paypal.service";
 import { Payment } from "./entities/payment.entity";
 import { OrderModule } from "../order/order.module";
 import { TableModule } from "../table/table.module";
@@ -17,18 +19,20 @@ import { TableModule } from "../table/table.module";
     TableModule, // Import TableModule to use TableService
     ConfigModule, // Import ConfigModule for PaymentGatewayService
   ],
-  controllers: [PaymentController],
+  controllers: [PaymentController, WebhookController],
   providers: [
     PaymentService,
     PaymentGatewayService,
     StripeService,
     IyzicoService,
+    PayPalService,
   ],
   exports: [
     PaymentService,
     PaymentGatewayService,
     StripeService,
     IyzicoService,
+    PayPalService,
   ],
 })
 export class PaymentModule {}

@@ -2,6 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { StripeService } from "./stripe.service";
 import { IyzicoService } from "./iyzico.service";
+import { PayPalService } from "./paypal.service";
 
 export enum PaymentProvider {
   STRIPE = "stripe",
@@ -45,7 +46,8 @@ export class PaymentGatewayService {
   constructor(
     private readonly configService: ConfigService,
     private readonly stripeService: StripeService,
-    private readonly iyzicoService: IyzicoService
+    private readonly iyzicoService: IyzicoService,
+    private readonly paypalService: PayPalService
   ) {
     // Get the payment provider from config, default to MOCK for development
     this.provider = this.configService.get<PaymentProvider>(
@@ -308,32 +310,70 @@ export class PaymentGatewayService {
     }
   }
 
-  // PayPal implementation stubs (would be implemented with actual PayPal SDK)
+  // PayPal implementation using PayPalService
   private async createPayPalPaymentIntent(
     amount: number,
     currency: string,
     metadata: Record<string, any>
   ): Promise<PaymentGatewayResponse> {
-    // In a real implementation, this would use the PayPal SDK
-    this.logger.log("PayPal payment not implemented yet, using mock");
-    return this.createMockPaymentIntent(amount, currency, metadata);
+    const result = await this.paypalService.createPayment(
+      amount,
+      currency,
+      metadata
+    );
+
+    if (result.success) {
+      return {
+        success: true,
+        transactionId: result.paymentId,
+        status: result.status,
+        paymentUrl: result.redirectUrl,
+      };
+    } else {
+      return {
+        success: false,
+        error: result.error,
+      };
+    }
   }
 
   private async processPayPalPayment(
     paymentIntentId: string,
     paymentMethodId: string
   ): Promise<PaymentGatewayResponse> {
-    // In a real implementation, this would use the PayPal SDK
-    this.logger.log("PayPal payment not implemented yet, using mock");
-    return this.processMockPayment(paymentIntentId, paymentMethodId);
+    const result = await this.paypalService.capturePayment(paymentIntentId);
+
+    if (result.success) {
+      return {
+        success: true,
+        transactionId: result.paymentId,
+        status: result.status,
+      };
+    } else {
+      return {
+        success: false,
+        error: result.error,
+      };
+    }
   }
 
   private async verifyPayPalPayment(
     transactionId: string
   ): Promise<PaymentGatewayResponse> {
-    // In a real implementation, this would use the PayPal SDK
-    this.logger.log("PayPal payment not implemented yet, using mock");
-    return this.verifyMockPayment(transactionId);
+    const result = await this.paypalService.verifyPayment(transactionId);
+
+    if (result.success) {
+      return {
+        success: true,
+        transactionId: result.paymentId,
+        status: result.status,
+      };
+    } else {
+      return {
+        success: false,
+        error: result.error,
+      };
+    }
   }
 
   // iyzico implementation using IyzicoService

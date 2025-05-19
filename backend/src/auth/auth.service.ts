@@ -181,10 +181,25 @@ export class AuthService {
     );
 
     // Get token expiration time from config
-    const expiresIn = parseInt(
-      this.configService.get("JWT_EXPIRATION", "900"),
-      10
-    ); // Default to 15 minutes (900 seconds)
+    // Parse duration string like "7d" to seconds
+    const jwtExpiration = this.configService.get("JWT_EXPIRATION", "900");
+    let expiresIn = 900; // Default to 15 minutes (900 seconds)
+
+    if (typeof jwtExpiration === "string") {
+      if (jwtExpiration.endsWith("d")) {
+        // Convert days to seconds
+        expiresIn = parseInt(jwtExpiration.slice(0, -1), 10) * 24 * 60 * 60;
+      } else if (jwtExpiration.endsWith("h")) {
+        // Convert hours to seconds
+        expiresIn = parseInt(jwtExpiration.slice(0, -1), 10) * 60 * 60;
+      } else if (jwtExpiration.endsWith("m")) {
+        // Convert minutes to seconds
+        expiresIn = parseInt(jwtExpiration.slice(0, -1), 10) * 60;
+      } else {
+        // Assume it's already in seconds
+        expiresIn = parseInt(jwtExpiration, 10);
+      }
+    }
 
     return {
       user: {
@@ -547,10 +562,40 @@ export class AuthService {
     const tokenString = crypto.randomBytes(40).toString("hex");
 
     // Calculate expiration date (default: 30 days)
-    const refreshTokenExpiration = this.configService.get<number>(
+    const refreshTokenExpirationConfig = this.configService.get<string>(
       "REFRESH_TOKEN_EXPIRATION",
-      30 * 24 * 60 * 60 * 1000
+      "30d"
     );
+
+    // Parse duration string like "30d" to milliseconds
+    let refreshTokenExpiration = 30 * 24 * 60 * 60 * 1000; // Default: 30 days in milliseconds
+
+    if (typeof refreshTokenExpirationConfig === "string") {
+      if (refreshTokenExpirationConfig.endsWith("d")) {
+        // Convert days to milliseconds
+        refreshTokenExpiration =
+          parseInt(refreshTokenExpirationConfig.slice(0, -1), 10) *
+          24 *
+          60 *
+          60 *
+          1000;
+      } else if (refreshTokenExpirationConfig.endsWith("h")) {
+        // Convert hours to milliseconds
+        refreshTokenExpiration =
+          parseInt(refreshTokenExpirationConfig.slice(0, -1), 10) *
+          60 *
+          60 *
+          1000;
+      } else if (refreshTokenExpirationConfig.endsWith("m")) {
+        // Convert minutes to milliseconds
+        refreshTokenExpiration =
+          parseInt(refreshTokenExpirationConfig.slice(0, -1), 10) * 60 * 1000;
+      } else {
+        // Assume it's already in milliseconds
+        refreshTokenExpiration = parseInt(refreshTokenExpirationConfig, 10);
+      }
+    }
+
     const expiresAt = new Date(Date.now() + refreshTokenExpiration);
 
     // Create and save the refresh token
@@ -630,10 +675,25 @@ export class AuthService {
     );
 
     // Get token expiration time from config
-    const expiresIn = parseInt(
-      this.configService.get("JWT_EXPIRATION", "900"),
-      10
-    ); // Default to 15 minutes (900 seconds)
+    // Parse duration string like "7d" to seconds
+    const jwtExpiration = this.configService.get("JWT_EXPIRATION", "900");
+    let expiresIn = 900; // Default to 15 minutes (900 seconds)
+
+    if (typeof jwtExpiration === "string") {
+      if (jwtExpiration.endsWith("d")) {
+        // Convert days to seconds
+        expiresIn = parseInt(jwtExpiration.slice(0, -1), 10) * 24 * 60 * 60;
+      } else if (jwtExpiration.endsWith("h")) {
+        // Convert hours to seconds
+        expiresIn = parseInt(jwtExpiration.slice(0, -1), 10) * 60 * 60;
+      } else if (jwtExpiration.endsWith("m")) {
+        // Convert minutes to seconds
+        expiresIn = parseInt(jwtExpiration.slice(0, -1), 10) * 60;
+      } else {
+        // Assume it's already in seconds
+        expiresIn = parseInt(jwtExpiration, 10);
+      }
+    }
 
     return {
       accessToken,
@@ -712,7 +772,17 @@ export class AuthService {
    * @param expiresIn Time in seconds until the token expires
    */
   async blacklistToken(token: string, expiresIn: number): Promise<void> {
-    await this.tokenBlacklistService.addToBlacklist(token, expiresIn);
+    try {
+      await this.tokenBlacklistService.addToBlacklist(token, expiresIn);
+      this.logger.log(`Token blacklisted for ${expiresIn} seconds`);
+    } catch (error) {
+      this.logger.error(
+        `Failed to blacklist token: ${error.message}`,
+        error.stack
+      );
+      // Don't throw the error to prevent authentication failures
+      // But log it for monitoring
+    }
   }
 
   /**
@@ -721,7 +791,16 @@ export class AuthService {
    * @returns True if the token is blacklisted
    */
   async isTokenBlacklisted(token: string): Promise<boolean> {
-    return this.tokenBlacklistService.isBlacklisted(token);
+    try {
+      return await this.tokenBlacklistService.isBlacklisted(token);
+    } catch (error) {
+      this.logger.error(
+        `Failed to check token blacklist: ${error.message}`,
+        error.stack
+      );
+      // In case of error, assume token is not blacklisted to avoid blocking legitimate requests
+      return false;
+    }
   }
 
   /**
@@ -767,7 +846,9 @@ export class AuthService {
         case OAuthProvider.GOOGLE:
           userInfo = await this.getGoogleUserInfo(code, redirectUri);
           break;
-        // Add other providers as needed
+        case OAuthProvider.GITHUB:
+          userInfo = await this.getGithubUserInfo(code, redirectUri);
+          break;
         default:
           throw new BadRequestException(
             `Unsupported OAuth provider: ${provider}`
@@ -835,10 +916,25 @@ export class AuthService {
       userAgent,
       ipAddress
     );
-    const expiresIn = parseInt(
-      this.configService.get("JWT_EXPIRATION", "900"),
-      10
-    );
+    // Parse duration string like "7d" to seconds
+    const jwtExpiration = this.configService.get("JWT_EXPIRATION", "900");
+    let expiresIn = 900; // Default to 15 minutes (900 seconds)
+
+    if (typeof jwtExpiration === "string") {
+      if (jwtExpiration.endsWith("d")) {
+        // Convert days to seconds
+        expiresIn = parseInt(jwtExpiration.slice(0, -1), 10) * 24 * 60 * 60;
+      } else if (jwtExpiration.endsWith("h")) {
+        // Convert hours to seconds
+        expiresIn = parseInt(jwtExpiration.slice(0, -1), 10) * 60 * 60;
+      } else if (jwtExpiration.endsWith("m")) {
+        // Convert minutes to seconds
+        expiresIn = parseInt(jwtExpiration.slice(0, -1), 10) * 60;
+      } else {
+        // Assume it's already in seconds
+        expiresIn = parseInt(jwtExpiration, 10);
+      }
+    }
 
     return {
       accessToken,
@@ -904,6 +1000,100 @@ export class AuthService {
     } catch (error) {
       this.logger.error(`Google OAuth error: ${error.message}`, error.stack);
       throw new UnauthorizedException("Failed to authenticate with Google");
+    }
+  }
+
+  /**
+   * Get user info from GitHub
+   * @param code Authorization code
+   * @param redirectUri Redirect URI
+   * @returns User info
+   */
+  private async getGithubUserInfo(
+    code: string,
+    redirectUri?: string
+  ): Promise<OAuthUserInfoDto> {
+    // Get OAuth configuration
+    const clientId = this.configService.get<string>("GITHUB_CLIENT_ID");
+    const clientSecret = this.configService.get<string>("GITHUB_CLIENT_SECRET");
+
+    if (!clientId || !clientSecret) {
+      throw new InternalServerErrorException(
+        "GitHub OAuth configuration is missing"
+      );
+    }
+
+    try {
+      // Exchange code for access token
+      const tokenResponse = await firstValueFrom(
+        this.httpService.post(
+          "https://github.com/login/oauth/access_token",
+          {
+            client_id: clientId,
+            client_secret: clientSecret,
+            code,
+            redirect_uri:
+              redirectUri ||
+              this.configService.get<string>("GITHUB_REDIRECT_URI"),
+          },
+          {
+            headers: { Accept: "application/json" },
+          }
+        )
+      );
+
+      const { access_token } = tokenResponse.data;
+
+      // Get user info
+      const userInfoResponse = await firstValueFrom(
+        this.httpService.get("https://api.github.com/user", {
+          headers: {
+            Authorization: `token ${access_token}`,
+            Accept: "application/json",
+          },
+        })
+      );
+
+      const userData = userInfoResponse.data;
+
+      // GitHub doesn't always return email in the user profile, so we need to fetch it separately
+      let email = userData.email;
+
+      if (!email) {
+        // Get user emails
+        const emailsResponse = await firstValueFrom(
+          this.httpService.get("https://api.github.com/user/emails", {
+            headers: {
+              Authorization: `token ${access_token}`,
+              Accept: "application/json",
+            },
+          })
+        );
+
+        // Find the primary email
+        const primaryEmail = emailsResponse.data.find(
+          (email: any) => email.primary && email.verified
+        );
+
+        if (primaryEmail) {
+          email = primaryEmail.email;
+        } else if (emailsResponse.data.length > 0) {
+          // Use the first email if no primary email is found
+          email = emailsResponse.data[0].email;
+        }
+      }
+
+      return {
+        id: userData.id.toString(),
+        email: email,
+        name: userData.name || userData.login,
+        picture: userData.avatar_url,
+        provider: OAuthProvider.GITHUB,
+        raw: userData,
+      };
+    } catch (error) {
+      this.logger.error(`GitHub OAuth error: ${error.message}`, error.stack);
+      throw new UnauthorizedException("Failed to authenticate with GitHub");
     }
   }
 }

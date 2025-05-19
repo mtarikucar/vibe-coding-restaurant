@@ -13,30 +13,7 @@ import { User } from "../../auth/entities/user.entity";
 import { Tenant } from "../../tenant/entities/tenant.entity";
 import { ReportTemplate } from "./report-template.entity";
 import { ReportSchedule } from "./report-schedule.entity";
-
-export enum ReportStatus {
-  DRAFT = "draft",
-  GENERATED = "generated",
-  SCHEDULED = "scheduled",
-  FAILED = "failed",
-}
-
-export enum ReportFormat {
-  PDF = "pdf",
-  CSV = "csv",
-  EXCEL = "excel",
-  JSON = "json",
-  HTML = "html",
-}
-
-export enum ReportType {
-  SALES = "sales",
-  INVENTORY = "inventory",
-  USERS = "users",
-  ORDERS = "orders",
-  PAYMENTS = "payments",
-  CUSTOM = "custom",
-}
+import { ReportStatus, ReportFormat, ReportType } from "./report.enums";
 
 @Entity()
 export class Report {

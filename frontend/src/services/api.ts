@@ -22,29 +22,41 @@ api.interceptors.request.use(
     // For backward compatibility - check both token and accessToken
     const token = authStore.accessToken || authStore.token;
 
-    // Check if token is expired and needs refresh
-    if (token && authStore.expiresAt) {
-      // Add 30 seconds buffer to ensure token doesn't expire during request
-      const isExpiringSoon = authStore.expiresAt < Date.now() + 30000;
+    // Check if token exists
+    if (token) {
+      // Check if token is expired and needs refresh
+      if (authStore.expiresAt) {
+        // Add 60 seconds buffer to ensure token doesn't expire during request
+        const isExpiringSoon = authStore.expiresAt < Date.now() + 60000;
 
-      if (isExpiringSoon && authStore.refreshToken) {
-        // Try to refresh the token
-        const newToken = await authStore.refreshAccessToken();
-        if (newToken) {
-          // Use the new token
-          config.headers.Authorization = `Bearer ${newToken}`;
+        if (isExpiringSoon && authStore.refreshToken) {
+          try {
+            // Try to refresh the token
+            console.log("Token is expiring soon, attempting to refresh");
+            const newToken = await authStore.refreshAccessToken();
+            if (newToken) {
+              // Use the new token
+              console.log("Token refreshed successfully");
+              config.headers.Authorization = `Bearer ${newToken}`;
+            } else {
+              // If refresh failed but not due to an error, use existing token
+              console.log("Token refresh returned null, using existing token");
+              config.headers.Authorization = `Bearer ${token}`;
+            }
+          } catch (error) {
+            console.error("Token refresh failed with error:", error);
+            // If refresh failed with an error, redirect to login
+            window.location.href = "/";
+            return Promise.reject(new Error("Session expired"));
+          }
         } else {
-          // If refresh failed, redirect to login
-          window.location.href = "/";
-          return Promise.reject(new Error("Session expired"));
+          // Token not expiring soon, use existing token
+          config.headers.Authorization = `Bearer ${token}`;
         }
       } else {
-        // Use existing token
+        // No expiration time (old format), use token as is
         config.headers.Authorization = `Bearer ${token}`;
       }
-    } else if (token) {
-      // For backward compatibility with old token format
-      config.headers.Authorization = `Bearer ${token}`;
     }
 
     // Add request ID for tracking
@@ -351,6 +363,15 @@ export const menuAPI = {
       throw error;
     }
   },
+
+  updateCategories: async (categories: any[]) => {
+    try {
+      const response = await api.post("/menu/categories/batch", { categories });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 // Table API
@@ -553,9 +574,28 @@ export const dashboardAPI = {
     }
   },
 
-  getSales: async (period: string = "day") => {
+  getSales: async (
+    period: string = "day",
+    startDate?: string,
+    endDate?: string
+  ) => {
     try {
-      const response = await api.get(`/dashboard/sales?period=${period}`);
+      let url = `/dashboard/sales?period=${period}`;
+      if (startDate && endDate) {
+        url += `&startDate=${startDate}&endDate=${endDate}`;
+      }
+      const response = await api.get(url);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getSalesComparison: async (currentPeriod: string, previousPeriod: string) => {
+    try {
+      const response = await api.get(
+        `/dashboard/sales-comparison?currentPeriod=${currentPeriod}&previousPeriod=${previousPeriod}`
+      );
       return response.data;
     } catch (error) {
       throw error;
@@ -571,9 +611,40 @@ export const dashboardAPI = {
     }
   },
 
+  getItemSalesBreakdown: async (itemId: string, period: string = "month") => {
+    try {
+      const response = await api.get(
+        `/dashboard/item-sales/${itemId}?period=${period}`
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getCategorySales: async (period: string = "month") => {
+    try {
+      const response = await api.get(
+        `/dashboard/category-sales?period=${period}`
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
   getActiveOrders: async () => {
     try {
       const response = await api.get("/dashboard/active-orders");
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getOrderStats: async (period: string = "day") => {
+    try {
+      const response = await api.get(`/dashboard/order-stats?period=${period}`);
       return response.data;
     } catch (error) {
       throw error;
@@ -588,6 +659,26 @@ export const dashboardAPI = {
     try {
       const response = await api.get(
         `/dashboard/custom-report?startDate=${startDate}&endDate=${endDate}&type=${type}`
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getHourlyStats: async (date: string) => {
+    try {
+      const response = await api.get(`/dashboard/hourly-stats?date=${date}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getStaffPerformance: async (period: string = "week") => {
+    try {
+      const response = await api.get(
+        `/dashboard/staff-performance?period=${period}`
       );
       return response.data;
     } catch (error) {
@@ -973,6 +1064,47 @@ export const notificationAPI = {
   createDefaultPreferences: async () => {
     try {
       const response = await api.post("/notifications/preferences/default");
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Push notification endpoints
+  getVapidPublicKey: async () => {
+    try {
+      const response = await api.get("/notifications/vapid-public-key");
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  savePushSubscription: async (subscription: PushSubscription) => {
+    try {
+      const response = await api.post("/notifications/subscriptions", {
+        subscription: JSON.stringify(subscription),
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  deletePushSubscription: async (subscription: PushSubscription) => {
+    try {
+      const response = await api.delete("/notifications/subscriptions", {
+        data: { subscription: JSON.stringify(subscription) },
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getPushSubscriptionStatus: async () => {
+    try {
+      const response = await api.get("/notifications/subscriptions/status");
       return response.data;
     } catch (error) {
       throw error;

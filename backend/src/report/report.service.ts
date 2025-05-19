@@ -1,9 +1,14 @@
-import { Injectable, NotFoundException, BadRequestException } from "@nestjs/common";
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository, Between } from "typeorm";
-import { Report, ReportStatus, ReportType } from "./entities/report.entity";
+import { Report } from "./entities/report.entity";
 import { ReportTemplate } from "./entities/report-template.entity";
 import { ReportSchedule } from "./entities/report-schedule.entity";
+import { ReportStatus, ReportType } from "./entities/report.enums";
 import { CreateReportDto } from "./dto/create-report.dto";
 import { UpdateReportDto } from "./dto/update-report.dto";
 import { CreateReportTemplateDto } from "./dto/create-report-template.dto";
@@ -44,7 +49,11 @@ export class ReportService {
   ) {}
 
   // Report CRUD operations
-  async createReport(createReportDto: CreateReportDto, userId: string, tenantId: string): Promise<Report> {
+  async createReport(
+    createReportDto: CreateReportDto,
+    userId: string,
+    tenantId: string
+  ): Promise<Report> {
     const report = this.reportRepository.create({
       ...createReportDto,
       createdById: userId,
@@ -57,7 +66,9 @@ export class ReportService {
         where: { id: createReportDto.templateId },
       });
       if (!template) {
-        throw new NotFoundException(`Template with ID ${createReportDto.templateId} not found`);
+        throw new NotFoundException(
+          `Template with ID ${createReportDto.templateId} not found`
+        );
       }
       report.template = template;
     }
@@ -67,7 +78,9 @@ export class ReportService {
         where: { id: createReportDto.scheduleId },
       });
       if (!schedule) {
-        throw new NotFoundException(`Schedule with ID ${createReportDto.scheduleId} not found`);
+        throw new NotFoundException(
+          `Schedule with ID ${createReportDto.scheduleId} not found`
+        );
       }
       report.schedule = schedule;
     }
@@ -99,11 +112,15 @@ export class ReportService {
     return report;
   }
 
-  async updateReport(id: string, updateReportDto: UpdateReportDto, tenantId: string): Promise<Report> {
+  async updateReport(
+    id: string,
+    updateReportDto: UpdateReportDto,
+    tenantId: string
+  ): Promise<Report> {
     const report = await this.findReportById(id, tenantId);
-    
+
     Object.assign(report, updateReportDto);
-    
+
     return this.reportRepository.save(report);
   }
 
@@ -157,7 +174,11 @@ export class ReportService {
   }
 
   // Report generation
-  async generateReport(generateReportDto: GenerateReportDto, userId: string, tenantId: string): Promise<Report> {
+  async generateReport(
+    generateReportDto: GenerateReportDto,
+    userId: string,
+    tenantId: string
+  ): Promise<Report> {
     let report: Report;
 
     if (generateReportDto.reportId) {
@@ -170,8 +191,12 @@ export class ReportService {
         format: generateReportDto.format,
         filters: generateReportDto.filters,
         parameters: generateReportDto.parameters,
-        startDate: generateReportDto.startDate ? new Date(generateReportDto.startDate) : undefined,
-        endDate: generateReportDto.endDate ? new Date(generateReportDto.endDate) : undefined,
+        startDate: generateReportDto.startDate
+          ? new Date(generateReportDto.startDate)
+          : undefined,
+        endDate: generateReportDto.endDate
+          ? new Date(generateReportDto.endDate)
+          : undefined,
         createdById: userId,
         tenantId,
         status: ReportStatus.DRAFT,
@@ -213,7 +238,9 @@ export class ReportService {
           reportData = await this.generateCustomReport(report);
           break;
         default:
-          throw new BadRequestException(`Unsupported report type: ${generateReportDto.type}`);
+          throw new BadRequestException(
+            `Unsupported report type: ${generateReportDto.type}`
+          );
       }
 
       // Update report with generated data
@@ -223,7 +250,10 @@ export class ReportService {
 
       // Generate file if needed
       if (generateReportDto.format) {
-        const fileUrl = await this.exportReport(report, generateReportDto.format);
+        const fileUrl = await this.exportReport(
+          report,
+          generateReportDto.format
+        );
         report.fileUrl = fileUrl;
       }
 
@@ -244,11 +274,19 @@ export class ReportService {
       where: {
         createdAt: Between(startDate, endDate),
       },
-      relations: ["order", "order.items", "order.items.menuItem", "order.waiter"],
+      relations: [
+        "order",
+        "order.items",
+        "order.items.menuItem",
+        "order.waiter",
+      ],
     });
 
     // Calculate total sales
-    const totalSales = payments.reduce((sum, payment) => sum + Number(payment.amount), 0);
+    const totalSales = payments.reduce(
+      (sum, payment) => sum + Number(payment.amount),
+      0
+    );
 
     // Group sales by date
     const salesByDate = {};
@@ -294,8 +332,14 @@ export class ReportService {
     return {
       totalSales,
       orderCount: payments.length,
-      salesByDate: Object.entries(salesByDate).map(([date, amount]) => ({ date, amount })),
-      salesByMethod: Object.entries(salesByMethod).map(([method, amount]) => ({ method, amount })),
+      salesByDate: Object.entries(salesByDate).map(([date, amount]) => ({
+        date,
+        amount,
+      })),
+      salesByMethod: Object.entries(salesByMethod).map(([method, amount]) => ({
+        method,
+        amount,
+      })),
       topItems,
       startDate,
       endDate,
@@ -328,7 +372,8 @@ export class ReportService {
         };
       }
       stockByCategory[category].count += 1;
-      stockByCategory[category].value += Number(item.quantity) * Number(item.costPerUnit);
+      stockByCategory[category].value +=
+        Number(item.quantity) * Number(item.costPerUnit);
       stockByCategory[category].items.push({
         id: item.id,
         name: item.menuItem?.name,
@@ -390,7 +435,9 @@ export class ReportService {
       if (order.waiterId && userActivity[order.waiterId]) {
         userActivity[order.waiterId].orderCount += 1;
         if (order.payment) {
-          userActivity[order.waiterId].totalSales += Number(order.payment.amount);
+          userActivity[order.waiterId].totalSales += Number(
+            order.payment.amount
+          );
         }
       }
     });
@@ -445,9 +492,18 @@ export class ReportService {
 
     return {
       totalOrders: orders.length,
-      ordersByStatus: Object.entries(ordersByStatus).map(([status, count]) => ({ status, count })),
-      ordersByDay: Object.entries(ordersByDay).map(([day, count]) => ({ day, count })),
-      ordersByHour: Object.entries(ordersByHour).map(([hour, count]) => ({ hour: Number(hour), count })),
+      ordersByStatus: Object.entries(ordersByStatus).map(([status, count]) => ({
+        status,
+        count,
+      })),
+      ordersByDay: Object.entries(ordersByDay).map(([day, count]) => ({
+        day,
+        count,
+      })),
+      ordersByHour: Object.entries(ordersByHour).map(([hour, count]) => ({
+        hour: Number(hour),
+        count,
+      })),
       orders: orders.map((order) => ({
         id: order.id,
         orderNumber: order.orderNumber,
@@ -516,18 +572,25 @@ export class ReportService {
 
     return {
       totalPayments: payments.length,
-      totalAmount: payments.reduce((sum, payment) => sum + Number(payment.amount), 0),
-      paymentsByMethod: Object.entries(paymentsByMethod).map(([method, data]) => ({
-        method,
-        ...data,
-      })),
-      paymentsByStatus: Object.entries(paymentsByStatus).map(([status, data]) => ({
-        status,
-        ...data,
-      })),
+      totalAmount: payments.reduce(
+        (sum, payment) => sum + Number(payment.amount),
+        0
+      ),
+      paymentsByMethod: Object.entries(paymentsByMethod).map(
+        ([method, data]) => ({
+          method,
+          ...(data as object),
+        })
+      ),
+      paymentsByStatus: Object.entries(paymentsByStatus).map(
+        ([status, data]) => ({
+          status,
+          ...(data as object),
+        })
+      ),
       paymentsByDay: Object.entries(paymentsByDay).map(([day, data]) => ({
         day,
-        ...data,
+        ...(data as object),
       })),
       payments: payments.map((payment) => ({
         id: payment.id,
@@ -554,7 +617,9 @@ export class ReportService {
     });
 
     if (!template) {
-      throw new NotFoundException(`Template with ID ${report.templateId} not found`);
+      throw new NotFoundException(
+        `Template with ID ${report.templateId} not found`
+      );
     }
 
     // Execute queries based on template structure
@@ -602,7 +667,7 @@ export class ReportService {
   // Export report to different formats
   private async exportReport(report: Report, format: string): Promise<string> {
     const uploadsDir = path.join(process.cwd(), "uploads", "reports");
-    
+
     // Ensure directory exists
     if (!fs.existsSync(uploadsDir)) {
       fs.mkdirSync(uploadsDir, { recursive: true });
@@ -639,29 +704,31 @@ export class ReportService {
       try {
         const doc = new PDFDocument();
         const stream = fs.createWriteStream(filePath);
-        
+
         doc.pipe(stream);
-        
+
         // Add report header
         doc.fontSize(20).text(`${report.name}`, { align: "center" });
         doc.moveDown();
-        doc.fontSize(12).text(`Generated: ${new Date().toLocaleString()}`, { align: "center" });
+        doc.fontSize(12).text(`Generated: ${new Date().toLocaleString()}`, {
+          align: "center",
+        });
         doc.moveDown();
-        
+
         // Add report data based on type
         doc.fontSize(16).text("Report Data", { underline: true });
         doc.moveDown();
-        
+
         // This is a very simplified example
         // In a real application, you would format the data properly
         doc.fontSize(12).text(JSON.stringify(report.data, null, 2));
-        
+
         doc.end();
-        
+
         stream.on("finish", () => {
           resolve();
         });
-        
+
         stream.on("error", (error) => {
           reject(error);
         });
@@ -676,12 +743,12 @@ export class ReportService {
     // In a real application, you would format the Excel file properly
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Report");
-    
+
     // Add report header
     worksheet.addRow([report.name]);
     worksheet.addRow([`Generated: ${new Date().toLocaleString()}`]);
     worksheet.addRow([]);
-    
+
     // Add report data based on type
     // This is a very simplified example
     // In a real application, you would format the data properly
@@ -692,7 +759,7 @@ export class ReportService {
           worksheet.addRow(["Total Sales", report.data.totalSales]);
           worksheet.addRow(["Order Count", report.data.orderCount]);
           worksheet.addRow([]);
-          
+
           worksheet.addRow(["Date", "Amount"]);
           if (report.data.salesByDate) {
             report.data.salesByDate.forEach((item) => {
@@ -700,13 +767,13 @@ export class ReportService {
             });
           }
           break;
-          
+
         case ReportType.INVENTORY:
           worksheet.addRow(["Inventory Report"]);
           worksheet.addRow(["Total Items", report.data.totalItems]);
           worksheet.addRow(["Total Value", report.data.totalValue]);
           worksheet.addRow([]);
-          
+
           worksheet.addRow(["Category", "Count", "Value"]);
           if (report.data.stockByCategory) {
             report.data.stockByCategory.forEach((item) => {
@@ -714,13 +781,13 @@ export class ReportService {
             });
           }
           break;
-          
+
         default:
           worksheet.addRow(["Report Data"]);
           worksheet.addRow([JSON.stringify(report.data)]);
       }
     }
-    
+
     await workbook.xlsx.writeFile(filePath);
   }
 
@@ -729,7 +796,7 @@ export class ReportService {
     // In a real application, you would use a CSV generation library
     let csvContent = `"${report.name}"\n`;
     csvContent += `"Generated","${new Date().toLocaleString()}"\n\n`;
-    
+
     // Add report data based on type
     // This is a very simplified example
     if (report.data) {
@@ -738,7 +805,7 @@ export class ReportService {
           csvContent += `"Sales Report"\n`;
           csvContent += `"Total Sales","${report.data.totalSales}"\n`;
           csvContent += `"Order Count","${report.data.orderCount}"\n\n`;
-          
+
           csvContent += `"Date","Amount"\n`;
           if (report.data.salesByDate) {
             report.data.salesByDate.forEach((item) => {
@@ -746,12 +813,12 @@ export class ReportService {
             });
           }
           break;
-          
+
         case ReportType.INVENTORY:
           csvContent += `"Inventory Report"\n`;
           csvContent += `"Total Items","${report.data.totalItems}"\n`;
           csvContent += `"Total Value","${report.data.totalValue}"\n\n`;
-          
+
           csvContent += `"Category","Count","Value"\n`;
           if (report.data.stockByCategory) {
             report.data.stockByCategory.forEach((item) => {
@@ -759,13 +826,13 @@ export class ReportService {
             });
           }
           break;
-          
+
         default:
           csvContent += `"Report Data"\n`;
           csvContent += `"${JSON.stringify(report.data)}"\n`;
       }
     }
-    
+
     fs.writeFileSync(filePath, csvContent);
   }
 

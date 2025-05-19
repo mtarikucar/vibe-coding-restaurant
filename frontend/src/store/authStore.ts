@@ -88,6 +88,11 @@ const useAuthStore = create<AuthState>()(
         // Calculate token expiration time
         const expiresAt = Date.now() + expiresIn * 1000;
 
+        console.log(`Logging in user: ${user.username}`);
+        console.log(
+          `Token will expire at: ${new Date(expiresAt).toISOString()}`
+        );
+
         set({
           user,
           accessToken,
@@ -126,10 +131,14 @@ const useAuthStore = create<AuthState>()(
 
         // If already refreshing or no refresh token, return null
         if (isRefreshing || !refreshToken) {
+          console.log(
+            "Token refresh skipped: already refreshing or no refresh token"
+          );
           return null;
         }
 
         try {
+          console.log("Starting token refresh process");
           set({ isRefreshing: true });
 
           // Call the API to refresh the token
@@ -141,6 +150,10 @@ const useAuthStore = create<AuthState>()(
             refreshToken: newRefreshToken,
             expiresIn,
           } = response;
+
+          console.log(
+            `Token refreshed successfully. New expiration: ${expiresIn} seconds`
+          );
           get().setTokens(accessToken, newRefreshToken, expiresIn);
 
           return accessToken;
@@ -148,6 +161,7 @@ const useAuthStore = create<AuthState>()(
           console.error("Failed to refresh token:", error);
 
           // If refresh fails, log the user out
+          console.log("Token refresh failed, logging out");
           await get().logout();
           return null;
         } finally {
@@ -156,7 +170,14 @@ const useAuthStore = create<AuthState>()(
       },
 
       setTokens: (accessToken, refreshToken, expiresIn) => {
+        // Calculate expiration time in milliseconds
         const expiresAt = Date.now() + expiresIn * 1000;
+        console.log(
+          `Setting tokens with expiration at: ${new Date(
+            expiresAt
+          ).toISOString()}`
+        );
+
         set({
           accessToken,
           refreshToken,

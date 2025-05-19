@@ -13,6 +13,7 @@ import {
 } from "./entities/notification-preference.entity";
 import { EventsGateway } from "../events/events.gateway";
 import { EmailService } from "../shared/services/email.service";
+import { PushNotificationService } from "./services/push-notification.service";
 import { CreateNotificationDto } from "./dto/create-notification.dto";
 import { UpdateNotificationDto } from "./dto/update-notification.dto";
 import { CreateNotificationPreferenceDto } from "./dto/create-notification-preference.dto";
@@ -28,7 +29,8 @@ export class NotificationService {
     @InjectRepository(NotificationPreference)
     private readonly notificationPreferenceRepository: Repository<NotificationPreference>,
     private readonly eventsGateway: EventsGateway,
-    private readonly emailService: EmailService
+    private readonly emailService: EmailService,
+    private pushNotificationService: PushNotificationService
   ) {}
 
   async create(
@@ -75,8 +77,26 @@ export class NotificationService {
       }
     }
 
-    // Push notification logic would go here
-    // This would require a push notification service
+    // Send push notification if enabled
+    const pushPreference = await this.notificationPreferenceRepository.findOne({
+      where: {
+        userId: createNotificationDto.recipientId,
+        notificationType: createNotificationDto.type,
+        channel: NotificationChannel.PUSH,
+        enabled: true,
+      },
+    });
+
+    if (pushPreference) {
+      try {
+        await this.pushNotificationService.sendNotification(savedNotification);
+      } catch (error) {
+        this.logger.error(
+          `Failed to send push notification: ${error.message}`,
+          error.stack
+        );
+      }
+    }
 
     return savedNotification;
   }

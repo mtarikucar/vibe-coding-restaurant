@@ -6,8 +6,7 @@ import {
   IsObject,
   IsBoolean,
 } from "class-validator";
-import { ReportType } from "../entities/report.entity";
-import { TemplateCategory } from "../entities/report-template.entity";
+import { ReportType, TemplateCategory } from "../entities/report.enums";
 
 export class CreateReportTemplateDto {
   @IsString()

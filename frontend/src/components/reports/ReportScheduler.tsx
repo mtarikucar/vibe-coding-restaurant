@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import reportAPI, {
-  Report,
   ReportFormat,
-  CreateReportScheduleDto,
+  type CreateReportScheduleDto,
   ScheduleFrequency,
   DeliveryMethod,
 } from "../../services/reportApi";
+import { type Report } from "../../types/report.types";
 
 interface ReportSchedulerProps {
   report: Report | null;
@@ -46,7 +46,9 @@ const ReportScheduler: React.FC<ReportSchedulerProps> = ({
   }, [report]);
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));

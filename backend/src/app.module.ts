@@ -16,6 +16,8 @@ import { TenantModule } from "./tenant/tenant.module";
 import { CampaignModule } from "./campaign/campaign.module";
 import { NotificationModule } from "./notification/notification.module";
 import { ReportModule } from "./report/report.module";
+import { InvoiceModule } from "./invoice/invoice.module";
+import { RedisModule } from "./redis/redis.module";
 import { TenantMiddleware } from "./tenant/tenant.middleware";
 import { ServeStaticModule } from "@nestjs/serve-static";
 import { join } from "path";
@@ -51,6 +53,7 @@ import { join } from "path";
 
     // Application modules
     SharedModule,
+    RedisModule.forRoot(),
     TenantModule, // Must be before other modules that use tenant
     AuthModule,
     MenuModule,
@@ -65,6 +68,7 @@ import { join } from "path";
     CampaignModule,
     NotificationModule,
     ReportModule,
+    InvoiceModule,
   ],
 })
 export class AppModule {

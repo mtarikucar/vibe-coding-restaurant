@@ -12,9 +12,13 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import SocketInitializer from "./components/common/SocketInitializer";
 import ToastProvider from "./components/common/ToastProvider";
 import LanguageManager from "./components/common/LanguageManager";
+import ThemeProvider from "./contexts/ThemeContext";
 
 // Import the test component for debugging
 import TestApp from "./TestApp";
+
+// Mobile Layout
+import MobileLayout from "./components/layout/MobileLayout";
 
 // Pages
 const Login = lazy(() => import("./pages/auth/Login"));
@@ -22,9 +26,10 @@ const Register = lazy(() => import("./pages/auth/Register"));
 const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/auth/ResetPassword"));
 const OAuthCallback = lazy(() => import("./pages/auth/OAuthCallback"));
-const Dashboard = lazy(() => import("./pages/dashboard/Dashboard"));
+const Dashboard = lazy(() => import("./pages/dashboard/DashboardNew"));
 const Menu = lazy(() => import("./pages/menu/Menu"));
 const Orders = lazy(() => import("./pages/order/Orders"));
+const OrderDetail = lazy(() => import("./pages/order/OrderDetail"));
 const Kitchen = lazy(() => import("./pages/kitchen/Kitchen"));
 const Tables = lazy(() => import("./pages/table/Tables"));
 const Payments = lazy(() => import("./pages/payment/Payments"));
@@ -47,8 +52,26 @@ const SubscriptionCheckout = lazy(
 const NotificationSettings = lazy(
   () => import("./pages/settings/NotificationSettings")
 );
+const SystemInfo = lazy(() => import("./pages/settings/SystemInfo"));
 const Campaigns = lazy(() => import("./pages/marketing/Campaigns"));
 const CampaignForm = lazy(() => import("./pages/marketing/CampaignForm"));
+const Invoices = lazy(() => import("./pages/invoice/Invoices"));
+const InvoiceDetail = lazy(() => import("./pages/invoice/InvoiceDetail"));
+const InvoiceForm = lazy(() => import("./pages/invoice/InvoiceForm"));
+
+// Mobile Pages
+const MobileRedirect = lazy(() => import("./pages/mobile/MobileRedirect"));
+const MobileTables = lazy(() => import("./pages/mobile/MobileTables"));
+const MobileOrders = lazy(() => import("./pages/mobile/MobileOrders"));
+const MobileMenu = lazy(() => import("./pages/mobile/MobileMenu"));
+const MobileProfile = lazy(() => import("./pages/mobile/MobileProfile"));
+const MobileTableDetails = lazy(
+  () => import("./pages/mobile/MobileTableDetails")
+);
+const MobileNewOrder = lazy(() => import("./pages/mobile/MobileNewOrder"));
+const MobileOrderDetail = lazy(
+  () => import("./pages/mobile/MobileOrderDetail")
+);
 
 // Loading component
 const Loading = () => (
@@ -161,6 +184,16 @@ const router = createBrowserRouter([
               </Suspense>
             ),
             // Admin, waiter, and cashier can access orders
+            handle: { allowedRoles: ["admin", "waiter", "cashier"] },
+          },
+          {
+            path: "orders/:id",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <OrderDetail />
+              </Suspense>
+            ),
+            // Admin, waiter, and cashier can access order details
             handle: { allowedRoles: ["admin", "waiter", "cashier"] },
           },
           {
@@ -301,6 +334,15 @@ const router = createBrowserRouter([
             // All authenticated users can access notification settings
           },
           {
+            path: "settings/system",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <SystemInfo />
+              </Suspense>
+            ),
+            // All authenticated users can access system information
+          },
+          {
             path: "campaigns",
             element: (
               <Suspense fallback={<Loading />}>
@@ -330,6 +372,135 @@ const router = createBrowserRouter([
             // Only admin and marketing roles can access campaign form
             handle: { allowedRoles: ["admin", "marketing", "manager"] },
           },
+          {
+            path: "invoices",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <Invoices />
+              </Suspense>
+            ),
+            // Admin and cashier can access invoices
+            handle: { allowedRoles: ["admin", "cashier"] },
+          },
+          {
+            path: "invoices/:id",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <InvoiceDetail />
+              </Suspense>
+            ),
+            // Admin and cashier can access invoice details
+            handle: { allowedRoles: ["admin", "cashier"] },
+          },
+          {
+            path: "invoices/new",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <InvoiceForm />
+              </Suspense>
+            ),
+            // Admin and cashier can create invoices
+            handle: { allowedRoles: ["admin", "cashier"] },
+          },
+          {
+            path: "invoices/new/:orderId",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <InvoiceForm />
+              </Suspense>
+            ),
+            // Admin and cashier can create invoices
+            handle: { allowedRoles: ["admin", "cashier"] },
+          },
+        ],
+      },
+    ],
+  },
+  {
+    path: "/mobile-redirect",
+    element: (
+      <Suspense fallback={<Loading />}>
+        <MobileRedirect />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/mobile",
+    element: <ProtectedRoute allowedRoles={["admin", "waiter"]} />,
+    errorElement: <ErrorFallback />,
+    children: [
+      {
+        path: "",
+        element: <MobileLayout />,
+        children: [
+          {
+            index: true,
+            element: <Navigate to="/mobile/tables" replace />,
+          },
+          {
+            path: "tables",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <MobileTables />
+              </Suspense>
+            ),
+          },
+          {
+            path: "tables/:tableId/details",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <MobileTableDetails />
+              </Suspense>
+            ),
+          },
+          {
+            path: "tables/:tableId/seat",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <MobileTableDetails />
+              </Suspense>
+            ),
+          },
+          {
+            path: "tables/:tableId/new-order",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <MobileNewOrder />
+              </Suspense>
+            ),
+          },
+          {
+            path: "orders",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <MobileOrders />
+              </Suspense>
+            ),
+          },
+          {
+            path: "orders/:orderId",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <MobileOrderDetail />
+              </Suspense>
+            ),
+          },
+          {
+            path: "menu",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <MobileMenu />
+              </Suspense>
+            ),
+          },
+          {
+            path: "profile",
+            element: (
+              <Suspense fallback={<Loading />}>
+                <MobileProfile />
+              </Suspense>
+            ),
+          },
         ],
       },
     ],
@@ -349,8 +520,10 @@ function App() {
     <>
       <SocketInitializer />
       <ToastProvider>
-        <LanguageManager />
-        <RouterProvider router={router} />
+        <ThemeProvider>
+          <LanguageManager />
+          <RouterProvider router={router} />
+        </ThemeProvider>
       </ToastProvider>
     </>
   );

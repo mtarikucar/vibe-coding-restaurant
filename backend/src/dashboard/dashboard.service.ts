@@ -28,10 +28,48 @@ export class DashboardService {
     private readonly menuItemRepository: Repository<MenuItem>
   ) {}
 
+  // Helper method to calculate trend percentage
+  private calculateTrend(
+    currentValue: number,
+    previousValue: number
+  ): { trend: "up" | "down" | "neutral"; percentage: number } {
+    if (previousValue === 0) {
+      return { trend: currentValue > 0 ? "up" : "neutral", percentage: 100 };
+    }
+
+    const difference = currentValue - previousValue;
+    const percentage = Math.abs(Math.round((difference / previousValue) * 100));
+
+    if (difference > 0) {
+      return { trend: "up", percentage };
+    } else if (difference < 0) {
+      return { trend: "down", percentage };
+    } else {
+      return { trend: "neutral", percentage: 0 };
+    }
+  }
+
+  // Helper method to get previous period date range
+  private getPreviousPeriodRange(period: string): {
+    startDate: Date;
+    endDate: Date;
+  } {
+    const { startDate: currentStartDate, endDate: currentEndDate } =
+      this.getDateRange(period);
+    const duration = currentEndDate.getTime() - currentStartDate.getTime();
+
+    const endDate = new Date(currentStartDate.getTime() - 1); // 1ms before current period
+    const startDate = new Date(endDate.getTime() - duration);
+
+    return { startDate, endDate };
+  }
+
   async getStats(period: string): Promise<any> {
     const { startDate, endDate } = this.getDateRange(period);
+    const { startDate: prevStartDate, endDate: prevEndDate } =
+      this.getPreviousPeriodRange(period);
 
-    // Get total sales
+    // Get total sales for current period
     const payments = await this.paymentRepository.find({
       where: {
         status: PaymentStatus.COMPLETED,
@@ -44,12 +82,38 @@ export class DashboardService {
       0
     );
 
-    // Get order count
+    // Get total sales for previous period
+    const prevPayments = await this.paymentRepository.find({
+      where: {
+        status: PaymentStatus.COMPLETED,
+        createdAt: Between(prevStartDate, prevEndDate),
+      },
+    });
+
+    const prevTotalSales = prevPayments.reduce(
+      (sum, payment) => sum + Number(payment.amount),
+      0
+    );
+
+    // Calculate sales trend
+    const salesTrend = this.calculateTrend(totalSales, prevTotalSales);
+
+    // Get order count for current period
     const orderCount = await this.orderRepository.count({
       where: {
         createdAt: Between(startDate, endDate),
       },
     });
+
+    // Get order count for previous period
+    const prevOrderCount = await this.orderRepository.count({
+      where: {
+        createdAt: Between(prevStartDate, prevEndDate),
+      },
+    });
+
+    // Calculate order count trend
+    const orderCountTrend = this.calculateTrend(orderCount, prevOrderCount);
 
     // Get active orders
     const activeOrdersCount = await this.orderRepository.count({
@@ -59,6 +123,67 @@ export class DashboardService {
         { status: OrderStatus.READY },
       ],
     });
+
+    // Calculate average preparation time for completed orders
+    const completedOrders = await this.orderRepository.find({
+      where: {
+        status: OrderStatus.COMPLETED,
+        createdAt: Between(startDate, endDate),
+      },
+    });
+
+    let totalPrepTime = 0;
+    let orderWithPrepTimeCount = 0;
+
+    completedOrders.forEach((order) => {
+      if (order.completedAt && order.createdAt) {
+        const prepTime =
+          (order.completedAt.getTime() - order.createdAt.getTime()) /
+          (1000 * 60); // in minutes
+        totalPrepTime += prepTime;
+        orderWithPrepTimeCount++;
+      }
+    });
+
+    const avgPrepTime =
+      orderWithPrepTimeCount > 0
+        ? Math.round(totalPrepTime / orderWithPrepTimeCount)
+        : 0;
+
+    // Calculate previous period average preparation time
+    const prevCompletedOrders = await this.orderRepository.find({
+      where: {
+        status: OrderStatus.COMPLETED,
+        createdAt: Between(prevStartDate, prevEndDate),
+      },
+    });
+
+    let prevTotalPrepTime = 0;
+    let prevOrderWithPrepTimeCount = 0;
+
+    prevCompletedOrders.forEach((order) => {
+      if (order.completedAt && order.createdAt) {
+        const prepTime =
+          (order.completedAt.getTime() - order.createdAt.getTime()) /
+          (1000 * 60); // in minutes
+        prevTotalPrepTime += prepTime;
+        prevOrderWithPrepTimeCount++;
+      }
+    });
+
+    const prevAvgPrepTime =
+      prevOrderWithPrepTimeCount > 0
+        ? Math.round(prevTotalPrepTime / prevOrderWithPrepTimeCount)
+        : 0;
+
+    // Calculate prep time trend (for prep time, lower is better so we invert the trend)
+    const prepTimeTrend = this.calculateTrend(avgPrepTime, prevAvgPrepTime);
+    prepTimeTrend.trend =
+      prepTimeTrend.trend === "up"
+        ? "down"
+        : prepTimeTrend.trend === "down"
+          ? "up"
+          : "neutral";
 
     // Get active tables
     const activeTablesCount = await this.tableRepository.count({
@@ -79,8 +204,12 @@ export class DashboardService {
 
     return {
       totalSales,
+      salesTrend,
       orderCount,
+      orderCountTrend,
       activeOrdersCount,
+      avgPrepTime,
+      prepTimeTrend,
       activeTablesCount,
       lowStockCount,
       userCount,

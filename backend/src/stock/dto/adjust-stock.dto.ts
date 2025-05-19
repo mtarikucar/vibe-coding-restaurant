@@ -1,5 +1,12 @@
-import { IsNumber, IsNotEmpty, IsUUID, IsEnum, IsOptional, IsString } from 'class-validator';
-import { StockActionType } from '../entities/stock-history.entity';
+import {
+  IsNumber,
+  IsNotEmpty,
+  IsUUID,
+  IsEnum,
+  IsOptional,
+  IsString,
+} from "class-validator";
+import { StockActionType } from "../entities/stock-history.entity";
 
 export class AdjustStockDto {
   @IsNumber()
@@ -17,6 +24,10 @@ export class AdjustStockDto {
   @IsUUID()
   @IsOptional()
   orderId?: string;
+
+  @IsUUID()
+  @IsOptional()
+  purchaseOrderId?: string;
 
   @IsString()
   @IsOptional()

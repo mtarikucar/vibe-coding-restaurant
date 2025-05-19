@@ -73,7 +73,9 @@ const ChartCustomizer: React.FC<ChartCustomizerProps> = ({
   }, [reportType, parameters.xAxisLabel, parameters.yAxisLabel]);
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
   ) => {
     const { name, value } = e.target;
     setParameters((prev) => ({ ...prev, [name]: value }));
@@ -117,10 +119,7 @@ const ChartCustomizer: React.FC<ChartCustomizerProps> = ({
           { value: "scatter", label: "Scatter Plot" },
         ];
       case ReportType.USERS:
-        return [
-          ...baseCharts,
-          { value: "heatmap", label: "Heat Map" },
-        ];
+        return [...baseCharts, { value: "heatmap", label: "Heat Map" }];
       default:
         return baseCharts;
     }
@@ -277,10 +276,244 @@ const ChartCustomizer: React.FC<ChartCustomizerProps> = ({
             </div>
           </div>
 
-          {/* Chart Preview Placeholder */}
+          {/* Chart Preview */}
           <div className="border border-gray-200 rounded-lg p-4 mb-6">
-            <div className="text-center text-gray-500 py-12">
-              Chart preview will be available in the final implementation.
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Preview</h3>
+            <div className="bg-white rounded-lg p-4 h-64 relative">
+              {parameters.title && (
+                <div className="text-center font-medium text-gray-800 mb-2">
+                  {parameters.title}
+                </div>
+              )}
+
+              {parameters.chartType === "bar" && (
+                <div className="h-full flex items-end justify-around px-4 pt-4">
+                  {[0.4, 0.7, 0.5, 0.9, 0.6].map((height, i) => (
+                    <div key={i} className="flex flex-col items-center">
+                      <div
+                        className="w-10 rounded-t-sm transition-all duration-500"
+                        style={{
+                          height: `${height * 100}%`,
+                          backgroundColor:
+                            parameters.colors[i % parameters.colors.length],
+                        }}
+                      ></div>
+                      {parameters.showLabels && (
+                        <div className="text-xs mt-1 text-gray-600">
+                          {`${Math.round(height * 100)}%`}
+                        </div>
+                      )}
+                      <div className="text-xs mt-1 text-gray-500">
+                        Item {i + 1}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {parameters.chartType === "line" && (
+                <div className="h-full w-full relative">
+                  <svg
+                    className="w-full h-full"
+                    viewBox="0 0 100 100"
+                    preserveAspectRatio="none"
+                  >
+                    {parameters.showGrid && (
+                      <>
+                        <line
+                          x1="0"
+                          y1="25"
+                          x2="100"
+                          y2="25"
+                          stroke="#e5e7eb"
+                          strokeWidth="0.5"
+                        />
+                        <line
+                          x1="0"
+                          y1="50"
+                          x2="100"
+                          y2="50"
+                          stroke="#e5e7eb"
+                          strokeWidth="0.5"
+                        />
+                        <line
+                          x1="0"
+                          y1="75"
+                          x2="100"
+                          y2="75"
+                          stroke="#e5e7eb"
+                          strokeWidth="0.5"
+                        />
+                      </>
+                    )}
+                    <polyline
+                      points="0,70 20,60 40,40 60,50 80,20 100,30"
+                      fill="none"
+                      stroke={parameters.colors[0]}
+                      strokeWidth="2"
+                    />
+                    {parameters.showLabels && (
+                      <>
+                        <circle
+                          cx="0"
+                          cy="70"
+                          r="2"
+                          fill={parameters.colors[0]}
+                        />
+                        <circle
+                          cx="20"
+                          cy="60"
+                          r="2"
+                          fill={parameters.colors[0]}
+                        />
+                        <circle
+                          cx="40"
+                          cy="40"
+                          r="2"
+                          fill={parameters.colors[0]}
+                        />
+                        <circle
+                          cx="60"
+                          cy="50"
+                          r="2"
+                          fill={parameters.colors[0]}
+                        />
+                        <circle
+                          cx="80"
+                          cy="20"
+                          r="2"
+                          fill={parameters.colors[0]}
+                        />
+                        <circle
+                          cx="100"
+                          cy="30"
+                          r="2"
+                          fill={parameters.colors[0]}
+                        />
+                      </>
+                    )}
+                  </svg>
+                </div>
+              )}
+
+              {parameters.chartType === "pie" && (
+                <div className="h-full flex justify-center items-center">
+                  <svg width="150" height="150" viewBox="0 0 100 100">
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      fill={parameters.colors[0]}
+                    />
+                    <path
+                      d="M50,50 L50,10 A40,40 0 0,1 83.6,36.4 z"
+                      fill={parameters.colors[1]}
+                    />
+                    <path
+                      d="M50,50 L83.6,36.4 A40,40 0 0,1 83.6,63.6 z"
+                      fill={parameters.colors[2]}
+                    />
+                    <path
+                      d="M50,50 L83.6,63.6 A40,40 0 0,1 50,90 z"
+                      fill={parameters.colors[3]}
+                    />
+                    <path
+                      d="M50,50 L50,90 A40,40 0 0,1 16.4,63.6 z"
+                      fill={parameters.colors[4] || parameters.colors[0]}
+                    />
+                  </svg>
+                </div>
+              )}
+
+              {parameters.chartType === "area" && (
+                <div className="h-full w-full relative">
+                  <svg
+                    className="w-full h-full"
+                    viewBox="0 0 100 100"
+                    preserveAspectRatio="none"
+                  >
+                    {parameters.showGrid && (
+                      <>
+                        <line
+                          x1="0"
+                          y1="25"
+                          x2="100"
+                          y2="25"
+                          stroke="#e5e7eb"
+                          strokeWidth="0.5"
+                        />
+                        <line
+                          x1="0"
+                          y1="50"
+                          x2="100"
+                          y2="50"
+                          stroke="#e5e7eb"
+                          strokeWidth="0.5"
+                        />
+                        <line
+                          x1="0"
+                          y1="75"
+                          x2="100"
+                          y2="75"
+                          stroke="#e5e7eb"
+                          strokeWidth="0.5"
+                        />
+                      </>
+                    )}
+                    <path
+                      d="M0,70 L20,60 L40,40 L60,50 L80,20 L100,30 V100 H0 Z"
+                      fill={parameters.colors[0]}
+                      fillOpacity="0.3"
+                      stroke={parameters.colors[0]}
+                      strokeWidth="2"
+                    />
+                  </svg>
+                </div>
+              )}
+
+              {/* X and Y axis labels */}
+              {parameters.xAxisLabel && (
+                <div className="absolute bottom-0 left-0 right-0 text-center text-xs text-gray-500">
+                  {parameters.xAxisLabel}
+                </div>
+              )}
+
+              {parameters.yAxisLabel && (
+                <div className="absolute top-1/2 left-0 transform -translate-y-1/2 -rotate-90 text-xs text-gray-500 origin-left">
+                  {parameters.yAxisLabel}
+                </div>
+              )}
+
+              {/* Legend */}
+              {parameters.showLegend && (
+                <div className="absolute bottom-0 right-0 bg-white bg-opacity-70 p-1 rounded text-xs">
+                  <div className="flex items-center">
+                    <div
+                      className="w-3 h-3 mr-1"
+                      style={{ backgroundColor: parameters.colors[0] }}
+                    ></div>
+                    <span>Series 1</span>
+                  </div>
+                  {parameters.chartType === "pie" && (
+                    <>
+                      <div className="flex items-center">
+                        <div
+                          className="w-3 h-3 mr-1"
+                          style={{ backgroundColor: parameters.colors[1] }}
+                        ></div>
+                        <span>Series 2</span>
+                      </div>
+                      <div className="flex items-center">
+                        <div
+                          className="w-3 h-3 mr-1"
+                          style={{ backgroundColor: parameters.colors[2] }}
+                        ></div>
+                        <span>Series 3</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

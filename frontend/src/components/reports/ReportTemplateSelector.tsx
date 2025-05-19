@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { XMarkIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
-import { ReportTemplate, TemplateCategory, ReportType } from "../../services/reportApi";
+import { TemplateCategory, ReportType } from "../../services/reportApi";
+import {type ReportTemplate } from "../../types/report.types";
 
 interface ReportTemplateSelectorProps {
   templates: ReportTemplate[];
@@ -18,13 +19,17 @@ const ReportTemplateSelector: React.FC<ReportTemplateSelectorProps> = ({
   const [selectedType, setSelectedType] = useState<string>("all");
 
   const filteredTemplates = templates.filter((template) => {
-    const matchesSearch = template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (template.description && template.description.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesCategory = selectedCategory === "all" || template.category === selectedCategory;
-    
-    const matchesType = selectedType === "all" || template.type === selectedType;
-    
+    const matchesSearch =
+      template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (template.description &&
+        template.description.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    const matchesCategory =
+      selectedCategory === "all" || template.category === selectedCategory;
+
+    const matchesType =
+      selectedType === "all" || template.type === selectedType;
+
     return matchesSearch && matchesCategory && matchesType;
   });
 
@@ -79,8 +84,12 @@ const ReportTemplateSelector: React.FC<ReportTemplateSelectorProps> = ({
                 >
                   <option value="all">All Categories</option>
                   <option value={TemplateCategory.FINANCIAL}>Financial</option>
-                  <option value={TemplateCategory.OPERATIONAL}>Operational</option>
-                  <option value={TemplateCategory.ANALYTICAL}>Analytical</option>
+                  <option value={TemplateCategory.OPERATIONAL}>
+                    Operational
+                  </option>
+                  <option value={TemplateCategory.ANALYTICAL}>
+                    Analytical
+                  </option>
                   <option value={TemplateCategory.CUSTOM}>Custom</option>
                 </select>
 

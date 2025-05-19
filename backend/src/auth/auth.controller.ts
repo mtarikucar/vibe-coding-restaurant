@@ -43,7 +43,7 @@ export class AuthController {
     return this.authService.register(createUserDto);
   }
 
-  @UseGuards(LocalAuthGuard, AuthThrottlerGuard)
+  @UseGuards(LocalAuthGuard)
   @Post("login")
   async login(
     @Body() loginDto: LoginDto,
@@ -54,7 +54,6 @@ export class AuthController {
     return this.authService.login(req.user, userAgent, ip);
   }
 
-  @UseGuards(AuthThrottlerGuard)
   @Post("refresh")
   async refreshToken(
     @Body() refreshTokenDto: RefreshTokenDto,
@@ -93,6 +92,25 @@ export class AuthController {
     return res.status(HttpStatus.FOUND).redirect(authUrl);
   }
 
+  @Get("oauth/github")
+  githubAuth(@Query("redirect_uri") redirectUri: string, @Res() res: Response) {
+    const clientId = this.authService.getConfig("GITHUB_CLIENT_ID");
+    if (!clientId) {
+      throw new UnauthorizedException("GitHub OAuth is not configured");
+    }
+
+    // Generate the GitHub OAuth URL
+    const scope = encodeURIComponent("user:email");
+    const redirectUriEncoded = encodeURIComponent(
+      redirectUri || this.authService.getConfig("GITHUB_REDIRECT_URI")
+    );
+
+    const authUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUriEncoded}&scope=${scope}`;
+
+    // Redirect to GitHub's OAuth page
+    return res.status(HttpStatus.FOUND).redirect(authUrl);
+  }
+
   @Get("oauth/callback/google")
   async googleCallback(
     @Query() query: OAuthCallbackDto,
@@ -127,7 +145,56 @@ export class AuthController {
       return res
         .status(HttpStatus.FOUND)
         .redirect(
-          `${frontendUrl}/oauth/callback?access_token=${result.accessToken}&refresh_token=${result.refreshToken}&expires_in=${result.expiresIn}`
+          `${frontendUrl}/oauth/callback?access_token=${result.accessToken}&refresh_token=${result.refreshToken}&expires_in=${result.expiresIn}&provider=google`
+        );
+    } catch (error) {
+      const frontendUrl = this.authService.getConfig(
+        "FRONTEND_URL",
+        "http://localhost:5173"
+      );
+      return res
+        .status(HttpStatus.FOUND)
+        .redirect(
+          `${frontendUrl}/oauth/callback?error=${encodeURIComponent(error.message)}`
+        );
+    }
+  }
+
+  @Get("oauth/callback/github")
+  async githubCallback(
+    @Query() query: OAuthCallbackDto,
+    @Headers("user-agent") userAgent: string,
+    @Ip() ip: string,
+    @Query("redirect_uri") redirectUri: string,
+    @Res() res: Response
+  ) {
+    try {
+      const { code } = query;
+      if (!code) {
+        throw new UnauthorizedException("Invalid OAuth callback");
+      }
+
+      const result = await this.authService.oauthLogin(
+        {
+          provider: OAuthProvider.GITHUB,
+          code,
+          redirectUri,
+        },
+        userAgent,
+        ip
+      );
+
+      // Get the frontend URL from config
+      const frontendUrl = this.authService.getConfig(
+        "FRONTEND_URL",
+        "http://localhost:5173"
+      );
+
+      // Redirect to frontend with tokens
+      return res
+        .status(HttpStatus.FOUND)
+        .redirect(
+          `${frontendUrl}/oauth/callback?access_token=${result.accessToken}&refresh_token=${result.refreshToken}&expires_in=${result.expiresIn}&provider=github`
         );
     } catch (error) {
       const frontendUrl = this.authService.getConfig(

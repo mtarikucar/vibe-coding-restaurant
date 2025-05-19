@@ -8,15 +8,21 @@ import { TableService } from "./table/table.service";
 import { StockService } from "./stock/stock.service";
 import { SubscriptionService } from "./subscription/subscription.service";
 import { TenantService } from "./tenant/tenant.service";
+import { NestExpressApplication } from "@nestjs/platform-express";
+import * as bodyParser from "body-parser";
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // Enable CORS
   app.enableCors();
 
   // Set global prefix for API routes
   app.setGlobalPrefix("api");
+
+  // Configure body parser for webhooks
+  // This is important for Stripe webhook signature verification
+  app.use("/api/webhooks/stripe", bodyParser.raw({ type: "application/json" }));
 
   // Enable validation
   app.useGlobalPipes(

@@ -38,6 +38,41 @@ export class StockController {
     return this.stockService.findAll();
   }
 
+  @Get("menu-item/:menuItemId")
+  @Roles(UserRole.ADMIN)
+  @UseGuards(RolesGuard)
+  findByMenuItem(@Param("menuItemId") menuItemId: string) {
+    return this.stockService.findByMenuItem(menuItemId);
+  }
+
+  @Get("low-stock")
+  @Roles(UserRole.ADMIN)
+  @UseGuards(RolesGuard)
+  findLowStock() {
+    return this.stockService.findLowStock();
+  }
+
+  @Get("critical-stock")
+  @Roles(UserRole.ADMIN)
+  @UseGuards(RolesGuard)
+  findCriticalStock() {
+    return this.stockService.findCriticalStock();
+  }
+
+  @Get("valuation")
+  @Roles(UserRole.ADMIN)
+  @UseGuards(RolesGuard)
+  getStockValuation() {
+    return this.stockService.getStockValuation();
+  }
+
+  @Get("purchase-suggestions")
+  @Roles(UserRole.ADMIN)
+  @UseGuards(RolesGuard)
+  suggestPurchaseOrders(@Request() req) {
+    return this.stockService.suggestPurchaseOrders(req.user.tenantId);
+  }
+
   @Get(":id")
   @Roles(UserRole.ADMIN)
   @UseGuards(RolesGuard)
@@ -66,32 +101,11 @@ export class StockController {
     return this.stockService.adjustStock(id, adjustStockDto);
   }
 
-  @Get("menu-item/:menuItemId")
-  @Roles(UserRole.ADMIN)
-  @UseGuards(RolesGuard)
-  findByMenuItem(@Param("menuItemId") menuItemId: string) {
-    return this.stockService.findByMenuItem(menuItemId);
-  }
-
-  @Get("low-stock")
-  @Roles(UserRole.ADMIN)
-  @UseGuards(RolesGuard)
-  findLowStock() {
-    return this.stockService.findLowStock();
-  }
-
   @Get(":id/history")
   @Roles(UserRole.ADMIN)
   @UseGuards(RolesGuard)
   getStockHistory(@Param("id") id: string) {
     return this.stockService.getStockHistory(id);
-  }
-
-  @Get("critical-stock")
-  @Roles(UserRole.ADMIN)
-  @UseGuards(RolesGuard)
-  findCriticalStock() {
-    return this.stockService.findCriticalStock();
   }
 
   @Get(":id/usage")
@@ -114,19 +128,5 @@ export class StockController {
   @UseGuards(RolesGuard)
   getStockForecast(@Param("id") id: string, @Query("days") days: string) {
     return this.stockService.getStockForecast(id, days ? parseInt(days) : 30);
-  }
-
-  @Get("valuation")
-  @Roles(UserRole.ADMIN)
-  @UseGuards(RolesGuard)
-  getStockValuation() {
-    return this.stockService.getStockValuation();
-  }
-
-  @Get("purchase-suggestions")
-  @Roles(UserRole.ADMIN)
-  @UseGuards(RolesGuard)
-  suggestPurchaseOrders(@Request() req) {
-    return this.stockService.suggestPurchaseOrders(req.user.tenantId);
   }
 }

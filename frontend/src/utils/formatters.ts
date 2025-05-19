@@ -190,3 +190,25 @@ export const formatPercentage = (
     ...options,
   }).format(value / 100);
 };
+
+/**
+ * Format a date and time according to the current locale
+ * @param date - The date to format
+ * @returns Formatted date and time string
+ */
+export const formatDateTime = (date: Date | string): string => {
+  if (!date) return "";
+
+  const dateObj = typeof date === "string" ? new Date(date) : date;
+  if (isNaN(dateObj.getTime())) return "";
+
+  const language = i18next.language || "en";
+
+  return new Intl.DateTimeFormat(language, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+  }).format(dateObj);
+};

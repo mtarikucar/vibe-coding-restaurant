@@ -15,6 +15,35 @@ export class StripeService {
   }
 
   /**
+   * Construct a webhook event from the raw body and signature
+   */
+  async constructWebhookEvent(
+    rawBody: Buffer,
+    signature: string
+  ): Promise<Stripe.Event> {
+    const webhookSecret = this.configService.get<string>(
+      "STRIPE_WEBHOOK_SECRET"
+    );
+
+    if (!webhookSecret) {
+      throw new Error("Stripe webhook secret is not configured");
+    }
+
+    try {
+      return this.stripe.webhooks.constructEvent(
+        rawBody,
+        signature,
+        webhookSecret
+      );
+    } catch (error) {
+      this.logger.error(
+        `Webhook signature verification failed: ${error.message}`
+      );
+      throw error;
+    }
+  }
+
+  /**
    * Create a payment intent
    */
   async createPaymentIntent(

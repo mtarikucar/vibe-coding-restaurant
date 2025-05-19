@@ -10,7 +10,8 @@ import {
 } from "typeorm";
 import { User } from "../../auth/entities/user.entity";
 import { Tenant } from "../../tenant/entities/tenant.entity";
-import { Report, ReportFormat } from "./report.entity";
+import { Report } from "./report.entity";
+import { ReportFormat } from "./report.enums";
 
 export enum ScheduleFrequency {
   DAILY = "daily",

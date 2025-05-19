@@ -8,7 +8,7 @@ import {
   IsObject,
   IsDateString,
 } from "class-validator";
-import { ReportType, ReportFormat } from "../entities/report.entity";
+import { ReportType, ReportFormat } from "../entities/report.enums";
 
 export class CreateReportDto {
   @IsString()

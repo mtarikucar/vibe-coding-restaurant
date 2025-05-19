@@ -11,15 +11,20 @@ import {
   StarIcon,
   TrashIcon,
   PencilIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import reportAPI, {
-  Report,
-  ReportTemplate,
-  ReportSchedule,
   ReportType,
   ReportFormat,
   ReportStatus,
+  TemplateCategory,
+  type CreateReportTemplateDto,
 } from "../../services/reportApi";
+import {
+  type Report,
+  type ReportTemplate,
+  type ReportSchedule,
+} from "../../types/report.types";
 import ReportBuilder from "../../components/reports/ReportBuilder";
 import ReportTemplateSelector from "../../components/reports/ReportTemplateSelector";
 import ReportScheduler from "../../components/reports/ReportScheduler";
@@ -46,6 +51,18 @@ const AdvancedReports = () => {
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   const [showScheduler, setShowScheduler] = useState(false);
+  const [showTemplateForm, setShowTemplateForm] = useState(false);
+  const [templateFormData, setTemplateFormData] =
+    useState<CreateReportTemplateDto>({
+      name: "",
+      description: "",
+      type: ReportType.SALES,
+      category: TemplateCategory.FINANCIAL,
+      structure: {},
+      defaultParameters: {},
+      visualizationOptions: {},
+      isActive: true,
+    });
 
   // Fetch data
   const fetchReports = async () => {
@@ -118,7 +135,10 @@ const AdvancedReports = () => {
 
   const handleGenerateReport = async (id: string) => {
     try {
-      const report = await reportAPI.generateReport({ reportId: id, type: ReportType.SALES });
+      const report = await reportAPI.generateReport({
+        reportId: id,
+        type: ReportType.SALES,
+      });
       fetchReports();
       alert("Report generated successfully!");
     } catch (err) {
@@ -138,6 +158,46 @@ const AdvancedReports = () => {
   const handleScheduleReport = (report: Report) => {
     setSelectedReport(report);
     setShowScheduler(true);
+  };
+
+  const handleCreateTemplate = () => {
+    setTemplateFormData({
+      name: "",
+      description: "",
+      type: ReportType.SALES,
+      category: TemplateCategory.FINANCIAL,
+      structure: {},
+      defaultParameters: {},
+      visualizationOptions: {},
+      isActive: true,
+    });
+    setShowTemplateForm(true);
+  };
+
+  const handleTemplateFormChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setTemplateFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleTemplateFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading((prev) => ({ ...prev, templates: true }));
+    setError(null);
+
+    try {
+      await reportAPI.createReportTemplate(templateFormData);
+      setShowTemplateForm(false);
+      fetchTemplates();
+    } catch (err) {
+      console.error("Error creating template:", err);
+      setError("Failed to create template. Please try again.");
+    } finally {
+      setLoading((prev) => ({ ...prev, templates: false }));
+    }
   };
 
   // Render report status badge
@@ -164,7 +224,9 @@ const AdvancedReports = () => {
     }
 
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${bgColor} ${textColor}`}>
+      <span
+        className={`px-2 py-1 rounded-full text-xs font-medium ${bgColor} ${textColor}`}
+      >
         {status}
       </span>
     );
@@ -306,7 +368,9 @@ const AdvancedReports = () => {
                           <div className="flex items-center">
                             {renderTypeIcon(report.type)}
                             <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">{report.name}</div>
+                              <div className="text-sm font-medium text-gray-900">
+                                {report.name}
+                              </div>
                               <div className="text-sm text-gray-500">
                                 {report.description || "No description"}
                               </div>
@@ -314,7 +378,9 @@ const AdvancedReports = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{report.type}</div>
+                          <div className="text-sm text-gray-900">
+                            {report.type}
+                          </div>
                           {report.template && (
                             <div className="text-xs text-gray-500">
                               Template: {report.template.name}
@@ -376,9 +442,12 @@ const AdvancedReports = () => {
             ) : (
               <div className="bg-white shadow rounded-lg p-6 text-center">
                 <DocumentTextIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No reports found</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No reports found
+                </h3>
                 <p className="text-gray-500 mb-4">
-                  Create your first report to get started with advanced reporting.
+                  Create your first report to get started with advanced
+                  reporting.
                 </p>
                 <div className="flex justify-center space-x-4">
                   <button
@@ -414,7 +483,9 @@ const AdvancedReports = () => {
                   >
                     <div className="p-6">
                       <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-medium text-gray-900">{template.name}</h3>
+                        <h3 className="text-lg font-medium text-gray-900">
+                          {template.name}
+                        </h3>
                         <span
                           className={`px-2 py-1 rounded-full text-xs font-medium ${
                             template.isSystem
@@ -440,9 +511,20 @@ const AdvancedReports = () => {
                         <button
                           onClick={() => {
                             // Create report from template
-                            setSelectedReport(null);
+                            setSelectedReport({
+                              ...templateFormData,
+                              id: "",
+                              status: ReportStatus.DRAFT,
+                              format: ReportFormat.PDF,
+                              isPublic: false,
+                              isFavorite: false,
+                              createdById: "",
+                              createdAt: new Date().toISOString(),
+                              updatedAt: new Date().toISOString(),
+                              templateId: template.id,
+                              template: template,
+                            } as Report);
                             setShowReportBuilder(true);
-                            // TODO: Pass template to report builder
                           }}
                           className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm"
                         >
@@ -456,14 +538,15 @@ const AdvancedReports = () => {
             ) : (
               <div className="bg-white shadow rounded-lg p-6 text-center">
                 <DocumentTextIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No templates found</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No templates found
+                </h3>
                 <p className="text-gray-500 mb-4">
-                  Create your first template to streamline your reporting process.
+                  Create your first template to streamline your reporting
+                  process.
                 </p>
                 <button
-                  onClick={() => {
-                    // TODO: Show template creation form
-                  }}
+                  onClick={handleCreateTemplate}
                   className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md inline-flex items-center"
                 >
                   <PlusIcon className="h-5 w-5 mr-2" />
@@ -507,7 +590,9 @@ const AdvancedReports = () => {
                           <div className="flex items-center">
                             <ClockIcon className="h-5 w-5 text-purple-500" />
                             <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">{schedule.name}</div>
+                              <div className="text-sm font-medium text-gray-900">
+                                {schedule.name}
+                              </div>
                               <div className="text-sm text-gray-500">
                                 {schedule.description || "No description"}
                               </div>
@@ -515,7 +600,9 @@ const AdvancedReports = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{schedule.frequency}</div>
+                          <div className="text-sm text-gray-900">
+                            {schedule.frequency}
+                          </div>
                           <div className="text-xs text-gray-500">
                             Delivery: {schedule.deliveryMethod}
                           </div>
@@ -556,7 +643,9 @@ const AdvancedReports = () => {
                                   ? "text-red-600 hover:text-red-900"
                                   : "text-green-600 hover:text-green-900"
                               }`}
-                              title={schedule.isActive ? "Deactivate" : "Activate"}
+                              title={
+                                schedule.isActive ? "Deactivate" : "Activate"
+                              }
                             >
                               {schedule.isActive ? (
                                 <span className="h-5 w-5">⏸</span>
@@ -583,7 +672,9 @@ const AdvancedReports = () => {
             ) : (
               <div className="bg-white shadow rounded-lg p-6 text-center">
                 <ClockIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No scheduled reports</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No scheduled reports
+                </h3>
                 <p className="text-gray-500 mb-4">
                   Schedule reports to be generated and delivered automatically.
                 </p>
@@ -623,9 +714,23 @@ const AdvancedReports = () => {
           onClose={() => setShowTemplateSelector(false)}
           onSelect={(template) => {
             setShowTemplateSelector(false);
-            setSelectedReport(null);
+            setSelectedReport({
+              id: "",
+              name: template.name,
+              description: template.description,
+              type: template.type,
+              status: ReportStatus.DRAFT,
+              format: ReportFormat.PDF,
+              isPublic: false,
+              isFavorite: false,
+              createdById: "",
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              templateId: template.id,
+              template: template,
+              parameters: template.defaultParameters || {},
+            } as Report);
             setShowReportBuilder(true);
-            // TODO: Pass template to report builder
           }}
         />
       )}
@@ -640,6 +745,153 @@ const AdvancedReports = () => {
             fetchSchedules();
           }}
         />
+      )}
+
+      {/* Template Creation Modal */}
+      {showTemplateForm && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h2 className="text-xl font-semibold text-gray-800">
+                Create Report Template
+              </h2>
+              <button
+                onClick={() => setShowTemplateForm(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
+
+            {error && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 m-6 rounded">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleTemplateFormSubmit} className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Template Name *
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={templateFormData.name}
+                    onChange={handleTemplateFormChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter template name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Report Type *
+                  </label>
+                  <select
+                    name="type"
+                    value={templateFormData.type}
+                    onChange={handleTemplateFormChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value={ReportType.SALES}>Sales Report</option>
+                    <option value={ReportType.INVENTORY}>
+                      Inventory Report
+                    </option>
+                    <option value={ReportType.USERS}>
+                      User Activity Report
+                    </option>
+                    <option value={ReportType.ORDERS}>Order Report</option>
+                    <option value={ReportType.PAYMENTS}>Payment Report</option>
+                    <option value={ReportType.CUSTOM}>Custom Report</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description
+                </label>
+                <textarea
+                  name="description"
+                  value={templateFormData.description}
+                  onChange={handleTemplateFormChange}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter template description"
+                ></textarea>
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Category
+                </label>
+                <select
+                  name="category"
+                  value={templateFormData.category}
+                  onChange={handleTemplateFormChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value={TemplateCategory.FINANCIAL}>Financial</option>
+                  <option value={TemplateCategory.OPERATIONAL}>
+                    Operational
+                  </option>
+                  <option value={TemplateCategory.ANALYTICAL}>
+                    Analytical
+                  </option>
+                  <option value={TemplateCategory.CUSTOM}>Custom</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4 border-t">
+                <button
+                  type="button"
+                  onClick={() => setShowTemplateForm(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                  disabled={loading.templates}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  disabled={loading.templates}
+                >
+                  {loading.templates ? (
+                    <span className="flex items-center">
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Creating...
+                    </span>
+                  ) : (
+                    "Create Template"
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

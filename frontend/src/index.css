@@ -2,52 +2,115 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color-scheme: light dark;
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #f9fafb;
+  background-color: #fffdf6; /* Light mode background color */
+  transition: background-color 0.3s ease;
 }
 
-/* Custom form styles */
-.form-input {
-  @apply mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500;
+.dark body {
+  background-color: #2c3333; /* Dark mode background color */
 }
 
-.form-label {
-  @apply block text-sm font-medium text-gray-700;
+@layer base {
+  h1 {
+    @apply text-2xl font-bold text-forest-600 dark:text-lime-200;
+  }
+  h2 {
+    @apply text-xl font-semibold text-forest-500 dark:text-lime-300;
+  }
+  h3 {
+    @apply text-lg font-medium text-forest-500 dark:text-lime-300;
+  }
+  a {
+    @apply text-lime-600 hover:text-lime-700 dark:text-lime-400 dark:hover:text-lime-300 transition-colors;
+  }
 }
 
-.btn {
-  @apply py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium;
-}
+@layer components {
+  /* Modern form styles */
+  .form-input {
+    @apply mt-1 block w-full px-3 py-2 border border-lime-200 rounded-xl shadow-sm
+    focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-lime-500
+    transition-all duration-200 bg-cream-100
+    dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 dark:focus:ring-lime-600 dark:focus:border-lime-600;
+  }
 
-.btn-primary {
-  @apply bg-blue-600 hover:bg-blue-700 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500;
-}
+  .form-label {
+    @apply block text-sm font-medium text-forest-500 mb-1 dark:text-lime-300;
+  }
 
-.btn-secondary {
-  @apply bg-gray-200 hover:bg-gray-300 text-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500;
-}
+  /* Button styles */
+  .btn {
+    @apply inline-flex items-center justify-center py-2 px-4 border border-transparent
+    rounded-xl shadow-sm text-sm font-medium transition-all duration-200
+    focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
 
-.btn-success {
-  @apply bg-green-600 hover:bg-green-700 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500;
-}
+  .btn-primary {
+    @apply bg-lime-500 hover:bg-lime-600 text-white
+    focus:ring-lime-400 active:bg-lime-700;
+  }
 
-.btn-danger {
-  @apply bg-red-600 hover:bg-red-700 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500;
-}
+  .btn-secondary {
+    @apply bg-forest-500 hover:bg-forest-600 text-white
+    focus:ring-forest-400 active:bg-forest-700;
+  }
 
-.card {
-  @apply bg-white rounded-lg shadow p-6;
+  .btn-success {
+    @apply bg-lime-500 hover:bg-lime-600 text-white
+    focus:ring-lime-400 active:bg-lime-700;
+  }
+
+  .btn-danger {
+    @apply bg-danger-600 hover:bg-danger-700 text-white
+    focus:ring-danger-500 active:bg-danger-800;
+  }
+
+  .btn-warning {
+    @apply bg-warning-500 hover:bg-warning-600 text-white
+    focus:ring-warning-400 active:bg-warning-700;
+  }
+
+  /* Soft button styles */
+  .btn-soft-primary {
+    @apply bg-lime-100 hover:bg-lime-200 text-lime-700
+    focus:ring-lime-300 active:bg-lime-300 border border-lime-200;
+  }
+
+  .btn-soft-secondary {
+    @apply bg-forest-100 hover:bg-forest-200 text-forest-700
+    focus:ring-forest-300 active:bg-forest-300 border border-forest-200;
+  }
+
+  /* Card styles */
+  .card {
+    @apply bg-cream-100 rounded-2xl shadow-card p-6 transition-shadow duration-300 hover:shadow-soft border border-cream-300
+    dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100;
+  }
+
+  .card-accent {
+    @apply bg-cream-100 rounded-2xl shadow-card p-6 transition-shadow duration-300 hover:shadow-soft border-l-4 border-lime-500
+    dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100;
+  }
+
+  .card-soft {
+    @apply bg-cream-50 rounded-2xl p-6 transition-shadow duration-300 hover:shadow-soft border border-cream-200
+    dark:bg-gray-900 dark:border-gray-800 dark:text-gray-200;
+  }
 }
 
 /* Custom scrollbar */
@@ -57,16 +120,18 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  @apply bg-cream-200 dark:bg-gray-700;
+  border-radius: 8px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
+  @apply bg-lime-300 dark:bg-lime-700;
+  border-radius: 8px;
+  @apply border-2 border-cream-200 dark:border-gray-700;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  @apply bg-lime-400 dark:bg-lime-600;
 }
 
 /* Animations */
@@ -81,6 +146,78 @@ body {
   }
 }
 
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
 .animate-fadeIn {
-  animation: fadeIn 0.2s ease-out forwards;
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.3s ease-out forwards;
+}
+
+.animate-slideInLeft {
+  animation: slideInLeft 0.3s ease-out forwards;
+}
+
+.animate-zoomIn {
+  animation: zoomIn 0.3s ease-out forwards;
+}
+
+.animate-bounce-slow {
+  animation: bounce 2s ease-in-out infinite;
+}
+
+/* Transition classes */
+.transition-fast {
+  @apply transition-all duration-150 ease-in-out;
+}
+
+.transition-normal {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+.transition-slow {
+  @apply transition-all duration-500 ease-in-out;
 }

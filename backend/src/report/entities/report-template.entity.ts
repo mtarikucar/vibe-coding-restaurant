@@ -10,14 +10,8 @@ import {
 } from "typeorm";
 import { User } from "../../auth/entities/user.entity";
 import { Tenant } from "../../tenant/entities/tenant.entity";
-import { Report, ReportType } from "./report.entity";
-
-export enum TemplateCategory {
-  FINANCIAL = "financial",
-  OPERATIONAL = "operational",
-  ANALYTICAL = "analytical",
-  CUSTOM = "custom",
-}
+import { Report } from "./report.entity";
+import { ReportType, TemplateCategory } from "./report.enums";
 
 @Entity()
 export class ReportTemplate {

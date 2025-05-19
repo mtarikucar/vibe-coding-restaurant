@@ -1,8 +1,12 @@
-import { useState, useEffect } from 'react';
-import { paymentAPI } from '../../services/api';
-import { PaymentMethod } from './PaymentMethodSelector';
-import useAuthStore from '../../store/authStore';
-import { formatCurrency } from '../../utils/formatters';
+import { useState, useEffect } from "react";
+import { paymentAPI } from "../../services/api";
+import { PaymentMethod } from "./PaymentMethodSelector";
+import useAuthStore from "../../store/authStore";
+import { formatCurrency } from "../../utils/formatters";
+import PayPalPayment from "./PayPalPayment";
+import StripePayment from "./StripePayment";
+import IyzicoPayment from "./IyzicoPayment";
+import { useTranslation } from "react-i18next";
 
 interface PaymentProcessorProps {
   orderId: string;
@@ -24,6 +28,7 @@ const PaymentProcessor: React.FC<PaymentProcessorProps> = ({
   const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
   const [paymentDetails, setPaymentDetails] = useState<any>(null);
   const user = useAuthStore((state) => state.user);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const initializePayment = async () => {
@@ -37,18 +42,18 @@ const PaymentProcessor: React.FC<PaymentProcessorProps> = ({
         );
         setPaymentId(payment.id);
         setPaymentStatus(payment.status);
-        
+
         // For cash payments, we're done
-        if (paymentMethod === 'cash') {
+        if (paymentMethod === "cash") {
           onPaymentComplete();
           return;
         }
-        
+
         // For card or online payments, process the payment
         await processPayment(payment.id);
       } catch (error: any) {
-        console.error('Payment initialization error:', error);
-        onPaymentError(error.message || 'Failed to initialize payment');
+        console.error("Payment initialization error:", error);
+        onPaymentError(error.message || "Failed to initialize payment");
       } finally {
         setLoading(false);
       }
@@ -67,22 +72,22 @@ const PaymentProcessor: React.FC<PaymentProcessorProps> = ({
         undefined, // paymentIntentId - would come from the payment provider in a real implementation
         user?.id
       );
-      
+
       setPaymentStatus(result.status);
       setPaymentDetails(result.paymentDetails);
-      
-      if (result.status === 'completed') {
+
+      if (result.status === "completed") {
         onPaymentComplete();
-      } else if (result.status === 'failed') {
-        onPaymentError('Payment processing failed');
+      } else if (result.status === "failed") {
+        onPaymentError("Payment processing failed");
       } else if (result.paymentDetails?.requiresAction) {
         // In a real implementation, this would redirect to the payment provider's page
         // or show a form for entering card details
         setPaymentDetails(result.paymentDetails);
       }
     } catch (error: any) {
-      console.error('Payment processing error:', error);
-      onPaymentError(error.message || 'Failed to process payment');
+      console.error("Payment processing error:", error);
+      onPaymentError(error.message || "Failed to process payment");
     } finally {
       setLoading(false);
     }
@@ -90,7 +95,7 @@ const PaymentProcessor: React.FC<PaymentProcessorProps> = ({
 
   const handleMockPaymentSuccess = async () => {
     if (!paymentId) return;
-    
+
     setLoading(true);
     try {
       // In a real implementation, this would use the actual payment provider's SDK
@@ -98,28 +103,28 @@ const PaymentProcessor: React.FC<PaymentProcessorProps> = ({
       const result = await paymentAPI.processPayment(
         paymentId,
         paymentMethod,
-        'mock_payment_method_id', // Mock payment method ID
+        "mock_payment_method_id", // Mock payment method ID
         paymentDetails?.paymentIntentId, // Use the payment intent ID from the initial request
         user?.id
       );
-      
+
       setPaymentStatus(result.status);
-      
-      if (result.status === 'completed') {
+
+      if (result.status === "completed") {
         onPaymentComplete();
       } else {
-        onPaymentError('Payment processing failed');
+        onPaymentError("Payment processing failed");
       }
     } catch (error: any) {
-      console.error('Payment processing error:', error);
-      onPaymentError(error.message || 'Failed to process payment');
+      console.error("Payment processing error:", error);
+      onPaymentError(error.message || "Failed to process payment");
     } finally {
       setLoading(false);
     }
   };
 
   const handleMockPaymentFailure = () => {
-    onPaymentError('Payment was cancelled by the user');
+    onPaymentError("Payment was cancelled by the user");
   };
 
   if (loading) {
@@ -131,38 +136,66 @@ const PaymentProcessor: React.FC<PaymentProcessorProps> = ({
     );
   }
 
-  if (paymentStatus === 'pending' && paymentDetails?.requiresAction) {
+  if (paymentStatus === "pending" && paymentDetails?.requiresAction) {
     return (
       <div className="bg-white p-6 rounded-lg shadow-md">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Complete Your Payment</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">
+          {t("payment.completeYourPayment")}
+        </h3>
         <p className="text-gray-600 mb-4">
-          Total amount: {formatCurrency(orderTotal)}
+          {t("payment.totalAmount")}: {formatCurrency(orderTotal)}
         </p>
-        
-        {/* This would be replaced with an actual payment form in a real implementation */}
-        <div className="border border-gray-300 rounded-lg p-4 mb-4">
-          <p className="text-gray-700 mb-2">
-            This is a mock payment interface for demonstration purposes.
-          </p>
-          <p className="text-gray-700 mb-4">
-            In a real implementation, this would be replaced with the payment provider's form or redirect.
-          </p>
-          
-          <div className="flex space-x-4">
-            <button
-              onClick={handleMockPaymentSuccess}
-              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md"
-            >
-              Simulate Successful Payment
-            </button>
-            <button
-              onClick={handleMockPaymentFailure}
-              className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md"
-            >
-              Simulate Failed Payment
-            </button>
+
+        {paymentMethod === "paypal" ? (
+          <PayPalPayment
+            paymentDetails={paymentDetails}
+            onSuccess={onPaymentComplete}
+            onError={onPaymentError}
+            amount={orderTotal}
+            orderId={orderId}
+          />
+        ) : paymentMethod === "stripe" ? (
+          <StripePayment
+            paymentDetails={paymentDetails}
+            onSuccess={onPaymentComplete}
+            onError={onPaymentError}
+            amount={orderTotal}
+            orderId={orderId}
+          />
+        ) : paymentMethod === "iyzico" ? (
+          <IyzicoPayment
+            paymentDetails={paymentDetails}
+            onSuccess={onPaymentComplete}
+            onError={onPaymentError}
+            amount={orderTotal}
+            orderId={orderId}
+          />
+        ) : (
+          // Default payment interface for other methods
+          <div className="border border-gray-300 rounded-lg p-4 mb-4">
+            <p className="text-gray-700 mb-2">
+              {t("payment.mockPaymentInterface")}
+            </p>
+            <p className="text-gray-700 mb-4">
+              {t("payment.realImplementationNote")}
+            </p>
+
+            <div className="flex space-x-4">
+              <button
+                onClick={handleMockPaymentSuccess}
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md"
+              >
+                {t("payment.simulateSuccess")}
+              </button>
+              <button
+                onClick={handleMockPaymentFailure}
+                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md"
+              >
+                {t("payment.simulateFailure")}
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     );
   }
