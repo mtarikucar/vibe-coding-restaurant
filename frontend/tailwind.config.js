@@ -5,106 +5,104 @@ export default {
   theme: {
     extend: {
       colors: {
-        // New color palette
-        cream: {
-          50: "#FFFDF9",
-          100: "#FFFDF6", // Main background color
-          200: "#FDF9ED",
-          300: "#FAF6E9", // Secondary background color
-          400: "#F5EFD8",
-          500: "#F0E8C8",
-          600: "#E6DDB8",
-          700: "#DCD3A8",
-          800: "#D2C998",
-          900: "#C8BF88",
+        // New color palette based on: 89A8B2, B3C8CF, E5E1DA, F1F0E8
+        neutral: {
+          50: "#F9F8F7",
+          100: "#F1F0E8", // Main background color (lightest)
+          200: "#E8E6DF",
+          300: "#E5E1DA", // Secondary background color
+          400: "#D8D3C8",
+          500: "#C8C1B2",
+          600: "#B8AF9C",
+          700: "#A89D86",
+          800: "#363636", // Dark mode secondary background (metal gray)
+          900: "#1E1E1E", // Dark mode primary background (metal gray)
         },
-        lime: {
-          50: "#F5F9E8",
-          100: "#EBF3D1",
-          200: "#DDEB9D", // Accent color
-          300: "#D0E36A",
-          400: "#C2DB36",
-          500: "#A0C878", // Main primary color
-          600: "#8AB45E",
-          700: "#74A044",
-          800: "#5E8C2A",
-          900: "#487810",
-        },
-        forest: {
-          50: "#F0F2EC",
-          100: "#E1E5D9",
-          200: "#C3CBB3",
-          300: "#A5B18D",
-          400: "#879767",
-          500: "#626F47", // Main secondary color
-          600: "#556339",
-          700: "#48572B",
-          800: "#3B4B1D",
-          900: "#2E3F0F",
-        },
-        // Keep the functional colors but adjust them to match the new palette
-        success: {
-          50: "#ecfdf5",
-          100: "#d1fae5",
-          200: "#a7f3d0",
-          300: "#6ee7b7",
-          400: "#34d399",
-          500: "#A0C878", // Updated success color
-          600: "#8AB45E",
-          700: "#74A044",
-          800: "#5E8C2A",
-          900: "#487810",
-        },
-        warning: {
-          50: "#fffbeb",
-          100: "#fef3c7",
-          200: "#fde68a",
-          300: "#fcd34d",
-          400: "#fbbf24",
-          500: "#f59e0b", // Keep warning color
-          600: "#d97706",
-          700: "#b45309",
-          800: "#92400e",
-          900: "#78350f",
-          950: "#451a03",
-        },
-        danger: {
-          50: "#fef2f2",
-          100: "#fee2e2",
-          200: "#fecaca",
-          300: "#fca5a5",
-          400: "#f87171",
-          500: "#ef4444", // Keep danger color
-          600: "#dc2626",
-          700: "#b91c1c",
-          800: "#991b1b",
-          900: "#7f1d1d",
-          950: "#450a0a",
-        },
-        // Alias the old primary and secondary to the new colors for backward compatibility
         primary: {
-          50: "#F5F9E8",
-          100: "#EBF3D1",
-          200: "#DDEB9D",
-          300: "#D0E36A",
-          400: "#C2DB36",
-          500: "#A0C878", // Main primary color
-          600: "#8AB45E",
-          700: "#74A044",
-          800: "#5E8C2A",
-          900: "#487810",
+          50: "#F4F6F7",
+          100: "#E9ECEF",
+          200: "#D4DADF",
+          300: "#B3C8CF", // Primary accent color
+          400: "#9FB8C1",
+          500: "#8BA8B3",
+          600: "#89A8B2", // Main primary color (darkest)
+          700: "#7A969F",
+          800: "#4A4A4A", // Dark mode primary darker
+          900: "#2A2A2A", // Dark mode primary darkest
         },
         secondary: {
-          50: "#F0F2EC",
-          100: "#E1E5D9",
-          200: "#C3CBB3",
-          300: "#A5B18D",
-          400: "#879767",
-          500: "#626F47", // Main secondary color
-          600: "#556339",
-          700: "#48572B",
-          800: "#3B4B1D",
-          900: "#2E3F0F",
+          50: "#F6F7F8",
+          100: "#EDEEF0",
+          200: "#DBDDE1",
+          300: "#C9CCD2",
+          400: "#B7BBC3",
+          500: "#A5AAB4",
+          600: "#9399A5",
+          700: "#818896",
+          800: "#505050", // Dark mode secondary darker
+          900: "#303030", // Dark mode secondary darkest
+        },
+        // Dark mode specific gray palette (metal/pastel gray)
+        darkGray: {
+          50: "#F8F8F8",
+          100: "#F0F0F0",
+          200: "#E0E0E0",
+          300: "#C0C0C0",
+          400: "#A0A0A0",
+          500: "#808080",
+          600: "#606060",
+          700: "#404040",
+          800: "#2A2A2A",
+          900: "#1E1E1E",
+        },
+        // Functional colors adjusted to match the new palette
+        success: {
+          50: "#F0F7F4",
+          100: "#E1EFE9",
+          200: "#C3DFD3",
+          300: "#A5CFBD",
+          400: "#87BFA7",
+          500: "#69AF91",
+          600: "#5A9A7D",
+          700: "#4B8569",
+          800: "#3C7055",
+          900: "#2D5B41",
+        },
+        warning: {
+          50: "#FDF8F0",
+          100: "#FBF1E1",
+          200: "#F7E3C3",
+          300: "#F3D5A5",
+          400: "#EFC787",
+          500: "#EBB969",
+          600: "#D4A55A",
+          700: "#BD914B",
+          800: "#A67D3C",
+          900: "#8F692D",
+        },
+        danger: {
+          50: "#FDF2F2",
+          100: "#FBE5E5",
+          200: "#F7CBCB",
+          300: "#F3B1B1",
+          400: "#EF9797",
+          500: "#EB7D7D",
+          600: "#D47070",
+          700: "#BD6363",
+          800: "#A65656",
+          900: "#8F4949",
+        },
+        info: {
+          50: "#F4F6F7",
+          100: "#E9ECEF",
+          200: "#D4DADF",
+          300: "#B3C8CF",
+          400: "#9FB8C1",
+          500: "#8BA8B3",
+          600: "#89A8B2",
+          700: "#7A969F",
+          800: "#6B848C",
+          900: "#5C7279",
         },
       },
       fontFamily: {

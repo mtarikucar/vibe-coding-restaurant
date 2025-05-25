@@ -389,16 +389,36 @@ export const menuAPI = {
 
   createMenuItem: async (data: any) => {
     try {
-      const response = await api.post("/menu/items", data);
+      // Clean menu item data - remove backend-only fields
+      const cleanData = { ...data };
+      delete cleanData.id;
+      delete cleanData.tenantId;
+      delete cleanData.createdAt;
+      delete cleanData.updatedAt;
+      delete cleanData.category;
+      delete cleanData.imageFile;
+
+      console.log("Sending menu item to backend:", cleanData);
+
+      const response = await api.post("/menu/items", cleanData);
       return response.data;
     } catch (error) {
+      console.error("Error creating menu item:", error);
       throw error;
     }
   },
 
   updateMenuItem: async (id: string, data: any) => {
     try {
-      const response = await api.patch(`/menu/items/${id}`, data);
+      // Clean menu item data - remove backend-only fields
+      const cleanData = { ...data };
+      delete cleanData.tenantId;
+      delete cleanData.createdAt;
+      delete cleanData.updatedAt;
+      delete cleanData.category;
+      delete cleanData.imageFile;
+
+      const response = await api.patch(`/menu/items/${id}`, cleanData);
       return response.data;
     } catch (error) {
       throw error;
@@ -416,9 +436,23 @@ export const menuAPI = {
 
   updateCategories: async (categories: any[]) => {
     try {
-      const response = await api.post("/menu/categories/batch", { categories });
+      // Clean categories data - remove backend-only fields
+      const cleanCategories = categories.map((category) => {
+        const cleanCategory = { ...category };
+        delete cleanCategory.tenantId;
+        delete cleanCategory.createdAt;
+        delete cleanCategory.updatedAt;
+        return cleanCategory;
+      });
+
+      console.log("Sending categories to backend:", cleanCategories);
+
+      const response = await api.post("/menu/categories/batch", {
+        categories: cleanCategories,
+      });
       return response.data;
     } catch (error) {
+      console.error("Error updating categories:", error);
       throw error;
     }
   },

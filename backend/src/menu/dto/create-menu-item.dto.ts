@@ -1,4 +1,12 @@
-import { IsString, IsNotEmpty, IsOptional, IsNumber, IsBoolean, IsUUID } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsNumber,
+  IsBoolean,
+  IsUUID,
+} from "class-validator";
+import { Exclude } from "class-transformer";
 
 export class CreateMenuItemDto {
   @IsString()
@@ -24,4 +32,22 @@ export class CreateMenuItemDto {
   @IsUUID()
   @IsNotEmpty()
   categoryId: string;
+
+  @Exclude()
+  id?: string;
+
+  @Exclude()
+  tenantId?: string;
+
+  @Exclude()
+  createdAt?: Date;
+
+  @Exclude()
+  updatedAt?: Date;
+
+  @Exclude()
+  category?: any;
+
+  @Exclude()
+  imageFile?: any;
 }

@@ -5,8 +5,11 @@ import {
   OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
 } from "typeorm";
 import { MenuItem } from "./menu-item.entity";
+import { Tenant } from "../../tenant/entities/tenant.entity";
 
 @Entity()
 export class Category {
@@ -27,6 +30,13 @@ export class Category {
 
   @OneToMany(() => MenuItem, (menuItem) => menuItem.category)
   menuItems: MenuItem[];
+
+  @ManyToOne(() => Tenant)
+  @JoinColumn({ name: "tenantId" })
+  tenant: Tenant;
+
+  @Column({ nullable: true })
+  tenantId: string;
 
   @CreateDateColumn()
   createdAt: Date;

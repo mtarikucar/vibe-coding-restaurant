@@ -1,6 +1,13 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateMenuItemDto } from './create-menu-item.dto';
-import { IsString, IsOptional, IsNumber, IsBoolean, IsUUID } from 'class-validator';
+import { PartialType } from "@nestjs/mapped-types";
+import { CreateMenuItemDto } from "./create-menu-item.dto";
+import {
+  IsString,
+  IsOptional,
+  IsNumber,
+  IsBoolean,
+  IsUUID,
+} from "class-validator";
+import { Exclude } from "class-transformer";
 
 export class UpdateMenuItemDto extends PartialType(CreateMenuItemDto) {
   @IsString()
@@ -26,4 +33,19 @@ export class UpdateMenuItemDto extends PartialType(CreateMenuItemDto) {
   @IsUUID()
   @IsOptional()
   categoryId?: string;
+
+  @Exclude()
+  tenantId?: string;
+
+  @Exclude()
+  createdAt?: Date;
+
+  @Exclude()
+  updatedAt?: Date;
+
+  @Exclude()
+  category?: any;
+
+  @Exclude()
+  imageFile?: any;
 }

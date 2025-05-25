@@ -55,6 +55,7 @@ describe("AuthController", () => {
         username: "testuser",
         password: "password",
         fullName: "Test User",
+        email: "test@example.com",
         role: UserRole.WAITER,
       };
 
@@ -62,6 +63,7 @@ describe("AuthController", () => {
         id: "user-id",
         username: "testuser",
         fullName: "Test User",
+        email: "test@example.com",
         role: UserRole.WAITER,
       };
 

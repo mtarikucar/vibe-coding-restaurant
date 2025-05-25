@@ -1,4 +1,9 @@
-import React, { createContext, useContext, useState, type ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  type ReactNode,
+} from "react";
 import Toast, { type ToastType } from "./Toast";
 import { Toaster } from "react-hot-toast";
 
@@ -119,29 +124,41 @@ const ToastProvider: React.FC<ToastProviderProps> = ({
         toastOptions={{
           duration: 4000,
           style: {
-            background: "#fff",
-            color: "#333",
+            background: "#F1F0E8",
+            color: "#89A8B2",
+            border: "1px solid #B3C8CF",
           },
           success: {
             style: {
-              background: "#ECFDF5",
-              border: "1px solid #10B981",
-              color: "#065F46",
+              background: "#F0F7F4",
+              border: "1px solid #69AF91",
+              color: "#2D5B41",
             },
             iconTheme: {
-              primary: "#10B981",
-              secondary: "#ECFDF5",
+              primary: "#69AF91",
+              secondary: "#F0F7F4",
             },
           },
           error: {
             style: {
-              background: "#FEF2F2",
-              border: "1px solid #EF4444",
-              color: "#991B1B",
+              background: "#FDF2F2",
+              border: "1px solid #EB7D7D",
+              color: "#8F4949",
             },
             iconTheme: {
-              primary: "#EF4444",
-              secondary: "#FEF2F2",
+              primary: "#EB7D7D",
+              secondary: "#FDF2F2",
+            },
+          },
+          warning: {
+            style: {
+              background: "#FDF8F0",
+              border: "1px solid #EBB969",
+              color: "#8F692D",
+            },
+            iconTheme: {
+              primary: "#EBB969",
+              secondary: "#FDF8F0",
             },
           },
         }}

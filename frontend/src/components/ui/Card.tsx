@@ -1,6 +1,6 @@
-import React from 'react';
+import React from "react";
 
-export type CardVariant = 'default' | 'outlined' | 'elevated' | 'flat';
+export type CardVariant = "default" | "outlined" | "elevated" | "flat";
 
 interface CardProps {
   children: React.ReactNode;
@@ -23,11 +23,11 @@ const Card: React.FC<CardProps> = ({
   title,
   subtitle,
   footer,
-  variant = 'default',
-  className = '',
-  bodyClassName = '',
-  headerClassName = '',
-  footerClassName = '',
+  variant = "default",
+  className = "",
+  bodyClassName = "",
+  headerClassName = "",
+  footerClassName = "",
   onClick,
   hoverable = false,
   bordered = false,
@@ -35,53 +35,56 @@ const Card: React.FC<CardProps> = ({
 }) => {
   // Variant classes
   const variantClasses = {
-    default: 'bg-white shadow-card',
-    outlined: 'bg-white border border-gray-200',
-    elevated: 'bg-white shadow-soft',
-    flat: 'bg-gray-50',
+    default: "bg-neutral-100 shadow-card dark:bg-darkGray-800",
+    outlined:
+      "bg-neutral-100 border border-neutral-200 dark:bg-darkGray-800 dark:border-darkGray-700",
+    elevated: "bg-neutral-100 shadow-soft dark:bg-darkGray-800",
+    flat: "bg-neutral-50 dark:bg-darkGray-900",
   };
 
   // Base classes
-  const baseClasses = 'rounded-xl overflow-hidden transition-all duration-200';
-  
+  const baseClasses = "rounded-xl overflow-hidden transition-all duration-200";
+
   // Interactive classes
-  const interactiveClasses = onClick || hoverable 
-    ? 'cursor-pointer hover:shadow-soft active:shadow-card' 
-    : '';
-  
+  const interactiveClasses =
+    onClick || hoverable
+      ? "cursor-pointer hover:shadow-soft active:shadow-card"
+      : "";
+
   // Border classes
-  const borderClasses = bordered && variant !== 'outlined' 
-    ? 'border border-gray-200' 
-    : '';
-  
+  const borderClasses =
+    bordered && variant !== "outlined" ? "border border-gray-200" : "";
+
   // Padding classes
-  const paddingClasses = compact ? 'p-3' : 'p-5';
+  const paddingClasses = compact ? "p-3" : "p-5";
 
   // Combine all classes
   const cardClasses = `
-    ${baseClasses} 
-    ${variantClasses[variant]} 
-    ${interactiveClasses} 
-    ${borderClasses} 
+    ${baseClasses}
+    ${variantClasses[variant]}
+    ${interactiveClasses}
+    ${borderClasses}
     ${className}
   `;
 
   // Header rendering
   const renderHeader = () => {
     if (!title && !subtitle) return null;
-    
+
     return (
       <div className={`mb-4 ${headerClassName}`}>
-        {title && (
-          typeof title === 'string' 
-            ? <h3 className="text-lg font-medium text-gray-900">{title}</h3>
-            : title
-        )}
-        {subtitle && (
-          typeof subtitle === 'string'
-            ? <p className="mt-1 text-sm text-gray-500">{subtitle}</p>
-            : subtitle
-        )}
+        {title &&
+          (typeof title === "string" ? (
+            <h3 className="text-lg font-medium text-gray-900">{title}</h3>
+          ) : (
+            title
+          ))}
+        {subtitle &&
+          (typeof subtitle === "string" ? (
+            <p className="mt-1 text-sm text-gray-500">{subtitle}</p>
+          ) : (
+            subtitle
+          ))}
       </div>
     );
   };
@@ -89,7 +92,7 @@ const Card: React.FC<CardProps> = ({
   // Footer rendering
   const renderFooter = () => {
     if (!footer) return null;
-    
+
     return (
       <div className={`mt-4 pt-3 border-t border-gray-200 ${footerClassName}`}>
         {footer}

@@ -41,7 +41,11 @@ export class MenuService {
   }
 
   async findAllCategories(tenantId?: string): Promise<Category[]> {
-    const whereClause = tenantId ? { tenantId } : {};
+    // Create a properly typed where clause
+    const whereClause: Record<string, any> = {};
+    if (tenantId) {
+      whereClause.tenantId = tenantId;
+    }
 
     return this.categoryRepository.find({
       where: whereClause,
@@ -50,7 +54,8 @@ export class MenuService {
   }
 
   async findOneCategory(id: string, tenantId?: string): Promise<Category> {
-    const whereClause: any = { id };
+    // Create a properly typed where clause
+    const whereClause: Record<string, any> = { id };
     if (tenantId) {
       whereClause.tenantId = tenantId;
     }
@@ -292,7 +297,7 @@ export class MenuService {
     tenantId?: string
   ): Promise<MenuItem[]> {
     // Check if category exists with optional tenant filter
-    const whereClause: any = { id: categoryId };
+    const whereClause: Record<string, any> = { id: categoryId };
     if (tenantId) {
       whereClause.tenantId = tenantId;
     }

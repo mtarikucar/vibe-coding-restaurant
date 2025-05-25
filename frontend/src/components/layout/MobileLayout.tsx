@@ -20,7 +20,7 @@ const MobileLayout: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-cream-100">
+    <div className="flex flex-col h-screen bg-neutral-100 dark:bg-darkGray-900">
       <MobileHeader title={getPageTitle()} />
       <main className="flex-1 overflow-y-auto pb-16">
         <Outlet />

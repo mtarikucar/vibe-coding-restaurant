@@ -5,14 +5,19 @@ import {
   TrashIcon,
   Cog6ToothIcon,
   ArrowPathIcon,
+  EyeIcon,
+  DocumentArrowUpIcon,
 } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
 import { menuAPI } from "../../services/api";
 import { type MenuItem, type Category } from "../../types/menu";
 import { useToast } from "../../components/common/ToastProvider";
 import usePerformanceMonitoring from "../../hooks/usePerformanceMonitoring";
+import { Input, Select } from "../../components/ui";
 import MenuItemForm from "../../components/menu/MenuItemForm";
 import CategoryManager from "../../components/menu/CategoryManager";
+import BulkMenuUpload from "../../components/menu/BulkMenuUpload";
+import MenuVisualization from "../../components/menu/MenuVisualization";
 
 const Menu = () => {
   const { t } = useTranslation();
@@ -28,6 +33,8 @@ const Menu = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
+  const [showVisualizationModal, setShowVisualizationModal] = useState(false);
   const [currentMenuItem, setCurrentMenuItem] = useState<MenuItem | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -82,6 +89,7 @@ const Menu = () => {
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const filteredItems = menuItems.filter((item) => {
@@ -130,6 +138,58 @@ const Menu = () => {
     setShowCategoryModal(true);
   };
 
+  const handleBulkUpload = () => {
+    setShowBulkUploadModal(true);
+  };
+
+  const handleVisualization = () => {
+    setShowVisualizationModal(true);
+  };
+
+  const handleBulkSave = async (menuItems: MenuItem[]) => {
+    try {
+      setIsSubmitting(true);
+
+      for (const menuItem of menuItems) {
+        // Handle image upload if present
+        if (menuItem.imageFile) {
+          try {
+            const imageUrl = await uploadImage(menuItem.imageFile);
+            menuItem.imageUrl = imageUrl;
+          } catch (err) {
+            console.error(
+              "Error uploading image for item:",
+              menuItem.name,
+              err
+            );
+            // Continue with other items even if one image fails
+          }
+        }
+
+        // Create the menu item without the imageFile property
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { imageFile, ...menuItemToSave } = menuItem;
+        await trackAsyncOperation("createMenuItem", () =>
+          menuAPI.createMenuItem(menuItemToSave)
+        );
+      }
+
+      success(
+        t(
+          "menu.bulkCreateSuccess",
+          `Successfully created ${menuItems.length} menu items`
+        )
+      );
+      setShowBulkUploadModal(false);
+      fetchData(); // Refresh the data
+    } catch (err) {
+      console.error("Error creating menu items:", err);
+      error(t("menu.bulkCreateError", "Failed to create menu items"));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleSaveMenuItem = async (menuItem: MenuItem) => {
     setIsSubmitting(true);
     try {
@@ -141,6 +201,7 @@ const Menu = () => {
       }
 
       // Create a copy without the imageFile property
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { imageFile, ...menuItemToSave } = menuItem;
 
       // Add the imageUrl from the upload
@@ -200,28 +261,46 @@ const Menu = () => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h2 className="text-2xl font-bold text-primary-900 dark:text-neutral-100">
           {t("menu.title", "Menu Management")}
         </h2>
-        <div className="flex space-x-2">
+        <div className="flex flex-wrap gap-3">
           <button
             onClick={handleRefresh}
-            className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-md flex items-center"
+            className="bg-neutral-200 dark:bg-darkGray-700 hover:bg-neutral-300 dark:hover:bg-darkGray-600 text-primary-700 dark:text-neutral-300 px-3 py-2 rounded-xl flex items-center transition-colors"
             title={t("common.refresh", "Refresh")}
           >
             <ArrowPathIcon className="h-5 w-5" />
           </button>
+
+          <button
+            onClick={handleVisualization}
+            className="bg-primary-100 dark:bg-primary-900/30 hover:bg-primary-200 dark:hover:bg-primary-900/50 text-primary-700 dark:text-primary-300 px-4 py-2 rounded-xl flex items-center transition-colors"
+          >
+            <EyeIcon className="h-5 w-5 mr-2" />
+            {t("menu.visualize", "Visualize")}
+          </button>
+
+          <button
+            onClick={handleBulkUpload}
+            className="bg-secondary-500 hover:bg-secondary-600 text-white px-4 py-2 rounded-xl flex items-center transition-colors"
+          >
+            <DocumentArrowUpIcon className="h-5 w-5 mr-2" />
+            {t("menu.bulkUpload", "Bulk Upload")}
+          </button>
+
           <button
             onClick={handleManageCategories}
-            className="bg-secondary-500 hover:bg-secondary-600 text-white px-4 py-2 rounded-md flex items-center"
+            className="bg-secondary-500 hover:bg-secondary-600 text-white px-4 py-2 rounded-xl flex items-center transition-colors"
           >
             <Cog6ToothIcon className="h-5 w-5 mr-2" />
             {t("menu.manageCategories", "Manage Categories")}
           </button>
+
           <button
             onClick={handleAddItem}
-            className="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-md flex items-center"
+            className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-xl flex items-center transition-colors"
           >
             <PlusIcon className="h-5 w-5 mr-2" />
             {t("menu.addItem", "Add Item")}
@@ -229,51 +308,34 @@ const Menu = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
-          <div className="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-4">
-            <div>
-              <label
-                htmlFor="category"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                {t("menu.category", "Category")}
-              </label>
-              <select
-                id="category"
-                className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-              >
-                <option value="all">
-                  {t("menu.allCategories", "All Categories")}
-                </option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label
-                htmlFor="search"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                {t("common.search", "Search")}
-              </label>
-              <input
-                type="text"
-                id="search"
-                className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                placeholder={t(
-                  "menu.searchPlaceholder",
-                  "Search menu items..."
-                )}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
+      <div className="bg-neutral-100 dark:bg-darkGray-800 rounded-xl shadow-sm p-6 mb-6">
+        <div className="flex flex-col md:flex-row md:items-end space-y-4 md:space-y-0 md:space-x-6">
+          <div className="flex-1">
+            <Select
+              label={t("menu.category", "Category")}
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              options={[
+                {
+                  value: "all",
+                  label: t("menu.allCategories", "All Categories"),
+                },
+                ...categories.map((category) => ({
+                  value: category.id,
+                  label: category.name,
+                })),
+              ]}
+            />
+          </div>
+          <div className="flex-1">
+            <Input
+              label={t("common.search", "Search")}
+              type="text"
+              placeholder={t("menu.searchPlaceholder", "Search menu items...")}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              fullWidth
+            />
           </div>
         </div>
       </div>
@@ -283,59 +345,62 @@ const Menu = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-neutral-100 dark:bg-darkGray-800 rounded-xl shadow-sm overflow-hidden">
           {filteredItems.length > 0 ? (
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-neutral-200 dark:divide-darkGray-700">
+              <thead className="bg-neutral-200 dark:bg-darkGray-700">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-primary-700 dark:text-neutral-300 uppercase tracking-wider">
                     {t("menu.item", "Item")}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-primary-700 dark:text-neutral-300 uppercase tracking-wider">
                     {t("menu.description", "Description")}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-primary-700 dark:text-neutral-300 uppercase tracking-wider">
                     {t("menu.price", "Price")}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-primary-700 dark:text-neutral-300 uppercase tracking-wider">
                     {t("menu.category", "Category")}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-primary-700 dark:text-neutral-300 uppercase tracking-wider">
                     {t("menu.status", "Status")}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-primary-700 dark:text-neutral-300 uppercase tracking-wider">
                     {t("common.actions", "Actions")}
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-neutral-100 dark:bg-darkGray-800 divide-y divide-neutral-200 dark:divide-darkGray-700">
                 {filteredItems.map((item) => (
-                  <tr key={item.id}>
+                  <tr
+                    key={item.id}
+                    className="hover:bg-neutral-200 dark:hover:bg-darkGray-700 transition-colors"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         {item.imageUrl && (
-                          <div className="flex-shrink-0 h-10 w-10 mr-3">
+                          <div className="flex-shrink-0 h-12 w-12 mr-4">
                             <img
-                              className="h-10 w-10 rounded-full object-cover"
+                              className="h-12 w-12 rounded-xl object-cover shadow-sm"
                               src={item.imageUrl}
                               alt={item.name}
                             />
                           </div>
                         )}
                         <div>
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-semibold text-primary-900 dark:text-neutral-100">
                             {item.name}
                           </div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm text-gray-500 max-w-xs truncate">
+                      <div className="text-sm text-neutral-600 dark:text-neutral-400 max-w-xs truncate">
                         {item.description}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
+                      <div className="text-sm font-medium text-primary-900 dark:text-neutral-100">
                         $
                         {typeof item.price === "number"
                           ? item.price.toFixed(2)
@@ -343,17 +408,17 @@ const Menu = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-neutral-600 dark:text-neutral-400">
                         {categories.find((c) => c.id === item.categoryId)
                           ?.name || "Unknown"}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           item.isAvailable
-                            ? "bg-success-100 text-success-800"
-                            : "bg-danger-100 text-danger-800"
+                            ? "bg-success-100 dark:bg-success-900/30 text-success-800 dark:text-success-300"
+                            : "bg-danger-100 dark:bg-danger-900/30 text-danger-800 dark:text-danger-300"
                         }`}
                       >
                         {item.isAvailable
@@ -362,17 +427,17 @@ const Menu = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
+                      <div className="flex space-x-3">
                         <button
                           onClick={() => handleEditItem(item)}
-                          className="text-primary-600 hover:text-primary-900"
+                          className="text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 transition-colors"
                           title={t("common.edit", "Edit")}
                         >
                           <PencilIcon className="h-5 w-5" />
                         </button>
                         <button
                           onClick={() => handleDeleteItem(item.id)}
-                          className="text-danger-600 hover:text-danger-900"
+                          className="text-danger-600 hover:text-danger-800 dark:text-danger-400 dark:hover:text-danger-300 transition-colors"
                           title={t("common.delete", "Delete")}
                         >
                           <TrashIcon className="h-5 w-5" />
@@ -384,8 +449,49 @@ const Menu = () => {
               </tbody>
             </table>
           ) : (
-            <div className="p-8 text-center text-gray-500">
-              {t("menu.noItems", "No menu items found.")}
+            <div className="p-12 text-center text-neutral-600 dark:text-neutral-400">
+              <div className="max-w-sm mx-auto">
+                <div className="mb-4">
+                  <svg
+                    className="mx-auto h-16 w-16 text-neutral-400 dark:text-neutral-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1}
+                      d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-primary-900 dark:text-neutral-100 mb-2">
+                  {t("menu.noItemsTitle", "No menu items")}
+                </h3>
+                <p className="text-sm mb-6">
+                  {t(
+                    "menu.noItemsDescription",
+                    "Get started by adding your first menu item or importing items in bulk."
+                  )}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <button
+                    onClick={handleAddItem}
+                    className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-xl flex items-center justify-center transition-colors"
+                  >
+                    <PlusIcon className="h-5 w-5 mr-2" />
+                    {t("menu.addFirstItem", "Add First Item")}
+                  </button>
+                  <button
+                    onClick={handleBulkUpload}
+                    className="bg-secondary-500 hover:bg-secondary-600 text-white px-4 py-2 rounded-xl flex items-center justify-center transition-colors"
+                  >
+                    <DocumentArrowUpIcon className="h-5 w-5 mr-2" />
+                    {t("menu.bulkImport", "Bulk Import")}
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -415,6 +521,23 @@ const Menu = () => {
         onSave={handleSaveCategories}
         categories={categories}
         isLoading={isSubmitting}
+      />
+
+      {/* Bulk Upload Modal */}
+      <BulkMenuUpload
+        isOpen={showBulkUploadModal}
+        onClose={() => setShowBulkUploadModal(false)}
+        onSave={handleBulkSave}
+        categories={categories}
+        isLoading={isSubmitting}
+      />
+
+      {/* Menu Visualization Modal */}
+      <MenuVisualization
+        isOpen={showVisualizationModal}
+        onClose={() => setShowVisualizationModal(false)}
+        menuItems={menuItems}
+        categories={categories}
       />
     </div>
   );

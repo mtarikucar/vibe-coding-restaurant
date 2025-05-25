@@ -62,7 +62,7 @@ const MobileNavigation: React.FC = () => {
   ];
 
   return (
-    <nav className="bg-forest-500 shadow-lg fixed bottom-0 left-0 right-0 z-10 rounded-t-2xl">
+    <nav className="bg-primary-600 dark:bg-primary-800 shadow-lg fixed bottom-0 left-0 right-0 z-10 rounded-t-2xl">
       <div className="flex justify-around items-center h-16 px-2">
         {navItems.map((item) => (
           <Link
@@ -70,8 +70,8 @@ const MobileNavigation: React.FC = () => {
             to={item.path}
             className={`flex flex-col items-center justify-center w-full h-full rounded-xl py-2 ${
               isActive(item.path)
-                ? "text-white bg-lime-500"
-                : "text-cream-100 hover:bg-forest-400"
+                ? "text-primary-900 bg-primary-300 dark:bg-primary-400"
+                : "text-neutral-100 hover:bg-primary-500 dark:hover:bg-primary-700"
             }`}
           >
             <div className="mb-0.5">{item.icon}</div>

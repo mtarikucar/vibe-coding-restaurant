@@ -177,17 +177,17 @@ const Sidebar = () => {
   return (
     <div className="hidden md:flex md:flex-shrink-0">
       <div className="flex flex-col w-72">
-        <div className="flex flex-col h-0 flex-1 bg-forest-500">
+        <div className="flex flex-col h-0 flex-1 bg-primary-600 dark:bg-primary-800">
           <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
             <div className="flex items-center flex-shrink-0 px-6">
-              <h1 className="text-cream-100 font-bold text-xl">
+              <h1 className="text-neutral-100 font-bold text-xl">
                 Restaurant Manager
               </h1>
             </div>
             <nav className="mt-6 flex-1 px-4 space-y-6">
               {filteredCategories.map((category) => (
                 <div key={category.category} className="space-y-1">
-                  <h3 className="px-3 text-xs font-semibold text-cream-300 uppercase tracking-wider">
+                  <h3 className="px-3 text-xs font-semibold text-neutral-300 uppercase tracking-wider">
                     {category.category}
                   </h3>
                   <div className="space-y-1">
@@ -198,8 +198,8 @@ const Sidebar = () => {
                         className={({ isActive }) =>
                           `group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 ${
                             isActive
-                              ? "bg-lime-500 text-white shadow-md"
-                              : "text-cream-100 hover:bg-forest-400 hover:text-white"
+                              ? "bg-primary-300 text-primary-900 shadow-md dark:bg-primary-400 dark:text-primary-900"
+                              : "text-neutral-100 hover:bg-primary-500 hover:text-white dark:hover:bg-primary-700"
                           }`
                         }
                       >
@@ -208,8 +208,8 @@ const Sidebar = () => {
                             isActive,
                           }) =>
                             isActive
-                              ? "text-white"
-                              : "text-cream-300 group-hover:text-cream-100"}`}
+                              ? "text-primary-900"
+                              : "text-neutral-300 group-hover:text-neutral-100"}`}
                           aria-hidden="true"
                         />
                         {item.name}
@@ -220,21 +220,21 @@ const Sidebar = () => {
               ))}
             </nav>
           </div>
-          <div className="flex-shrink-0 flex bg-forest-600 p-4 rounded-tr-xl">
+          <div className="flex-shrink-0 flex bg-primary-700 dark:bg-primary-900 p-4 rounded-tr-xl">
             <div className="flex-shrink-0 w-full group block">
               <div className="flex items-center">
                 <div>
-                  <div className="h-10 w-10 rounded-full bg-lime-200 flex items-center justify-center text-forest-700 font-bold">
+                  <div className="h-10 w-10 rounded-full bg-primary-200 flex items-center justify-center text-primary-800 font-bold">
                     {user?.fullName.charAt(0) || "U"}
                   </div>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-cream-100">
+                  <p className="text-sm font-medium text-neutral-100">
                     {user?.fullName || "User"}
                   </p>
                   <button
                     onClick={handleLogout}
-                    className="text-xs font-medium text-cream-300 hover:text-cream-100 flex items-center transition-colors"
+                    className="text-xs font-medium text-neutral-300 hover:text-neutral-100 flex items-center transition-colors"
                   >
                     <ArrowRightOnRectangleIcon className="h-3 w-3 mr-1" />
                     Logout

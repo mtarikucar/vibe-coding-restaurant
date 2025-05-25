@@ -20,6 +20,7 @@ export enum PaymentMethod {
   DEBIT_CARD = "debit_card",
   STRIPE = "stripe",
   PAYPAL = "paypal",
+  IYZICO = "iyzico",
 }
 
 export enum PaymentStatus {

@@ -9,10 +9,14 @@ import {
   XCircleIcon,
   CheckCircleIcon,
   ClockIcon,
+  ArrowPathIcon,
+  MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 import { invoiceAPI } from "../../services/invoiceAPI";
 import { formatCurrency, formatDate } from "../../utils/formatters";
 import { useToast } from "../../components/common/ToastProvider";
+import { useTranslation } from "react-i18next";
+import { Button, Input, Select } from "../../components/ui";
 
 // Define types directly in this file
 export enum InvoiceStatus {
@@ -76,6 +80,7 @@ const Invoices = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { t } = useTranslation();
 
   useEffect(() => {
     fetchInvoices();
@@ -177,225 +182,265 @@ const Invoices = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="p-6">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+          <span className="ml-3 text-neutral-600 dark:text-neutral-400">
+            {t("invoice.loading", "Loading invoices...")}
+          </span>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-        <p>{error}</p>
-        <button
-          onClick={fetchInvoices}
-          className="mt-2 bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded"
-        >
-          Retry
-        </button>
+      <div className="p-6">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-6 py-4 rounded-xl">
+          <h3 className="font-semibold mb-2">{t("common.error", "Error")}</h3>
+          <p className="mb-4">{error}</p>
+          <Button
+            variant="outline"
+            onClick={fetchInvoices}
+            leftIcon={<ArrowPathIcon className="h-4 w-4" />}
+          >
+            {t("common.retry", "Retry")}
+          </Button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Invoice Management</h2>
-        <Link
+    <div className="p-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-primary-900 dark:text-neutral-100">
+            {t("invoice.title", "Invoice Management")}
+          </h1>
+          <p className="text-neutral-600 dark:text-neutral-400 mt-1">
+            {t("invoice.subtitle", "Create, manage and track all invoices")}
+          </p>
+        </div>
+        <Button
+          as={Link}
           to="/app/invoices/new"
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center"
+          variant="primary"
+          leftIcon={<PlusIcon className="h-4 w-4" />}
         >
-          <PlusIcon className="h-5 w-5 mr-2" />
-          New Invoice
-        </Link>
+          {t("invoice.newInvoice", "New Invoice")}
+        </Button>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
-        <div className="p-4 border-b border-gray-200 bg-gray-50">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div>
-                <label
-                  htmlFor="status"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Status
-                </label>
-                <select
-                  id="status"
-                  className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                >
-                  <option value="all">All Statuses</option>
-                  <option value={InvoiceStatus.DRAFT}>Draft</option>
-                  <option value={InvoiceStatus.ISSUED}>Issued</option>
-                  <option value={InvoiceStatus.PAID}>Paid</option>
-                  <option value={InvoiceStatus.CANCELLED}>Cancelled</option>
-                </select>
-              </div>
-              <div>
-                <label
-                  htmlFor="search"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  Search
-                </label>
-                <input
-                  type="text"
-                  id="search"
-                  className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Invoice #, Order #, Customer"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
+      {/* Filters */}
+      <div className="bg-white dark:bg-darkGray-800 rounded-2xl shadow-soft p-6 mb-8">
+        <div className="flex flex-col lg:flex-row gap-6">
+          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                options={[
+                  {
+                    value: "all",
+                    label: t("invoice.allStatuses", "All Statuses"),
+                  },
+                  {
+                    value: InvoiceStatus.DRAFT,
+                    label: t("invoice.draft", "Draft"),
+                  },
+                  {
+                    value: InvoiceStatus.ISSUED,
+                    label: t("invoice.issued", "Issued"),
+                  },
+                  {
+                    value: InvoiceStatus.PAID,
+                    label: t("invoice.paid", "Paid"),
+                  },
+                  {
+                    value: InvoiceStatus.CANCELLED,
+                    label: t("invoice.cancelled", "Cancelled"),
+                  },
+                ]}
+                fullWidth
+              />
             </div>
             <div>
-              <button
-                onClick={fetchInvoices}
-                className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md flex items-center"
-              >
-                <svg
-                  className="h-5 w-5 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
-                </svg>
-                Refresh
-              </button>
+              <Input
+                placeholder={t(
+                  "invoice.searchPlaceholder",
+                  "Search invoices, orders, customers..."
+                )}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                leftIcon={<MagnifyingGlassIcon className="h-4 w-4" />}
+                fullWidth
+              />
             </div>
           </div>
+          <div className="flex items-end">
+            <Button
+              variant="outline"
+              onClick={fetchInvoices}
+              leftIcon={<ArrowPathIcon className="h-4 w-4" />}
+            >
+              {t("common.refresh", "Refresh")}
+            </Button>
+          </div>
         </div>
+      </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Invoice #
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Order #
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Customer
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Amount
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredInvoices.length === 0 ? (
+      {/* Invoices Table */}
+      <div className="bg-white dark:bg-darkGray-800 rounded-2xl shadow-soft overflow-hidden">
+        {filteredInvoices.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-neutral-200 dark:divide-darkGray-700">
+              <thead className="bg-neutral-50 dark:bg-darkGray-700">
                 <tr>
-                  <td
-                    colSpan={7}
-                    className="px-6 py-4 text-center text-gray-500"
-                  >
-                    No invoices found
-                  </td>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wider">
+                    {t("invoice.invoiceNumber", "Invoice #")}
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wider">
+                    {t("invoice.orderNumber", "Order #")}
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wider">
+                    {t("invoice.customer", "Customer")}
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wider">
+                    {t("invoice.amount", "Amount")}
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wider">
+                    {t("invoice.status", "Status")}
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wider">
+                    {t("invoice.date", "Date")}
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-neutral-600 dark:text-neutral-300 uppercase tracking-wider">
+                    {t("common.actions", "Actions")}
+                  </th>
                 </tr>
-              ) : (
-                filteredInvoices.map((invoice) => (
-                  <tr key={invoice.id}>
+              </thead>
+              <tbody className="bg-white dark:bg-darkGray-800 divide-y divide-neutral-200 dark:divide-darkGray-700">
+                {filteredInvoices.map((invoice) => (
+                  <tr
+                    key={invoice.id}
+                    className="hover:bg-neutral-50 dark:hover:bg-darkGray-700 transition-colors"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
+                      <div className="flex items-center gap-3">
                         {getStatusIcon(invoice.status)}
-                        <div className="ml-2 text-sm font-medium text-gray-900">
+                        <div className="text-sm font-semibold text-primary-900 dark:text-neutral-100">
                           {invoice.invoiceNumber}
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-neutral-600 dark:text-neutral-400">
                         {invoice.order.orderNumber}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">
-                        {invoice.customerName || "N/A"}
+                      <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                        {invoice.customerName ||
+                          t("common.notAvailable", "N/A")}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
+                      <div className="text-sm font-semibold text-primary-900 dark:text-neutral-100">
                         {formatCurrency(invoice.totalAmount)}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
+                        className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
                           invoice.status
                         )}`}
                       >
-                        {invoice.status.charAt(0).toUpperCase() +
-                          invoice.status.slice(1)}
+                        {t(
+                          `invoice.statuses.${invoice.status}`,
+                          invoice.status.charAt(0).toUpperCase() +
+                            invoice.status.slice(1)
+                        )}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-neutral-600 dark:text-neutral-400">
                         {formatDate(invoice.issueDate)}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <button
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() =>
                             navigate(`/app/invoices/${invoice.id}`)
                           }
-                          className="text-blue-600 hover:text-blue-900"
-                          title="View"
+                          leftIcon={<EyeIcon className="h-4 w-4" />}
                         >
-                          <EyeIcon className="h-5 w-5" />
-                        </button>
-                        <button
+                          {t("common.view", "View")}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => handleDownloadInvoice(invoice.id)}
-                          className="text-green-600 hover:text-green-900"
-                          title="Download"
+                          leftIcon={<ArrowDownTrayIcon className="h-4 w-4" />}
                         >
-                          <ArrowDownTrayIcon className="h-5 w-5" />
-                        </button>
-                        <button
+                          {t("invoice.download", "Download")}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={() => handleRegenerateInvoice(invoice.id)}
-                          className="text-purple-600 hover:text-purple-900"
-                          title="Regenerate"
+                          leftIcon={
+                            <DocumentDuplicateIcon className="h-4 w-4" />
+                          }
                         >
-                          <DocumentDuplicateIcon className="h-5 w-5" />
-                        </button>
+                          {t("invoice.regenerate", "Regenerate")}
+                        </Button>
                         {invoice.status === InvoiceStatus.DRAFT && (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleDeleteInvoice(invoice.id)}
-                            className="text-red-600 hover:text-red-900"
-                            title="Delete"
+                            leftIcon={<XCircleIcon className="h-4 w-4" />}
+                            className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                           >
-                            <XCircleIcon className="h-5 w-5" />
-                          </button>
+                            {t("common.delete", "Delete")}
+                          </Button>
                         )}
                       </div>
                     </td>
                   </tr>
-                ))
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="p-12 text-center">
+            <div className="mb-4">
+              <DocumentTextIcon className="mx-auto h-12 w-12 text-neutral-400 dark:text-neutral-500" />
+            </div>
+            <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-100 mb-2">
+              {t("invoice.noInvoicesTitle", "No invoices found")}
+            </h3>
+            <p className="text-neutral-600 dark:text-neutral-400 mb-6">
+              {t(
+                "invoice.noInvoicesDescription",
+                "Start by creating your first invoice or adjust your filters."
               )}
-            </tbody>
-          </table>
-        </div>
+            </p>
+            <Button
+              as={Link}
+              to="/app/invoices/new"
+              variant="primary"
+              leftIcon={<PlusIcon className="h-4 w-4" />}
+            >
+              {t("invoice.createFirstInvoice", "Create First Invoice")}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

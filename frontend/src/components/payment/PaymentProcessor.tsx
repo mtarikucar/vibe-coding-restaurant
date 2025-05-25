@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { paymentAPI } from "../../services/api";
-import { PaymentMethod } from "./PaymentMethodSelector";
+import { PaymentMethod } from "../../types/payment";
 import useAuthStore from "../../store/authStore";
 import { formatCurrency } from "../../utils/formatters";
 import PayPalPayment from "./PayPalPayment";
@@ -130,23 +130,26 @@ const PaymentProcessor: React.FC<PaymentProcessorProps> = ({
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-        <p className="mt-4 text-gray-600">Processing payment...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+        <p className="mt-4 text-neutral-600 dark:text-neutral-400">
+          {t("payment.processingPayment", "Processing payment...")}
+        </p>
       </div>
     );
   }
 
   if (paymentStatus === "pending" && paymentDetails?.requiresAction) {
     return (
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">
-          {t("payment.completeYourPayment")}
+      <div className="bg-white dark:bg-darkGray-800 p-6 rounded-2xl shadow-soft">
+        <h3 className="text-xl font-semibold text-primary-900 dark:text-neutral-100 mb-4">
+          {t("payment.completeYourPayment", "Complete Your Payment")}
         </h3>
-        <p className="text-gray-600 mb-4">
-          {t("payment.totalAmount")}: {formatCurrency(orderTotal)}
+        <p className="text-neutral-600 dark:text-neutral-400 mb-6">
+          {t("payment.totalAmount", "Total amount")}:{" "}
+          {formatCurrency(orderTotal)}
         </p>
 
-        {paymentMethod === "paypal" ? (
+        {paymentMethod === PaymentMethod.PAYPAL ? (
           <PayPalPayment
             paymentDetails={paymentDetails}
             onSuccess={onPaymentComplete}
@@ -154,7 +157,7 @@ const PaymentProcessor: React.FC<PaymentProcessorProps> = ({
             amount={orderTotal}
             orderId={orderId}
           />
-        ) : paymentMethod === "stripe" ? (
+        ) : paymentMethod === PaymentMethod.STRIPE ? (
           <StripePayment
             paymentDetails={paymentDetails}
             onSuccess={onPaymentComplete}
@@ -162,7 +165,7 @@ const PaymentProcessor: React.FC<PaymentProcessorProps> = ({
             amount={orderTotal}
             orderId={orderId}
           />
-        ) : paymentMethod === "iyzico" ? (
+        ) : paymentMethod === PaymentMethod.IYZICO ? (
           <IyzicoPayment
             paymentDetails={paymentDetails}
             onSuccess={onPaymentComplete}
@@ -172,26 +175,32 @@ const PaymentProcessor: React.FC<PaymentProcessorProps> = ({
           />
         ) : (
           // Default payment interface for other methods
-          <div className="border border-gray-300 rounded-lg p-4 mb-4">
-            <p className="text-gray-700 mb-2">
-              {t("payment.mockPaymentInterface")}
+          <div className="border border-neutral-300 dark:border-darkGray-600 rounded-xl p-6 mb-6 bg-neutral-50 dark:bg-darkGray-700">
+            <p className="text-neutral-700 dark:text-neutral-300 mb-3 font-medium">
+              {t(
+                "payment.mockPaymentInterface",
+                "This is a mock payment interface for demonstration purposes."
+              )}
             </p>
-            <p className="text-gray-700 mb-4">
-              {t("payment.realImplementationNote")}
+            <p className="text-neutral-600 dark:text-neutral-400 mb-6 text-sm">
+              {t(
+                "payment.realImplementationNote",
+                "In a real implementation, this would be replaced with the payment provider's form or redirect."
+              )}
             </p>
 
-            <div className="flex space-x-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <button
                 onClick={handleMockPaymentSuccess}
-                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md"
+                className="flex-1 bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white px-6 py-3 rounded-xl font-medium transition-colors"
               >
-                {t("payment.simulateSuccess")}
+                {t("payment.simulateSuccess", "Simulate Successful Payment")}
               </button>
               <button
                 onClick={handleMockPaymentFailure}
-                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md"
+                className="flex-1 bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white px-6 py-3 rounded-xl font-medium transition-colors"
               >
-                {t("payment.simulateFailure")}
+                {t("payment.simulateFailure", "Simulate Failed Payment")}
               </button>
             </div>
           </div>

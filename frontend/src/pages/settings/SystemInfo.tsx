@@ -142,7 +142,7 @@ const SystemInfo: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-forest-600">
+        <h1 className="text-2xl font-bold text-primary-700 dark:text-neutral-200">
           {t("system.title")}
         </h1>
       </div>
@@ -151,15 +151,15 @@ const SystemInfo: React.FC = () => {
         {/* Sidebar */}
         <div className="lg:col-span-1">
           <Card className="overflow-hidden">
-            <div className="divide-y divide-cream-300">
+            <div className="divide-y divide-neutral-300 dark:divide-darkGray-700">
               {filteredTabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`w-full flex items-center px-4 py-3 text-left transition-colors ${
                     activeTab === tab.id
-                      ? "bg-lime-100 text-forest-600"
-                      : "hover:bg-cream-200 text-forest-500"
+                      ? "bg-primary-100 text-primary-700 dark:bg-darkGray-700 dark:text-primary-300"
+                      : "hover:bg-neutral-200 text-primary-600 dark:hover:bg-darkGray-600 dark:text-neutral-300"
                   }`}
                 >
                   <tab.icon className="h-5 w-5 mr-3" />
@@ -176,10 +176,10 @@ const SystemInfo: React.FC = () => {
             {/* Theme Settings */}
             {activeTab === "theme" && (
               <div>
-                <h2 className="text-xl font-semibold text-forest-600 mb-4">
+                <h2 className="text-xl font-semibold text-primary-700 dark:text-neutral-200 mb-4">
                   {t("system.themeSettings")}
                 </h2>
-                <p className="text-forest-500 mb-6">
+                <p className="text-primary-600 dark:text-neutral-400 mb-6">
                   {t("system.themeDescription")}
                 </p>
 
@@ -190,15 +190,15 @@ const SystemInfo: React.FC = () => {
                       onClick={() => handleThemeChange(themeOption.id)}
                       className={`border rounded-xl p-5 cursor-pointer transition-all ${
                         selectedTheme === themeOption.id
-                          ? "border-lime-500 bg-lime-50 dark:bg-gray-700 dark:border-lime-400"
-                          : "border-cream-300 hover:border-lime-300 dark:border-gray-600 dark:hover:border-lime-500"
+                          ? "border-primary-500 bg-primary-50 dark:bg-neutral-700 dark:border-primary-400"
+                          : "border-neutral-300 hover:border-primary-300 dark:border-neutral-600 dark:hover:border-primary-500"
                       }`}
                     >
                       <div className="flex items-center justify-between mb-3">
-                        <span className="font-medium text-forest-600 dark:text-lime-300">
+                        <span className="font-medium text-primary-700 dark:text-primary-300">
                           {themeOption.name}
                         </span>
-                        <themeOption.icon className="h-5 w-5 text-forest-500 dark:text-lime-400" />
+                        <themeOption.icon className="h-5 w-5 text-primary-600 dark:text-primary-400" />
                       </div>
                       <div
                         className="w-full h-24 rounded-lg mb-3 shadow-sm"
@@ -208,15 +208,15 @@ const SystemInfo: React.FC = () => {
                         <div
                           className={`w-4 h-4 rounded-full border flex-shrink-0 ${
                             selectedTheme === themeOption.id
-                              ? "border-lime-500 bg-lime-500 dark:border-lime-400 dark:bg-lime-400"
-                              : "border-forest-300 dark:border-gray-500"
+                              ? "border-primary-500 bg-primary-500 dark:border-primary-400 dark:bg-primary-400"
+                              : "border-neutral-300 dark:border-neutral-500"
                           }`}
                         ></div>
-                        <span className="ml-2 font-medium text-forest-600 dark:text-gray-200">
+                        <span className="ml-2 font-medium text-primary-700 dark:text-neutral-200">
                           {themeOption.name}
                         </span>
                       </div>
-                      <p className="text-sm text-forest-500 dark:text-gray-300 mt-2">
+                      <p className="text-sm text-primary-600 dark:text-neutral-300 mt-2">
                         {themeOption.description}
                       </p>
                     </div>

@@ -11,46 +11,67 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color-scheme: light dark;
+
+  /* Light mode CSS variables */
+  --bg-primary: #f1f0e8;
+  --bg-secondary: #e5e1da;
+  --bg-tertiary: #f9f8f7;
+  --text-primary: #89a8b2;
+  --text-secondary: #5c7279;
+  --accent-primary: #b3c8cf;
+  --accent-secondary: #9fb8c1;
+  --border-color: #d4dadf;
+  --shadow-color: rgba(137, 168, 178, 0.1);
+}
+
+.dark {
+  /* Dark mode CSS variables - Metal/Pastel Gray Theme */
+  --bg-primary: #1e1e1e;
+  --bg-secondary: #2a2a2a;
+  --bg-tertiary: #363636;
+  --text-primary: #e5e1da;
+  --text-secondary: #b3c8cf;
+  --accent-primary: #89a8b2;
+  --accent-secondary: #7a969f;
+  --border-color: #404040;
+  --shadow-color: rgba(0, 0, 0, 0.4);
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #fffdf6; /* Light mode background color */
-  transition: background-color 0.3s ease;
-}
-
-.dark body {
-  background-color: #2c3333; /* Dark mode background color */
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 @layer base {
   h1 {
-    @apply text-2xl font-bold text-forest-600 dark:text-lime-200;
+    @apply text-2xl font-bold text-primary-800 dark:text-neutral-200;
   }
   h2 {
-    @apply text-xl font-semibold text-forest-500 dark:text-lime-300;
+    @apply text-xl font-semibold text-primary-700 dark:text-neutral-300;
   }
   h3 {
-    @apply text-lg font-medium text-forest-500 dark:text-lime-300;
+    @apply text-lg font-medium text-primary-700 dark:text-neutral-300;
   }
   a {
-    @apply text-lime-600 hover:text-lime-700 dark:text-lime-400 dark:hover:text-lime-300 transition-colors;
+    @apply text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition-colors;
   }
 }
 
 @layer components {
   /* Modern form styles */
   .form-input {
-    @apply mt-1 block w-full px-3 py-2 border border-lime-200 rounded-xl shadow-sm
-    focus:outline-none focus:ring-2 focus:ring-lime-500 focus:border-lime-500
-    transition-all duration-200 bg-cream-100
-    dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100 dark:focus:ring-lime-600 dark:focus:border-lime-600;
+    @apply mt-1 block w-full px-3 py-2 border border-primary-200 rounded-xl shadow-sm
+    focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500
+    transition-all duration-200 bg-neutral-100
+    dark:bg-darkGray-800 dark:border-darkGray-700 dark:text-neutral-100 dark:focus:ring-primary-600 dark:focus:border-primary-600;
   }
 
   .form-label {
-    @apply block text-sm font-medium text-forest-500 mb-1 dark:text-lime-300;
+    @apply block text-sm font-medium text-primary-700 mb-1 dark:text-neutral-300;
   }
 
   /* Button styles */
@@ -61,18 +82,18 @@ body {
   }
 
   .btn-primary {
-    @apply bg-lime-500 hover:bg-lime-600 text-white
-    focus:ring-lime-400 active:bg-lime-700;
+    @apply bg-primary-600 hover:bg-primary-700 text-white
+    focus:ring-primary-400 active:bg-primary-800;
   }
 
   .btn-secondary {
-    @apply bg-forest-500 hover:bg-forest-600 text-white
-    focus:ring-forest-400 active:bg-forest-700;
+    @apply bg-secondary-600 hover:bg-secondary-700 text-white
+    focus:ring-secondary-400 active:bg-secondary-800;
   }
 
   .btn-success {
-    @apply bg-lime-500 hover:bg-lime-600 text-white
-    focus:ring-lime-400 active:bg-lime-700;
+    @apply bg-success-600 hover:bg-success-700 text-white
+    focus:ring-success-400 active:bg-success-800;
   }
 
   .btn-danger {
@@ -81,35 +102,35 @@ body {
   }
 
   .btn-warning {
-    @apply bg-warning-500 hover:bg-warning-600 text-white
-    focus:ring-warning-400 active:bg-warning-700;
+    @apply bg-warning-600 hover:bg-warning-700 text-white
+    focus:ring-warning-400 active:bg-warning-800;
   }
 
   /* Soft button styles */
   .btn-soft-primary {
-    @apply bg-lime-100 hover:bg-lime-200 text-lime-700
-    focus:ring-lime-300 active:bg-lime-300 border border-lime-200;
+    @apply bg-primary-100 hover:bg-primary-200 text-primary-700
+    focus:ring-primary-300 active:bg-primary-300 border border-primary-200;
   }
 
   .btn-soft-secondary {
-    @apply bg-forest-100 hover:bg-forest-200 text-forest-700
-    focus:ring-forest-300 active:bg-forest-300 border border-forest-200;
+    @apply bg-secondary-100 hover:bg-secondary-200 text-secondary-700
+    focus:ring-secondary-300 active:bg-secondary-300 border border-secondary-200;
   }
 
   /* Card styles */
   .card {
-    @apply bg-cream-100 rounded-2xl shadow-card p-6 transition-shadow duration-300 hover:shadow-soft border border-cream-300
-    dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100;
+    @apply bg-neutral-100 rounded-2xl shadow-card p-6 transition-shadow duration-300 hover:shadow-soft border border-neutral-300
+    dark:bg-darkGray-800 dark:border-darkGray-700 dark:text-neutral-100;
   }
 
   .card-accent {
-    @apply bg-cream-100 rounded-2xl shadow-card p-6 transition-shadow duration-300 hover:shadow-soft border-l-4 border-lime-500
-    dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100;
+    @apply bg-neutral-100 rounded-2xl shadow-card p-6 transition-shadow duration-300 hover:shadow-soft border-l-4 border-primary-500
+    dark:bg-darkGray-800 dark:border-darkGray-700 dark:text-neutral-100;
   }
 
   .card-soft {
-    @apply bg-cream-50 rounded-2xl p-6 transition-shadow duration-300 hover:shadow-soft border border-cream-200
-    dark:bg-gray-900 dark:border-gray-800 dark:text-gray-200;
+    @apply bg-neutral-50 rounded-2xl p-6 transition-shadow duration-300 hover:shadow-soft border border-neutral-200
+    dark:bg-darkGray-900 dark:border-darkGray-800 dark:text-neutral-200;
   }
 }
 
@@ -120,18 +141,18 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-cream-200 dark:bg-gray-700;
+  @apply bg-neutral-200 dark:bg-darkGray-700;
   border-radius: 8px;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-lime-300 dark:bg-lime-700;
+  @apply bg-primary-300 dark:bg-darkGray-600;
   border-radius: 8px;
-  @apply border-2 border-cream-200 dark:border-gray-700;
+  @apply border-2 border-neutral-200 dark:border-darkGray-700;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-lime-400 dark:bg-lime-600;
+  @apply bg-primary-400 dark:bg-darkGray-500;
 }
 
 /* Animations */

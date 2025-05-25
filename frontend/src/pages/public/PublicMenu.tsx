@@ -20,7 +20,9 @@ const PublicMenu: React.FC = () => {
     fetchCategories();
     fetchMenuItems();
     // Try to get restaurant name from localStorage or use a default
-    const storedName = localStorage.getItem(`restaurant_name_${tenantId}`) || t("menu.defaultRestaurantName", "Restaurant Menu");
+    const storedName =
+      localStorage.getItem(`restaurant_name_${tenantId}`) ||
+      t("menu.defaultRestaurantName", "Restaurant Menu");
     setRestaurantName(storedName);
   }, [tenantId]);
 
@@ -48,7 +50,7 @@ const PublicMenu: React.FC = () => {
   const handleCategoryChange = async (categoryId: string) => {
     setSelectedCategory(categoryId);
     setLoading(true);
-    
+
     try {
       if (categoryId === "all") {
         const data = await menuAPI.getMenuItems(tenantId);
@@ -77,25 +79,33 @@ const PublicMenu: React.FC = () => {
   };
 
   return (
-    <div className="bg-cream-100 min-h-screen pb-16">
-      <div className="bg-forest-500 text-white p-4 shadow-md">
+    <div className="bg-neutral-100 dark:bg-darkGray-900 min-h-screen pb-16">
+      <div className="bg-primary-600 dark:bg-primary-800 text-white p-4 shadow-md">
         <h1 className="text-2xl font-bold text-center">{restaurantName}</h1>
         <div className="flex justify-center mt-2 space-x-2">
-          <button 
-            onClick={() => changeLanguage('en')} 
-            className={`px-2 py-1 rounded ${i18n.language === 'en' ? 'bg-lime-500' : 'bg-forest-400'}`}
+          <button
+            onClick={() => changeLanguage("en")}
+            className={`px-2 py-1 rounded ${
+              i18n.language === "en"
+                ? "bg-primary-300 text-primary-900"
+                : "bg-primary-500 hover:bg-primary-400"
+            }`}
           >
             English
           </button>
-          <button 
-            onClick={() => changeLanguage('tr')} 
-            className={`px-2 py-1 rounded ${i18n.language === 'tr' ? 'bg-lime-500' : 'bg-forest-400'}`}
+          <button
+            onClick={() => changeLanguage("tr")}
+            className={`px-2 py-1 rounded ${
+              i18n.language === "tr"
+                ? "bg-primary-300 text-primary-900"
+                : "bg-primary-500 hover:bg-primary-400"
+            }`}
           >
             Türkçe
           </button>
         </div>
       </div>
-      
+
       <div className="p-4">
         <div className="mb-4 relative">
           <div className="relative">
@@ -114,8 +124,8 @@ const PublicMenu: React.FC = () => {
           <button
             className={`px-4 py-2 rounded-full mr-2 text-sm font-medium whitespace-nowrap ${
               selectedCategory === "all"
-                ? "bg-forest-500 text-white"
-                : "bg-white text-gray-700 border border-gray-300"
+                ? "bg-primary-600 text-white dark:bg-primary-500"
+                : "bg-white text-primary-700 border border-primary-300 dark:bg-darkGray-800 dark:text-neutral-300 dark:border-darkGray-600"
             }`}
             onClick={() => handleCategoryChange("all")}
           >
@@ -126,8 +136,8 @@ const PublicMenu: React.FC = () => {
               key={category.id}
               className={`px-4 py-2 rounded-full mr-2 text-sm font-medium whitespace-nowrap ${
                 selectedCategory === category.id
-                  ? "bg-forest-500 text-white"
-                  : "bg-white text-gray-700 border border-gray-300"
+                  ? "bg-primary-600 text-white dark:bg-primary-500"
+                  : "bg-white text-primary-700 border border-primary-300 dark:bg-darkGray-800 dark:text-neutral-300 dark:border-darkGray-600"
               }`}
               onClick={() => handleCategoryChange(category.id)}
             >
@@ -159,11 +169,11 @@ const PublicMenu: React.FC = () => {
                         </p>
                       )}
                       <div className="mt-2 flex items-center">
-                        <span className="text-forest-600 font-medium">
+                        <span className="text-primary-700 dark:text-primary-400 font-medium">
                           {formatCurrency(item.price)}
                         </span>
                         {!item.isAvailable && (
-                          <span className="ml-2 px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                          <span className="ml-2 px-2 py-1 text-xs font-semibold rounded-full bg-danger-100 text-danger-800 dark:bg-danger-900 dark:text-danger-200">
                             {t("menu.unavailable", "Unavailable")}
                           </span>
                         )}
@@ -185,7 +195,9 @@ const PublicMenu: React.FC = () => {
           </div>
         ) : (
           <div className="text-center py-12">
-            <p className="text-gray-500">{t("menu.noItems", "No items found")}</p>
+            <p className="text-gray-500">
+              {t("menu.noItems", "No items found")}
+            </p>
           </div>
         )}
       </div>

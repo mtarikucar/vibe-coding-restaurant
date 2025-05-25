@@ -31,24 +31,26 @@ const MobileHeader: React.FC<MobileHeaderProps> = ({
   };
 
   return (
-    <header className="bg-cream-100 shadow-sm sticky top-0 z-10 border-b border-cream-300">
+    <header className="bg-neutral-100 dark:bg-darkGray-800 shadow-sm sticky top-0 z-10 border-b border-neutral-300 dark:border-darkGray-700">
       <div className="flex justify-between items-center py-4 px-4">
         <div className="flex items-center">
           {shouldShowBackButton() && (
             <button
               onClick={() => navigate(-1)}
-              className="mr-2 p-1.5 rounded-xl hover:bg-cream-200 text-forest-500"
+              className="mr-2 p-1.5 rounded-xl hover:bg-neutral-200 text-primary-600 dark:hover:bg-darkGray-700 dark:text-primary-400"
             >
               <ArrowLeftIcon className="h-5 w-5" />
             </button>
           )}
-          <h1 className="text-xl font-semibold text-forest-600">{title}</h1>
+          <h1 className="text-xl font-semibold text-primary-700 dark:text-neutral-200">
+            {title}
+          </h1>
         </div>
         <div className="flex items-center space-x-3">
-          <div className="bg-cream-200 p-1 rounded-xl">
+          <div className="bg-neutral-200 dark:bg-darkGray-700 p-1 rounded-xl">
             <SocketStatus showLabel={false} />
           </div>
-          <div className="bg-cream-200 p-1 rounded-xl">
+          <div className="bg-neutral-200 dark:bg-darkGray-700 p-1 rounded-xl">
             <NotificationBell />
           </div>
         </div>
