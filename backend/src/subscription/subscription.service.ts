@@ -6,7 +6,7 @@ import {
   Logger,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository, DataSource, LessThan, MoreThanOrEqual } from "typeorm";
+import { Repository, DataSource, LessThan, MoreThanOrEqual, In } from "typeorm";
 import { ConfigService } from "@nestjs/config";
 import {
   Subscription,
@@ -22,6 +22,7 @@ import { CreateSubscriptionDto } from "./dto/create-subscription.dto";
 import { UpdateSubscriptionDto } from "./dto/update-subscription.dto";
 import { CreateSubscriptionPlanDto } from "./dto/create-subscription-plan.dto";
 import { User, UserSubscriptionStatus } from "../auth/entities/user.entity";
+import { Tenant, TenantStatus } from "../tenant/entities/tenant.entity";
 import { EmailService } from "../shared/services/email.service";
 import { PaymentGatewayService } from "../payment/services/payment-gateway.service";
 import { addDays, format } from "date-fns";
@@ -85,15 +86,20 @@ export class SubscriptionService {
     await queryRunner.startTransaction();
 
     try {
-      // Check if user exists
+      // Check if user exists with tenant
       const user = await this.userRepository.findOne({
         where: { id: createSubscriptionDto.userId },
+        relations: ['tenant'],
       });
 
       if (!user) {
         throw new NotFoundException(
           `User with ID ${createSubscriptionDto.userId} not found`
         );
+      }
+
+      if (!user.tenant) {
+        throw new BadRequestException("User must belong to a tenant");
       }
 
       // Check if plan exists
@@ -107,23 +113,28 @@ export class SubscriptionService {
         );
       }
 
-      // Check if user already has an active subscription
+      // Check if tenant already has an active subscription
       const existingSubscription = await this.subscriptionRepository.findOne({
         where: {
-          userId: user.id,
-          status: SubscriptionStatus.ACTIVE,
+          tenantId: user.tenantId,
+          status: In([SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIAL]),
         },
       });
 
       if (existingSubscription) {
-        throw new ConflictException("User already has an active subscription");
+        throw new ConflictException("Tenant already has an active subscription");
       }
+
+      // Determine payment provider based on tenant's country
+      const paymentProvider = this.getPaymentProvider(user.tenant.country);
 
       // Create subscription
       const subscription = this.subscriptionRepository.create({
         ...createSubscriptionDto,
+        tenantId: user.tenantId,
         amount: plan.price,
-        currency: createSubscriptionDto.currency || "usd",
+        currency: createSubscriptionDto.currency || this.getCurrencyByCountry(user.tenant.country),
+        paymentProvider,
       });
 
       // Save subscription
@@ -133,6 +144,11 @@ export class SubscriptionService {
       user.subscriptionStatus = UserSubscriptionStatus.ACTIVE;
       user.subscriptionId = savedSubscription.id;
       await queryRunner.manager.save(user);
+
+      // Update tenant subscription info
+      user.tenant.subscriptionId = savedSubscription.id;
+      user.tenant.status = TenantStatus.ACTIVE;
+      await queryRunner.manager.save(user.tenant);
 
       // Commit transaction
       await queryRunner.commitTransaction();
@@ -606,5 +622,86 @@ export class SubscriptionService {
         },
       });
     }
+  }
+
+  /**
+   * Get payment provider based on country
+   */
+  private getPaymentProvider(country: string): PaymentProvider {
+    if (!country) {
+      return PaymentProvider.STRIPE;
+    }
+
+    const countryLower = country.toLowerCase();
+    if (countryLower === 'turkey' || countryLower === 'tr') {
+      return PaymentProvider.IYZICO;
+    }
+
+    return PaymentProvider.STRIPE;
+  }
+
+  /**
+   * Get currency based on country
+   */
+  private getCurrencyByCountry(country: string): string {
+    if (!country) {
+      return 'usd';
+    }
+
+    const countryLower = country.toLowerCase();
+
+    const currencyMap: Record<string, string> = {
+      'turkey': 'try',
+      'tr': 'try',
+      'united states': 'usd',
+      'us': 'usd',
+      'usa': 'usd',
+      'united kingdom': 'gbp',
+      'uk': 'gbp',
+      'gb': 'gbp',
+      'germany': 'eur',
+      'de': 'eur',
+      'france': 'eur',
+      'fr': 'eur',
+      'spain': 'eur',
+      'es': 'eur',
+      'italy': 'eur',
+      'it': 'eur',
+      'netherlands': 'eur',
+      'nl': 'eur',
+      'canada': 'cad',
+      'ca': 'cad',
+      'australia': 'aud',
+      'au': 'aud',
+      'japan': 'jpy',
+      'jp': 'jpy',
+    };
+
+    return currencyMap[countryLower] || 'usd';
+  }
+
+  /**
+   * Find subscription by tenant
+   */
+  async findSubscriptionByTenant(tenantId: string): Promise<Subscription | null> {
+    return this.subscriptionRepository.findOne({
+      where: { tenantId },
+      relations: ["plan", "user", "tenant"],
+      order: { createdAt: "DESC" },
+    });
+  }
+
+  /**
+   * Check if tenant has active subscription
+   */
+  async hasActiveSubscription(tenantId: string): Promise<boolean> {
+    const subscription = await this.subscriptionRepository.findOne({
+      where: {
+        tenantId,
+        status: In([SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIAL]),
+      },
+    });
+
+    return !!subscription;
   }
 }

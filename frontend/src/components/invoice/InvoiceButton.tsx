@@ -4,6 +4,7 @@ import {
   DocumentTextIcon,
   ArrowDownTrayIcon,
 } from "@heroicons/react/24/outline";
+import { Button } from "../ui";
 import { invoiceAPI } from "../../services/invoiceAPI";
 import { useToast } from "../common/ToastProvider";
 // Define Invoice interface directly here
@@ -68,53 +69,61 @@ const InvoiceButton: React.FC<InvoiceButtonProps> = ({ orderId }) => {
 
   if (loading) {
     return (
-      <button
+      <Button
         disabled
-        className="bg-gray-300 text-gray-500 px-4 py-2 rounded-md flex items-center"
+        variant="secondary"
+        size="md"
+        isLoading={true}
       >
-        <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-gray-600 mr-2"></div>
         Loading...
-      </button>
+      </Button>
     );
   }
 
   if (error) {
     return (
-      <button disabled className="bg-red-100 text-red-700 px-4 py-2 rounded-md">
+      <Button
+        disabled
+        variant="danger"
+        size="md"
+      >
         Error checking invoice
-      </button>
+      </Button>
     );
   }
 
   if (invoice) {
     return (
       <div className="flex space-x-2">
-        <button
+        <Button
           onClick={handleViewInvoice}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center"
+          variant="primary"
+          size="md"
+          leftIcon={<DocumentTextIcon className="h-5 w-5" />}
         >
-          <DocumentTextIcon className="h-5 w-5 mr-2" />
           View Invoice
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={handleDownloadInvoice}
-          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md flex items-center"
+          variant="success"
+          size="md"
+          leftIcon={<ArrowDownTrayIcon className="h-5 w-5" />}
         >
-          <ArrowDownTrayIcon className="h-5 w-5 mr-2" />
           Download
-        </button>
+        </Button>
       </div>
     );
   }
 
   return (
-    <button
+    <Button
       onClick={handleCreateInvoice}
-      className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-md flex items-center"
+      variant="warning"
+      size="md"
+      leftIcon={<DocumentTextIcon className="h-5 w-5" />}
     >
-      <DocumentTextIcon className="h-5 w-5 mr-2" />
       Generate Invoice
-    </button>
+    </Button>
   );
 };
 

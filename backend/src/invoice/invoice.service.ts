@@ -276,146 +276,44 @@ export class InvoiceService {
 
     return new Promise((resolve, reject) => {
       try {
-        const doc = new PDFDocument({ margin: 50 });
+        const doc = new PDFDocument({
+          margin: 50,
+          size: 'A4',
+          info: {
+            Title: `Invoice ${invoice.invoiceNumber}`,
+            Author: 'Restaurant Management System',
+            Subject: 'Invoice',
+            Keywords: 'invoice, restaurant, billing',
+          }
+        });
         const stream = fs.createWriteStream(filePath);
 
         doc.pipe(stream);
 
-        // Add company logo
-        // doc.image('path/to/logo.png', 50, 45, { width: 50 });
+        // Header section
+        this.addInvoiceHeader(doc, invoice);
 
-        // Add invoice header
-        doc.fontSize(20).text('INVOICE', { align: 'right' });
-        doc.fontSize(10).text(invoice.invoiceNumber, { align: 'right' });
-        doc.moveDown();
+        // Company and customer info
+        this.addCompanyAndCustomerInfo(doc, invoice);
 
-        // Add company info
-        doc.fontSize(10).text('Restaurant Management System', { align: 'left' });
-        doc.fontSize(10).text('123 Main Street', { align: 'left' });
-        doc.fontSize(10).text('City, State ZIP', { align: 'left' });
-        doc.fontSize(10).text('Phone: (123) 456-7890', { align: 'left' });
-        doc.fontSize(10).text('Email: info@restaurant.com', { align: 'left' });
-        doc.moveDown();
+        // Invoice details
+        this.addInvoiceDetails(doc, invoice);
 
-        // Add customer info if available
-        if (invoice.customerName) {
-          doc.fontSize(10).text('Bill To:', { align: 'left' });
-          doc.fontSize(10).text(invoice.customerName, { align: 'left' });
-          if (invoice.customerAddress) {
-            doc.fontSize(10).text(invoice.customerAddress, { align: 'left' });
-          }
-          if (invoice.customerEmail) {
-            doc.fontSize(10).text(`Email: ${invoice.customerEmail}`, { align: 'left' });
-          }
-          if (invoice.customerPhone) {
-            doc.fontSize(10).text(`Phone: ${invoice.customerPhone}`, { align: 'left' });
-          }
-          doc.moveDown();
-        }
+        // Items table
+        this.addItemsTable(doc, invoice);
 
-        // Add invoice details
-        doc.fontSize(10).text(`Issue Date: ${invoice.issueDate.toLocaleDateString()}`, { align: 'right' });
-        if (invoice.dueDate) {
-          doc.fontSize(10).text(`Due Date: ${invoice.dueDate.toLocaleDateString()}`, { align: 'right' });
-        }
-        doc.fontSize(10).text(`Order Number: ${invoice.order.orderNumber}`, { align: 'right' });
-        doc.fontSize(10).text(`Table: ${invoice.order.table.number}`, { align: 'right' });
-        doc.moveDown();
+        // Totals section
+        this.addTotalsSection(doc, invoice);
 
-        // Add order items
-        doc.fontSize(12).text('Order Items', { underline: true });
-        doc.moveDown();
+        // Footer
+        this.addInvoiceFooter(doc, invoice);
 
-        // Create table header
-        const tableTop = doc.y;
-        doc.fontSize(10)
-          .text('Item', 50, tableTop)
-          .text('Quantity', 250, tableTop)
-          .text('Price', 350, tableTop)
-          .text('Total', 450, tableTop);
 
-        // Draw line
-        doc.moveTo(50, doc.y + 5)
-          .lineTo(550, doc.y + 5)
-          .stroke();
-        doc.moveDown();
-
-        // Add items
-        let tableY = doc.y;
-        invoice.order.items.forEach((item) => {
-          doc.fontSize(10)
-            .text(item.menuItem.name, 50, tableY)
-            .text(item.quantity.toString(), 250, tableY)
-            .text(`$${item.price.toFixed(2)}`, 350, tableY)
-            .text(`$${(item.price * item.quantity).toFixed(2)}`, 450, tableY);
-          tableY = doc.y + 15;
-          doc.moveDown();
-        });
-
-        // Draw line
-        doc.moveTo(50, doc.y)
-          .lineTo(550, doc.y)
-          .stroke();
-        doc.moveDown();
-
-        // Add totals
-        doc.fontSize(10)
-          .text('Subtotal:', 350, doc.y)
-          .text(`$${invoice.subtotal.toFixed(2)}`, 450, doc.y);
-        doc.moveDown();
-
-        if (invoice.taxAmount > 0) {
-          doc.fontSize(10)
-            .text('Tax:', 350, doc.y)
-            .text(`$${invoice.taxAmount.toFixed(2)}`, 450, doc.y);
-          doc.moveDown();
-        }
-
-        if (invoice.discountAmount > 0) {
-          doc.fontSize(10)
-            .text('Discount:', 350, doc.y)
-            .text(`$${invoice.discountAmount.toFixed(2)}`, 450, doc.y);
-          doc.moveDown();
-        }
-
-        doc.fontSize(12)
-          .text('Total:', 350, doc.y)
-          .text(`$${invoice.totalAmount.toFixed(2)}`, 450, doc.y);
-        doc.moveDown();
-
-        // Add payment info if available
-        if (invoice.payment) {
-          doc.moveDown();
-          doc.fontSize(12).text('Payment Information', { underline: true });
-          doc.moveDown();
-          doc.fontSize(10)
-            .text(`Payment Method: ${invoice.payment.method}`, 50, doc.y);
-          doc.fontSize(10)
-            .text(`Payment Status: ${invoice.payment.status}`, 50, doc.y + 15);
-          if (invoice.payment.transactionId) {
-            doc.fontSize(10)
-              .text(`Transaction ID: ${invoice.payment.transactionId}`, 50, doc.y + 30);
-          }
-          doc.moveDown();
-        }
-
-        // Add notes if available
-        if (invoice.notes) {
-          doc.moveDown();
-          doc.fontSize(12).text('Notes', { underline: true });
-          doc.moveDown();
-          doc.fontSize(10).text(invoice.notes);
-          doc.moveDown();
-        }
-
-        // Add footer
-        doc.fontSize(10).text('Thank you for your business!', { align: 'center' });
 
         doc.end();
 
         stream.on('finish', () => {
-          const relativePath = filePath.replace(process.cwd(), '');
-          resolve(relativePath);
+          resolve(`uploads/invoices/${fileName}`);
         });
 
         stream.on('error', (error) => {
@@ -425,5 +323,209 @@ export class InvoiceService {
         reject(error);
       }
     });
+  }
+
+  private addInvoiceHeader(doc: any, invoice: any): void {
+    // Company logo placeholder
+    doc.fontSize(24)
+       .fillColor('#2563eb')
+       .text('RESTAURANT', 50, 50)
+       .fontSize(12)
+       .fillColor('#6b7280')
+       .text('Management System', 50, 80);
+
+    // Invoice title and number
+    doc.fontSize(28)
+       .fillColor('#1f2937')
+       .text('INVOICE', 400, 50, { align: 'right' })
+       .fontSize(14)
+       .fillColor('#6b7280')
+       .text(`#${invoice.invoiceNumber}`, 400, 85, { align: 'right' });
+
+    // Add a line separator
+    doc.moveTo(50, 120)
+       .lineTo(550, 120)
+       .strokeColor('#e5e7eb')
+       .stroke();
+  }
+
+  private addCompanyAndCustomerInfo(doc: any, invoice: any): void {
+    const startY = 140;
+
+    // Company information (left side)
+    doc.fontSize(12)
+       .fillColor('#1f2937')
+       .text('From:', 50, startY)
+       .fontSize(11)
+       .fillColor('#374151')
+       .text('Restaurant Name', 50, startY + 20)
+       .text('123 Restaurant Street', 50, startY + 35)
+       .text('City, State 12345', 50, startY + 50)
+       .text('Phone: (555) 123-4567', 50, startY + 65)
+       .text('Email: info@restaurant.com', 50, startY + 80);
+
+    // Customer information (right side)
+    if (invoice.customerName || invoice.customerEmail) {
+      doc.fontSize(12)
+         .fillColor('#1f2937')
+         .text('Bill To:', 350, startY)
+         .fontSize(11)
+         .fillColor('#374151');
+
+      let customerY = startY + 20;
+      if (invoice.customerName) {
+        doc.text(invoice.customerName, 350, customerY);
+        customerY += 15;
+      }
+      if (invoice.customerAddress) {
+        doc.text(invoice.customerAddress, 350, customerY);
+        customerY += 15;
+      }
+      if (invoice.customerEmail) {
+        doc.text(invoice.customerEmail, 350, customerY);
+        customerY += 15;
+      }
+      if (invoice.customerPhone) {
+        doc.text(invoice.customerPhone, 350, customerY);
+      }
+    }
+  }
+
+  private addInvoiceDetails(doc: any, invoice: any): void {
+    const startY = 280;
+
+    // Invoice details
+    doc.fontSize(12)
+       .fillColor('#1f2937')
+       .text('Invoice Details:', 50, startY)
+       .fontSize(11)
+       .fillColor('#374151')
+       .text(`Issue Date: ${new Date(invoice.issueDate).toLocaleDateString()}`, 50, startY + 20)
+       .text(`Order Number: ${invoice.order.orderNumber}`, 50, startY + 35)
+       .text(`Table: ${invoice.order.table?.number || 'N/A'}`, 50, startY + 50)
+       .text(`Waiter: ${invoice.order.waiter?.fullName || 'N/A'}`, 50, startY + 65);
+
+    if (invoice.dueDate) {
+      doc.text(`Due Date: ${new Date(invoice.dueDate).toLocaleDateString()}`, 350, startY + 20);
+    }
+
+    doc.text(`Status: ${invoice.status.toUpperCase()}`, 350, startY + 35);
+  }
+
+  private addItemsTable(doc: any, invoice: any): void {
+    const startY = 380;
+    const tableTop = startY;
+    const itemCodeX = 50;
+    const descriptionX = 150;
+    const quantityX = 350;
+    const priceX = 400;
+    const amountX = 480;
+
+    // Table header
+    doc.fontSize(12)
+       .fillColor('#1f2937')
+       .text('Item', itemCodeX, tableTop)
+       .text('Description', descriptionX, tableTop)
+       .text('Qty', quantityX, tableTop)
+       .text('Price', priceX, tableTop)
+       .text('Amount', amountX, tableTop);
+
+    // Header line
+    doc.moveTo(itemCodeX, tableTop + 20)
+       .lineTo(amountX + 70, tableTop + 20)
+       .strokeColor('#e5e7eb')
+       .stroke();
+
+    // Table rows
+    let currentY = tableTop + 35;
+    doc.fontSize(10).fillColor('#374151');
+
+    invoice.order.items.forEach((item: any, index: number) => {
+      const itemTotal = item.quantity * item.price;
+
+      doc.text(item.menuItem.name, itemCodeX, currentY)
+         .text(item.menuItem.description || '', descriptionX, currentY, { width: 180 })
+         .text(item.quantity.toString(), quantityX, currentY)
+         .text(`$${item.price.toFixed(2)}`, priceX, currentY)
+         .text(`$${itemTotal.toFixed(2)}`, amountX, currentY);
+
+      if (item.notes) {
+        currentY += 15;
+        doc.fontSize(9)
+           .fillColor('#6b7280')
+           .text(`Note: ${item.notes}`, descriptionX, currentY, { width: 180 })
+           .fontSize(10)
+           .fillColor('#374151');
+      }
+
+      currentY += 25;
+
+      // Add page break if needed
+      if (currentY > 700) {
+        doc.addPage();
+        currentY = 50;
+      }
+    });
+
+    // Bottom line
+    doc.moveTo(itemCodeX, currentY)
+       .lineTo(amountX + 70, currentY)
+       .strokeColor('#e5e7eb')
+       .stroke();
+  }
+
+  private addTotalsSection(doc: any, invoice: any): void {
+    const startY = doc.y + 20;
+    const labelX = 400;
+    const amountX = 480;
+
+    doc.fontSize(11).fillColor('#374151');
+
+    // Subtotal
+    doc.text('Subtotal:', labelX, startY)
+       .text(`$${invoice.subtotal.toFixed(2)}`, amountX, startY);
+
+    // Tax
+    if (invoice.taxAmount > 0) {
+      doc.text('Tax:', labelX, startY + 20)
+         .text(`$${invoice.taxAmount.toFixed(2)}`, amountX, startY + 20);
+    }
+
+    // Discount
+    if (invoice.discountAmount > 0) {
+      doc.text('Discount:', labelX, startY + 40)
+         .text(`-$${invoice.discountAmount.toFixed(2)}`, amountX, startY + 40);
+    }
+
+    // Total line
+    const totalY = startY + (invoice.taxAmount > 0 ? 60 : 40) + (invoice.discountAmount > 0 ? 20 : 0);
+    doc.moveTo(labelX, totalY)
+       .lineTo(amountX + 70, totalY)
+       .strokeColor('#e5e7eb')
+       .stroke();
+
+    // Total amount
+    doc.fontSize(14)
+       .fillColor('#1f2937')
+       .text('Total:', labelX, totalY + 10)
+       .text(`$${invoice.totalAmount.toFixed(2)}`, amountX, totalY + 10);
+  }
+
+  private addInvoiceFooter(doc: any, invoice: any): void {
+    const footerY = 750;
+
+    // Notes
+    if (invoice.notes) {
+      doc.fontSize(10)
+         .fillColor('#6b7280')
+         .text('Notes:', 50, footerY)
+         .text(invoice.notes, 50, footerY + 15, { width: 500 });
+    }
+
+    // Footer text
+    doc.fontSize(9)
+       .fillColor('#9ca3af')
+       .text('Thank you for your business!', 50, footerY + 50)
+       .text(`Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}`, 50, footerY + 65);
   }
 }

@@ -44,6 +44,9 @@
     "close": "Kapat",
     "notifications": "Bildirimler",
     "viewAllNotifications": "Tüm bildirimleri görüntüle",
+    "version": "Versiyon 1.0.0",
+    "notNow": "Şimdi Değil",
+    "processing": "İşleniyor...",
     "time": {
       "minutes": "dk",
       "hours": "sa",
@@ -296,9 +299,30 @@
       "completed": "Tamamlandı",
       "cancelled": "İptal Edildi"
     },
+    "itemStatus": {
+      "pending": "Beklemede",
+      "preparing": "Hazırlanıyor",
+      "ready": "Hazır",
+      "served": "Servis Edildi",
+      "cancelled": "İptal Edildi"
+    },
     "allStatuses": "Tüm Durumlar",
     "time": "Zaman",
-    "waiter": "Garson"
+    "waiter": "Garson",
+    "active": "Aktif Siparişler",
+    "completed": "Tamamlanan Siparişler",
+    "all": "Tüm Siparişler",
+    "fetchError": "Sipariş detayları alınırken hata oluştu",
+    "notFound": "Sipariş bulunamadı",
+    "statusUpdateSuccess": "Sipariş durumu başarıyla güncellendi",
+    "statusUpdateError": "Sipariş durumu güncellenirken hata oluştu",
+    "itemStatusUpdateSuccess": "Ürün durumu başarıyla güncellendi",
+    "itemStatusUpdateError": "Ürün durumu güncellenirken hata oluştu",
+    "markPreparing": "Hazırlanıyor Olarak İşaretle",
+    "markReady": "Hazır Olarak İşaretle",
+    "markServed": "Servis Edildi Olarak İşaretle",
+    "markCompleted": "Tamamlandı Olarak İşaretle",
+    "cancel": "Siparişi İptal Et"
   },
   "kitchen": {
     "title": "Mutfak",
@@ -377,7 +401,24 @@
       "completed": "Tamamlandı",
       "failed": "Başarısız",
       "refunded": "İade Edildi"
-    },
+    }
+  },
+  "payment": {
+    "completeYourPayment": "Ödemenizi Tamamlayın",
+    "totalAmount": "Toplam tutar",
+    "mockStripeInterface": "Bu, gösteri amaçlı sahte Stripe ödeme arayüzüdür.",
+    "mockPaymentInterface": "Bu, gösteri amaçlı sahte ödeme arayüzüdür.",
+    "realImplementationNote": "Gerçek uygulamada bu, ödeme sağlayıcısının formu veya yönlendirmesi ile değiştirilecektir.",
+    "simulateSuccess": "Başarılı Ödemeyi Simüle Et",
+    "simulateFailure": "Başarısız Ödemeyi Simüle Et",
+    "payWithPayPal": "PayPal ile Öde",
+    "redirectedToPayPal": "Ödemenizi tamamlamak için PayPal'a yönlendirileceksiniz.",
+    "ifNotRedirected": "Otomatik olarak yönlendirilmezseniz, lütfen aşağıdaki düğmeye tıklayın.",
+    "goToPayPal": "PayPal'a Git",
+    "payAmount": "{{amount}} Öde",
+    "paypalPaymentFailed": "PayPal ödemesi başarısız. Lütfen tekrar deneyin.",
+    "stripePaymentFailed": "Stripe ödemesi başarısız. Lütfen tekrar deneyin.",
+    "processingPayment": "Ödeme işleniyor...",
     "title": "Ödeme İşlemi",
     "subtitle": "Bu sipariş için ödemeyi tamamlayın",
     "loading": "Ödeme detayları yükleniyor...",
@@ -477,6 +518,67 @@
     "forbidden": "Erişim engellendi",
     "notFound": "Kaynak bulunamadı",
     "validationError": "Doğrulama hatası"
+  },
+  "pwa": {
+    "installTitle": "Garson Uygulamasını Yükle",
+    "installDescription": "Hızlı erişim ve çevrimdışı kullanım için bu uygulamayı cihazınıza yükleyin.",
+    "install": "Yükle",
+    "installed": "Uygulama başarıyla yüklendi",
+    "offlineReady": "Uygulama çevrimdışı kullanıma hazır",
+    "updateAvailable": "Güncelleme mevcut",
+    "update": "Güncelle",
+    "redirecting": "Garson Uygulamasına yönlendiriliyor..."
+  },
+  "navigation": {
+    "dashboard": "Gösterge Paneli",
+    "menu": "Menü",
+    "orders": "Siparişler",
+    "kitchen": "Mutfak",
+    "tables": "Masalar",
+    "payments": "Ödemeler",
+    "reports": "Raporlar",
+    "stock": "Stok",
+    "users": "Kullanıcılar",
+    "settings": "Ayarlar",
+    "profile": "Profil",
+    "logout": "Çıkış",
+    "mobileApp": "Mobil Uygulama"
+  },
+  "performance": {
+    "title": "Performans İzleme",
+    "dashboard": "Gösterge Paneli",
+    "settings": "Ayarlar",
+    "metrics": {
+      "apiRequests": "API İstekleri",
+      "avgApiTime": "Ort. API Yanıt Süresi",
+      "avgPageLoad": "Ort. Sayfa Yükleme Süresi",
+      "slowRequests": "Yavaş İstekler",
+      "componentRenders": "Bileşen Render'ları"
+    },
+    "filters": {
+      "all": "Tümü",
+      "api": "API",
+      "pageLoad": "Sayfa Yükleme",
+      "components": "Bileşenler",
+      "interactions": "Etkileşimler"
+    },
+    "table": {
+      "type": "Tür",
+      "name": "Ad",
+      "duration": "Süre",
+      "timestamp": "Zaman Damgası",
+      "details": "Detaylar",
+      "noMetrics": "Metrik mevcut değil"
+    },
+    "settings": {
+      "enableMonitoring": "Performans İzleme",
+      "enableDescription": "Uygulama genelinde performans izlemeyi etkinleştir veya devre dışı bırak",
+      "debugMode": "Hata Ayıklama Modu",
+      "debugDescription": "Tüm performans metriklerini konsola kaydet",
+      "clearMetrics": "Tüm Metrikleri Temizle",
+      "about": "Performans İzleme Hakkında",
+      "aboutDescription": "Performans izleme, API istekleri, sayfa yüklemeleri ve bileşen render'ları hakkında veri toplar. Bu veriler uygulamadaki performans darboğazlarını belirlemeye yardımcı olur. Herhangi bir performans etkisi fark ederseniz bu özelliği üretimde devre dışı bırakın."
+    }
   },
   "subscription": {
     "plans": "Abonelik Planları",

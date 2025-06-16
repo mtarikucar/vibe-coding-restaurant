@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import { Button } from "../ui";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -81,26 +82,32 @@ const InstallPrompt: React.FC = () => {
             {t("pwa.installDescription")}
           </p>
         </div>
-        <button
-          className="text-gray-400 hover:text-gray-500"
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={handleDismiss}
+          className="text-gray-400 hover:text-gray-500 p-1"
         >
           <XMarkIcon className="h-5 w-5" />
-        </button>
+        </Button>
       </div>
       <div className="mt-4 flex space-x-3">
-        <button
-          className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md text-sm font-medium"
+        <Button
+          variant="primary"
+          size="md"
+          fullWidth
           onClick={handleInstallClick}
         >
           {t("pwa.install")}
-        </button>
-        <button
-          className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-4 rounded-md text-sm font-medium"
+        </Button>
+        <Button
+          variant="outline"
+          size="md"
+          fullWidth
           onClick={handleDismiss}
         >
           {t("common.notNow")}
-        </button>
+        </Button>
       </div>
     </div>
   );

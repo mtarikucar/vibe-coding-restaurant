@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { User } from '../../auth/entities/user.entity';
 import { SubscriptionPlan } from './subscription-plan.entity';
+import { Tenant } from '../../tenant/entities/tenant.entity';
 
 export enum SubscriptionStatus {
   ACTIVE = 'active',
@@ -36,6 +37,14 @@ export class Subscription {
 
   @Column()
   userId: string;
+
+  // Tenant relationship
+  @ManyToOne(() => Tenant)
+  @JoinColumn()
+  tenant: Tenant;
+
+  @Column()
+  tenantId: string;
 
   @ManyToOne(() => SubscriptionPlan)
   @JoinColumn()
@@ -87,6 +96,31 @@ export class Subscription {
 
   @Column({ default: 'usd' })
   currency: string;
+
+  // Billing and invoice information
+  @Column({ nullable: true, type: 'jsonb' })
+  billingAddress: Record<string, any>;
+
+  @Column({ nullable: true })
+  invoiceEmail: string;
+
+  // Discount and coupon information
+  @Column({ nullable: true })
+  discountCode: string;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  discountAmount: number;
+
+  // Usage tracking
+  @Column({ nullable: true, type: 'jsonb' })
+  usageMetrics: Record<string, any>;
+
+  // Cancellation details
+  @Column({ nullable: true })
+  cancellationReason: string;
+
+  @Column({ nullable: true })
+  canceledBy: string;
 
   @CreateDateColumn()
   createdAt: Date;

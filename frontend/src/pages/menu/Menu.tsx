@@ -13,7 +13,7 @@ import { menuAPI } from "../../services/api";
 import { type MenuItem, type Category } from "../../types/menu";
 import { useToast } from "../../components/common/ToastProvider";
 import usePerformanceMonitoring from "../../hooks/usePerformanceMonitoring";
-import { Input, Select } from "../../components/ui";
+import { Button, Input, Select } from "../../components/ui";
 import MenuItemForm from "../../components/menu/MenuItemForm";
 import CategoryManager from "../../components/menu/CategoryManager";
 import BulkMenuUpload from "../../components/menu/BulkMenuUpload";
@@ -266,45 +266,50 @@ const Menu = () => {
           {t("menu.title", "Menu Management")}
         </h2>
         <div className="flex flex-wrap gap-3">
-          <button
+          <Button
             onClick={handleRefresh}
-            className="bg-neutral-200 dark:bg-darkGray-700 hover:bg-neutral-300 dark:hover:bg-darkGray-600 text-primary-700 dark:text-neutral-300 px-3 py-2 rounded-xl flex items-center transition-colors"
+            variant="outline"
+            size="md"
             title={t("common.refresh", "Refresh")}
           >
             <ArrowPathIcon className="h-5 w-5" />
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={handleVisualization}
-            className="bg-primary-100 dark:bg-primary-900/30 hover:bg-primary-200 dark:hover:bg-primary-900/50 text-primary-700 dark:text-primary-300 px-4 py-2 rounded-xl flex items-center transition-colors"
+            variant="secondary"
+            size="md"
+            leftIcon={<EyeIcon className="h-5 w-5" />}
           >
-            <EyeIcon className="h-5 w-5 mr-2" />
             {t("menu.visualize", "Visualize")}
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={handleBulkUpload}
-            className="bg-secondary-500 hover:bg-secondary-600 text-white px-4 py-2 rounded-xl flex items-center transition-colors"
+            variant="secondary"
+            size="md"
+            leftIcon={<DocumentArrowUpIcon className="h-5 w-5" />}
           >
-            <DocumentArrowUpIcon className="h-5 w-5 mr-2" />
             {t("menu.bulkUpload", "Bulk Upload")}
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={handleManageCategories}
-            className="bg-secondary-500 hover:bg-secondary-600 text-white px-4 py-2 rounded-xl flex items-center transition-colors"
+            variant="secondary"
+            size="md"
+            leftIcon={<Cog6ToothIcon className="h-5 w-5" />}
           >
-            <Cog6ToothIcon className="h-5 w-5 mr-2" />
             {t("menu.manageCategories", "Manage Categories")}
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={handleAddItem}
-            className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-xl flex items-center transition-colors"
+            variant="primary"
+            size="md"
+            leftIcon={<PlusIcon className="h-5 w-5" />}
           >
-            <PlusIcon className="h-5 w-5 mr-2" />
             {t("menu.addItem", "Add Item")}
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -476,20 +481,22 @@ const Menu = () => {
                   )}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <button
+                  <Button
                     onClick={handleAddItem}
-                    className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-xl flex items-center justify-center transition-colors"
+                    variant="primary"
+                    size="md"
+                    leftIcon={<PlusIcon className="h-5 w-5" />}
                   >
-                    <PlusIcon className="h-5 w-5 mr-2" />
                     {t("menu.addFirstItem", "Add First Item")}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     onClick={handleBulkUpload}
-                    className="bg-secondary-500 hover:bg-secondary-600 text-white px-4 py-2 rounded-xl flex items-center justify-center transition-colors"
+                    variant="secondary"
+                    size="md"
+                    leftIcon={<DocumentArrowUpIcon className="h-5 w-5" />}
                   >
-                    <DocumentArrowUpIcon className="h-5 w-5 mr-2" />
                     {t("menu.bulkImport", "Bulk Import")}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>

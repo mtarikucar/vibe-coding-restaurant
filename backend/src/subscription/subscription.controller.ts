@@ -56,9 +56,14 @@ export class SubscriptionController {
   ) {
     // JWT stratejisinde kullanıcı kimliği 'sub' veya 'id' olarak saklanıyor olabilir
     const userId = req.user.id || req.user.sub;
+    const tenantId = req.tenantId;
 
     if (!userId) {
       throw new BadRequestException("User ID not found in token");
+    }
+
+    if (!tenantId) {
+      throw new BadRequestException("Tenant ID not found in request");
     }
 
     // Only admins can create subscriptions for other users
@@ -75,6 +80,9 @@ export class SubscriptionController {
     if (!createSubscriptionDto.userId) {
       createSubscriptionDto.userId = userId;
     }
+
+    // Add tenant ID to subscription
+    createSubscriptionDto.tenantId = tenantId;
 
     return this.subscriptionService.createSubscription(createSubscriptionDto);
   }

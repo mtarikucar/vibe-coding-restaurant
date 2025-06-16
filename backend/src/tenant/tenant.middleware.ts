@@ -1,8 +1,9 @@
-import { Injectable, NestMiddleware, Logger } from "@nestjs/common";
+import { Injectable, NestMiddleware, Logger, HttpException, HttpStatus } from "@nestjs/common";
 import { Request, Response, NextFunction } from "express";
 import { TenantService } from "./tenant.service";
 import { DataSource } from "typeorm";
 import { ConfigService } from "@nestjs/config";
+import { TenantStatus } from "./entities/tenant.entity";
 
 @Injectable()
 export class TenantMiddleware implements NestMiddleware {
@@ -32,12 +33,39 @@ export class TenantMiddleware implements NestMiddleware {
       if (subdomain && subdomain !== "www" && subdomain !== "api") {
         try {
           const tenant = await this.tenantService.findBySubdomain(subdomain);
+
+          // Check tenant status
+          if (tenant.status === TenantStatus.SUSPENDED) {
+            throw new HttpException(
+              'Tenant account is suspended. Please contact support.',
+              HttpStatus.FORBIDDEN
+            );
+          }
+
+          if (tenant.status === TenantStatus.EXPIRED) {
+            throw new HttpException(
+              'Tenant subscription has expired. Please renew your subscription.',
+              HttpStatus.PAYMENT_REQUIRED
+            );
+          }
+
+          if (tenant.isDeleted) {
+            throw new HttpException(
+              'Tenant account not found.',
+              HttpStatus.NOT_FOUND
+            );
+          }
+
           schema = tenant.schema;
 
           // Add tenant info to request
           (req as any).tenantId = tenant.id;
           (req as any).tenantSchema = schema;
+          (req as any).tenant = tenant;
         } catch (error) {
+          if (error instanceof HttpException) {
+            throw error;
+          }
           this.logger.warn(`Tenant not found for subdomain: ${subdomain}`);
           // Continue with default schema if tenant not found
         }

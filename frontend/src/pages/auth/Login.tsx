@@ -150,27 +150,35 @@ const Login = () => {
 
   return (
     <div className="animate-fadeIn">
-      <Card variant="default" className="mb-6">
-        {error && (
-          <div className="mb-6 bg-danger-50 border border-danger-200 text-danger-700 px-4 py-3 rounded-lg flex items-center">
-            <ExclamationCircleIcon className="h-5 w-5 text-danger-500 mr-2" />
-            {error}
-          </div>
-        )}
+      {error && (
+        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center">
+          <ExclamationCircleIcon className="h-5 w-5 text-red-500 mr-2" />
+          {error}
+        </div>
+      )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+      {oauthLoading && (
+        <div className="mb-6 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg flex items-center">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+          {t("auth.completingOAuth")}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-4">
           <Input
             label={t("auth.username")}
             id="username"
             type="text"
-            placeholder={t("auth.usernamePlaceholder") || "Username"}
+            placeholder={t("auth.usernamePlaceholder") || "Enter your username"}
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
             fullWidth
-            leftIcon={<UserIcon className="h-5 w-5" />}
+            leftIcon={<UserIcon className="h-5 w-5 text-gray-400" />}
             variant="default"
             size="md"
+            className="transition-all duration-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
           />
 
           <div>
@@ -178,88 +186,109 @@ const Login = () => {
               label={t("auth.password")}
               id="password"
               type="password"
-              placeholder={t("auth.passwordPlaceholder") || "Password"}
+              placeholder={t("auth.passwordPlaceholder") || "Enter your password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               fullWidth
-              leftIcon={<LockClosedIcon className="h-5 w-5" />}
+              leftIcon={<LockClosedIcon className="h-5 w-5 text-gray-400" />}
               variant="default"
               size="md"
+              className="transition-all duration-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
             />
-            <div className="mt-1 text-right">
+            <div className="mt-2 text-right">
               <Link
                 to="/forgot-password"
-                className="text-sm text-primary-600 hover:text-primary-700 transition-colors"
+                className="text-sm text-orange-600 hover:text-orange-700 transition-colors font-medium"
               >
                 {t("auth.forgotPasswordQuestion")}
               </Link>
             </div>
           </div>
+        </div>
 
-          <Button
-            type="submit"
-            variant="primary"
-            fullWidth
-            isLoading={loading}
-            disabled={loading || oauthLoading}
-            size="lg"
-          >
-            {loading ? t("common.loading") : t("auth.signIn")}
-          </Button>
-        </form>
+        <Button
+          type="submit"
+          variant="primary"
+          fullWidth
+          isLoading={loading}
+          disabled={loading || oauthLoading}
+          size="lg"
+          className="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+        >
+          {loading ? (
+            <div className="flex items-center">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              {t("common.loading")}
+            </div>
+          ) : (
+            t("auth.signIn")
+          )}
+        </Button>
+      </form>
 
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">
-                {t("auth.orContinueWith")}
-              </span>
-            </div>
+      <div className="mt-6">
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-200"></div>
           </div>
-
-          <div className="mt-6 grid grid-cols-2 gap-3">
-            <Button
-              variant="outline"
-              onClick={handleGoogleLogin}
-              disabled={loading || oauthLoading}
-              fullWidth
-              leftIcon={<FcGoogle className="h-5 w-5" />}
-            >
-              Google
-            </Button>
-
-            <Button
-              variant="outline"
-              onClick={handleGithubLogin}
-              disabled={loading || oauthLoading}
-              fullWidth
-              leftIcon={<FaGithub className="h-5 w-5" />}
-            >
-              GitHub
-            </Button>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-3 bg-white text-gray-500 font-medium">
+              {t("auth.orContinueWith")}
+            </span>
           </div>
         </div>
-      </Card>
 
-      <div className="text-center animate-fadeIn space-y-2">
+        <div className="mt-6 grid grid-cols-2 gap-3">
+          <Button
+            variant="outline"
+            onClick={handleGoogleLogin}
+            disabled={loading || oauthLoading}
+            fullWidth
+            leftIcon={<FcGoogle className="h-5 w-5" />}
+            className="border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200"
+          >
+            Google
+          </Button>
+
+          <Button
+            variant="outline"
+            onClick={handleGithubLogin}
+            disabled={loading || oauthLoading}
+            fullWidth
+            leftIcon={<FaGithub className="h-5 w-5" />}
+            className="border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200"
+          >
+            GitHub
+          </Button>
+        </div>
+      </div>
+
+      <div className="mt-8 text-center space-y-3">
         <p className="text-sm text-gray-600">
           {t("auth.dontHaveAccount")}{" "}
           <Link
             to="/register"
-            className="font-medium text-primary-600 hover:text-primary-700 transition-colors"
+            className="font-semibold text-orange-600 hover:text-orange-700 transition-colors"
           >
             {t("auth.registerNow")}
           </Link>
         </p>
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-200"></div>
+          </div>
+          <div className="relative flex justify-center text-xs">
+            <span className="px-2 bg-white text-gray-400">
+              {t("auth.forRestaurants")}
+            </span>
+          </div>
+        </div>
         <p className="text-sm text-gray-600">
           {t("auth.areYouRestaurant")}{" "}
           <Link
             to="/register-restaurant"
-            className="font-medium text-primary-600 hover:text-primary-700 transition-colors"
+            className="font-semibold text-orange-600 hover:text-orange-700 transition-colors"
           >
             {t("auth.registerRestaurantNow")}
           </Link>

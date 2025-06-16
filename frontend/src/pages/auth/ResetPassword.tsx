@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { ExclamationCircleIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
+import { Button, Input } from "../../components/ui";
 import { authAPI } from "../../services/api";
 
 // Define error type for API errors
@@ -105,14 +107,15 @@ const ResetPassword = () => {
 
   if (!tokenValid && tokenChecked) {
     return (
-      <div className="text-center">
-        <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+      <div className="text-center animate-fadeIn">
+        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center justify-center">
+          <ExclamationCircleIcon className="h-5 w-5 text-red-500 mr-2" />
           {error || t("auth.invalidResetToken")}
         </div>
-        <p className="mt-4">
+        <p className="text-gray-600">
           <Link
             to="/forgot-password"
-            className="text-blue-600 hover:text-blue-800"
+            className="font-semibold text-orange-600 hover:text-orange-700 transition-colors"
           >
             {t("auth.requestNewReset")}
           </Link>
@@ -122,63 +125,68 @@ const ResetPassword = () => {
   }
 
   return (
-    <div>
+    <div className="animate-fadeIn">
       {error && (
-        <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center">
+          <ExclamationCircleIcon className="h-5 w-5 text-red-500 mr-2" />
           {error}
         </div>
       )}
 
       {success && (
-        <div className="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+        <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center">
+          <CheckCircleIcon className="h-5 w-5 text-green-500 mr-2" />
           {t("auth.passwordResetSuccess")}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="password" className="form-label">
-            {t("auth.newPassword")}
-          </label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="form-input"
-            placeholder="Enter your new password"
-            disabled={loading || success}
-          />
-        </div>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <Input
+          label={t("auth.newPassword")}
+          id="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Enter your new password"
+          disabled={loading || success}
+          required
+          fullWidth
+          variant="default"
+          size="md"
+        />
 
-        <div>
-          <label htmlFor="confirmPassword" className="form-label">
-            {t("auth.confirmNewPassword")}
-          </label>
-          <input
-            id="confirmPassword"
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="form-input"
-            placeholder="Confirm your new password"
-            disabled={loading || success}
-          />
-        </div>
+        <Input
+          label={t("auth.confirmNewPassword")}
+          id="confirmPassword"
+          type="password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          placeholder="Confirm your new password"
+          disabled={loading || success}
+          required
+          fullWidth
+          variant="default"
+          size="md"
+        />
 
-        <div>
-          <button
-            type="submit"
-            className={`btn w-full ${
-              loading || success
-                ? "bg-blue-300 cursor-not-allowed"
-                : "btn-primary"
-            }`}
-            disabled={loading || success}
-          >
-            {loading ? t("common.loading") : t("auth.resetPassword")}
-          </button>
-        </div>
+        <Button
+          type="submit"
+          variant="primary"
+          fullWidth
+          isLoading={loading}
+          disabled={loading || success}
+          size="lg"
+          className="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+        >
+          {loading ? (
+            <div className="flex items-center">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              {t("common.loading")}
+            </div>
+          ) : (
+            t("auth.resetPassword")
+          )}
+        </Button>
       </form>
     </div>
   );

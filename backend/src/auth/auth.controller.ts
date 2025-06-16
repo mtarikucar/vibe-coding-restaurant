@@ -39,8 +39,29 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post("register")
-  async register(@Body() createUserDto: CreateUserDto) {
-    return this.authService.register(createUserDto);
+  async register(
+    @Body() createUserDto: CreateUserDto,
+    @Query("tenantId") tenantId?: string
+  ) {
+    return this.authService.register(createUserDto, tenantId);
+  }
+
+  @Get("tenants")
+  async getAvailableTenants() {
+    return this.authService.getAvailableTenants();
+  }
+
+  @Get("tenants/:id/validate")
+  async validateTenant(@Param("id") tenantId: string) {
+    const tenant = await this.authService.validateTenantForRegistration(tenantId);
+    return {
+      id: tenant.id,
+      name: tenant.name,
+      displayName: tenant.displayName,
+      subdomain: tenant.subdomain,
+      logo: tenant.logo,
+      status: tenant.status,
+    };
   }
 
   @UseGuards(LocalAuthGuard)

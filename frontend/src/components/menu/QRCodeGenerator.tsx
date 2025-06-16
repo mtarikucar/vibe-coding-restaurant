@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import QRCode from "react-qr-code";
 import { useTranslation } from "react-i18next";
+import { Button } from "../ui";
 import useAuthStore from "../../store/authStore";
 
 interface QRCodeGeneratorProps {
@@ -173,27 +174,30 @@ const QRCodeGenerator: React.FC<QRCodeGeneratorProps> = ({
           </p>
         </div>
 
-        <div className="flex justify-between">
-          <button
+        <div className="flex justify-between space-x-3">
+          <Button
             onClick={handleDownload}
-            className="bg-secondary-600 hover:bg-secondary-700 text-white px-4 py-2 rounded-md dark:bg-secondary-500 dark:hover:bg-secondary-600"
+            variant="secondary"
+            size="md"
           >
             {t("common.download", "Download")}
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={handlePrint}
-            className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md dark:bg-primary-500 dark:hover:bg-primary-600"
+            variant="primary"
+            size="md"
           >
             {t("common.print", "Print")}
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={onClose}
-            className="bg-neutral-200 hover:bg-neutral-300 text-primary-800 px-4 py-2 rounded-md dark:bg-darkGray-700 dark:hover:bg-darkGray-600 dark:text-neutral-200"
+            variant="outline"
+            size="md"
           >
             {t("common.close", "Close")}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

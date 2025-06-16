@@ -71,14 +71,24 @@ export class PaymentGatewayService {
     metadata: Record<string, any> = {}
   ): Promise<PaymentGatewayResponse> {
     try {
-      // Get user country from metadata if available
-      const userCountry = metadata?.userCountry || "unknown";
+      // Get tenant and user country from metadata
+      const tenantCountry = metadata?.tenantCountry || metadata?.userCountry || "unknown";
+      const paymentProvider = metadata?.paymentProvider;
 
-      // Use iyzico for Turkey, Stripe for other countries
-      if (
-        userCountry.toLowerCase() === "turkey" ||
-        userCountry.toLowerCase() === "tr"
-      ) {
+      // Determine payment provider based on tenant country or explicit provider
+      let useIyzico = false;
+
+      if (paymentProvider === 'iyzico') {
+        useIyzico = true;
+      } else if (paymentProvider === 'stripe') {
+        useIyzico = false;
+      } else {
+        // Auto-detect based on country
+        useIyzico = tenantCountry.toLowerCase() === "turkey" ||
+                   tenantCountry.toLowerCase() === "tr";
+      }
+
+      if (useIyzico) {
         return this.createIyzicoPaymentIntent(amount, currency, metadata);
       }
 
@@ -435,5 +445,103 @@ export class PaymentGatewayService {
         error: result.error,
       };
     }
+  }
+
+  /**
+   * Create a subscription payment
+   */
+  async createSubscriptionPayment(
+    amount: number,
+    planId: string,
+    userId: string,
+    tenantId?: string,
+    metadata: Record<string, any> = {}
+  ): Promise<PaymentGatewayResponse> {
+    try {
+      // Get tenant information to determine payment provider
+      let paymentProvider = 'stripe';
+      let currency = 'usd';
+
+      if (tenantId) {
+        // In a real implementation, you would fetch tenant from database
+        // For now, we'll use metadata or default logic
+        const tenantCountry = metadata.tenantCountry || metadata.userCountry;
+        if (tenantCountry === 'turkey' || tenantCountry === 'tr') {
+          paymentProvider = 'iyzico';
+          currency = 'try';
+        }
+      }
+
+      // Add subscription-specific metadata
+      const subscriptionMetadata = {
+        ...metadata,
+        type: "subscription",
+        planId,
+        userId,
+        tenantId,
+        paymentProvider,
+      };
+
+      return this.createPaymentIntent(amount, currency, subscriptionMetadata);
+    } catch (error) {
+      this.logger.error(
+        `Subscription payment creation failed: ${error.message}`,
+        error.stack
+      );
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
+
+  /**
+   * Get payment provider for tenant
+   */
+  getPaymentProviderForTenant(tenantCountry?: string): string {
+    if (!tenantCountry) {
+      return 'stripe';
+    }
+
+    const countryLower = tenantCountry.toLowerCase();
+    if (countryLower === 'turkey' || countryLower === 'tr') {
+      return 'iyzico';
+    }
+
+    return 'stripe';
+  }
+
+  /**
+   * Get currency for tenant
+   */
+  getCurrencyForTenant(tenantCountry?: string): string {
+    if (!tenantCountry) {
+      return 'usd';
+    }
+
+    const countryLower = tenantCountry.toLowerCase();
+
+    const currencyMap: Record<string, string> = {
+      'turkey': 'try',
+      'tr': 'try',
+      'united states': 'usd',
+      'us': 'usd',
+      'usa': 'usd',
+      'united kingdom': 'gbp',
+      'uk': 'gbp',
+      'gb': 'gbp',
+      'germany': 'eur',
+      'de': 'eur',
+      'france': 'eur',
+      'fr': 'eur',
+      'spain': 'eur',
+      'es': 'eur',
+      'italy': 'eur',
+      'it': 'eur',
+      'netherlands': 'eur',
+      'nl': 'eur',
+    };
+
+    return currencyMap[countryLower] || 'usd';
   }
 }

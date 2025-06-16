@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { authAPI } from "../../services/api";
 import useAuthStore, { AuthProvider } from "../../store/authStore";
-import Loading from "../../components/common/Loading";
 
 const OAuthCallback = () => {
   const { t } = useTranslation();
@@ -90,7 +89,7 @@ const OAuthCallback = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
-      <Loading />
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
       <p className="mt-4 text-gray-600">{t("auth.completingLogin")}</p>
     </div>
   );

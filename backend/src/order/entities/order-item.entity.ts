@@ -1,6 +1,7 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Order } from './order.entity';
 import { MenuItem } from '../../menu/entities/menu-item.entity';
+import { OrderItemModifier } from './order-item-modifier.entity';
 
 export enum OrderItemStatus {
   PENDING = 'pending',
@@ -33,7 +34,13 @@ export class OrderItem {
   quantity: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
-  price: number;
+  basePrice: number; // Original menu item price
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  modifierPrice: number; // Total price of modifiers
+
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  price: number; // Final price (basePrice + modifierPrice) * quantity
 
   @Column({
     type: 'enum',
@@ -44,6 +51,27 @@ export class OrderItem {
 
   @Column({ nullable: true })
   notes: string;
+
+  @Column({ nullable: true })
+  specialInstructions: string;
+
+  @Column({ nullable: true })
+  estimatedPrepTime: number; // in minutes
+
+  @Column({ nullable: true })
+  actualPrepTime: number; // in minutes
+
+  @Column({ nullable: true })
+  startedAt: Date; // When preparation started
+
+  @Column({ nullable: true })
+  readyAt: Date; // When item was ready
+
+  @Column({ nullable: true })
+  servedAt: Date; // When item was served
+
+  @OneToMany(() => OrderItemModifier, modifier => modifier.orderItem, { cascade: true })
+  modifiers: OrderItemModifier[];
 
   @CreateDateColumn()
   createdAt: Date;

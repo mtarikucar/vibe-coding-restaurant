@@ -2,8 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ExclamationCircleIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
-import Card from "../../components/ui/Card";
-import Input from "../../components/ui/Input";
+import { Button, Input } from "../../components/ui";
 import { tenantAPI } from "../../services/api";
 import type { ApiError } from "../../types/api";
 
@@ -130,33 +129,26 @@ const TenantRegister = () => {
 
   return (
     <div className="animate-fadeIn">
-      <Card variant="default" className="mb-6">
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">
-            {t("auth.registerRestaurant")}
-          </h1>
+      {error && (
+        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center">
+          <ExclamationCircleIcon className="h-5 w-5 text-red-500 mr-2" />
+          {error}
+        </div>
+      )}
+
+      {success ? (
+        <div className="text-center">
+          <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center justify-center">
+            <svg className="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            {t("auth.registrationSuccess")}
+          </div>
           <p className="text-gray-600">
-            {t("auth.registerRestaurantSubtitle")}
+            {t("auth.redirectingToLogin")}
           </p>
         </div>
-
-        {error && (
-          <div className="mb-6 bg-danger-50 border border-danger-200 text-danger-700 px-4 py-3 rounded-lg flex items-center">
-            <ExclamationCircleIcon className="h-5 w-5 text-danger-500 mr-2" />
-            {error}
-          </div>
-        )}
-
-        {success ? (
-          <div className="text-center">
-            <div className="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-              {t("auth.registrationSuccess")}
-            </div>
-            <p className="mt-4">
-              {t("auth.redirectingToLogin")}
-            </p>
-          </div>
-        ) : (
+      ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="border-b border-gray-200 pb-4 mb-4">
               <h2 className="text-lg font-medium text-gray-800 mb-4">
@@ -346,34 +338,38 @@ const TenantRegister = () => {
               </div>
             </div>
 
-            <div>
-              <button
-                type="submit"
-                className={`btn w-full ${
-                  loading || success
-                    ? "bg-blue-300 cursor-not-allowed"
-                    : "btn-primary"
-                }`}
-                disabled={loading || success}
-              >
-                {loading ? t("auth.registering") : t("auth.registerRestaurant")}
-              </button>
-            </div>
+            <Button
+              type="submit"
+              variant="primary"
+              fullWidth
+              isLoading={loading}
+              disabled={loading || success}
+              size="lg"
+              className="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+            >
+              {loading ? (
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  {t("auth.registering")}
+                </div>
+              ) : (
+                t("auth.registerRestaurant")
+              )}
+            </Button>
           </form>
         )}
 
-        <div className="mt-4 text-center">
+        <div className="mt-8 text-center">
           <p className="text-sm text-gray-600">
             {t("auth.alreadyHaveAccount")}{" "}
             <Link
               to="/"
-              className="font-medium text-blue-600 hover:text-blue-500"
+              className="font-semibold text-orange-600 hover:text-orange-700 transition-colors"
             >
               {t("auth.signIn")}
             </Link>
           </p>
         </div>
-      </Card>
     </div>
   );
 };

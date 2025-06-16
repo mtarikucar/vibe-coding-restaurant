@@ -175,7 +175,8 @@ export const authAPI = {
     fullName: string,
     role: string,
     email?: string,
-    preferredLanguage?: string
+    preferredLanguage?: string,
+    tenantId?: string
   ) => {
     try {
       const response = await api.post("/auth/register", {
@@ -185,7 +186,28 @@ export const authAPI = {
         role,
         email,
         preferredLanguage,
+        tenantId,
       });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Get available tenants for registration
+  getAvailableTenants: async () => {
+    try {
+      const response = await api.get("/auth/tenants");
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Validate tenant for registration
+  validateTenant: async (tenantId: string) => {
+    try {
+      const response = await api.get(`/auth/tenants/${tenantId}/validate`);
       return response.data;
     } catch (error) {
       throw error;

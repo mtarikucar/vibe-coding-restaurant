@@ -41,7 +41,10 @@ import { join } from "path";
         password: configService.get<string>("DB_PASSWORD", "postgres"),
         database: configService.get<string>("DB_DATABASE", "restaurant"),
         synchronize: configService.get<string>("DB_SYNC", "true") === "true",
+        logging: configService.get<string>("DB_LOGGING", "false") === "true",
         entities: [__dirname + "/**/*.entity{.ts,.js}"],
+        migrations: [__dirname + "/migrations/*{.ts,.js}"],
+        migrationsRun: false,
       }),
     }),
 

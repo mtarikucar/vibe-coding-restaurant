@@ -1,0 +1,123 @@
+import { MigrationInterface, QueryRunner } from "typeorm";
+
+export class UpdateTenantAndSubscription1734024672000 implements MigrationInterface {
+    name = 'UpdateTenantAndSubscription1734024672000'
+
+    public async up(queryRunner: QueryRunner): Promise<void> {
+        // Add new columns to tenant table
+        await queryRunner.query(`
+            ALTER TABLE "tenant" 
+            ADD COLUMN IF NOT EXISTS "preferredPaymentProvider" character varying,
+            ADD COLUMN IF NOT EXISTS "billingDetails" jsonb,
+            ADD COLUMN IF NOT EXISTS "paymentMethods" jsonb,
+            ADD COLUMN IF NOT EXISTS "subscriptionLimits" jsonb,
+            ADD COLUMN IF NOT EXISTS "businessType" character varying,
+            ADD COLUMN IF NOT EXISTS "taxNumber" character varying,
+            ADD COLUMN IF NOT EXISTS "website" character varying,
+            ADD COLUMN IF NOT EXISTS "notificationSettings" jsonb,
+            ADD COLUMN IF NOT EXISTS "themeSettings" jsonb,
+            ADD COLUMN IF NOT EXISTS "lastActivityAt" TIMESTAMP,
+            ADD COLUMN IF NOT EXISTS "suspendedAt" TIMESTAMP,
+            ADD COLUMN IF NOT EXISTS "suspensionReason" character varying
+        `);
+
+        // Add new enum values to tenant status
+        await queryRunner.query(`
+            ALTER TYPE "tenant_status_enum" ADD VALUE IF NOT EXISTS 'expired'
+        `);
+
+        // Create payment provider enum if not exists
+        await queryRunner.query(`
+            DO $$ BEGIN
+                CREATE TYPE "tenant_preferredpaymentprovider_enum" AS ENUM('stripe', 'iyzico', 'paypal', 'manual');
+            EXCEPTION
+                WHEN duplicate_object THEN null;
+            END $$;
+        `);
+
+        // Update tenant table with enum constraint
+        await queryRunner.query(`
+            ALTER TABLE "tenant" 
+            ALTER COLUMN "preferredPaymentProvider" TYPE "tenant_preferredpaymentprovider_enum" 
+            USING "preferredPaymentProvider"::"tenant_preferredpaymentprovider_enum"
+        `);
+
+        // Add tenant relationship to subscription table
+        await queryRunner.query(`
+            ALTER TABLE "subscription" 
+            ADD COLUMN IF NOT EXISTS "tenantId" character varying,
+            ADD COLUMN IF NOT EXISTS "billingAddress" jsonb,
+            ADD COLUMN IF NOT EXISTS "invoiceEmail" character varying,
+            ADD COLUMN IF NOT EXISTS "discountCode" character varying,
+            ADD COLUMN IF NOT EXISTS "discountAmount" numeric(10,2),
+            ADD COLUMN IF NOT EXISTS "usageMetrics" jsonb,
+            ADD COLUMN IF NOT EXISTS "cancellationReason" character varying,
+            ADD COLUMN IF NOT EXISTS "canceledBy" character varying
+        `);
+
+        // Add foreign key constraint for tenant
+        await queryRunner.query(`
+            ALTER TABLE "subscription" 
+            ADD CONSTRAINT "FK_subscription_tenant" 
+            FOREIGN KEY ("tenantId") REFERENCES "tenant"("id") ON DELETE CASCADE
+        `);
+
+        // Create index for tenant subscriptions
+        await queryRunner.query(`
+            CREATE INDEX IF NOT EXISTS "IDX_subscription_tenant" ON "subscription" ("tenantId")
+        `);
+
+        // Create index for tenant activity
+        await queryRunner.query(`
+            CREATE INDEX IF NOT EXISTS "IDX_tenant_lastActivity" ON "tenant" ("lastActivityAt")
+        `);
+
+        // Create index for tenant status
+        await queryRunner.query(`
+            CREATE INDEX IF NOT EXISTS "IDX_tenant_status" ON "tenant" ("status")
+        `);
+    }
+
+    public async down(queryRunner: QueryRunner): Promise<void> {
+        // Remove indexes
+        await queryRunner.query(`DROP INDEX IF EXISTS "IDX_tenant_status"`);
+        await queryRunner.query(`DROP INDEX IF EXISTS "IDX_tenant_lastActivity"`);
+        await queryRunner.query(`DROP INDEX IF EXISTS "IDX_subscription_tenant"`);
+
+        // Remove foreign key constraint
+        await queryRunner.query(`ALTER TABLE "subscription" DROP CONSTRAINT IF EXISTS "FK_subscription_tenant"`);
+
+        // Remove columns from subscription table
+        await queryRunner.query(`
+            ALTER TABLE "subscription" 
+            DROP COLUMN IF EXISTS "tenantId",
+            DROP COLUMN IF EXISTS "billingAddress",
+            DROP COLUMN IF EXISTS "invoiceEmail",
+            DROP COLUMN IF EXISTS "discountCode",
+            DROP COLUMN IF EXISTS "discountAmount",
+            DROP COLUMN IF EXISTS "usageMetrics",
+            DROP COLUMN IF EXISTS "cancellationReason",
+            DROP COLUMN IF EXISTS "canceledBy"
+        `);
+
+        // Remove columns from tenant table
+        await queryRunner.query(`
+            ALTER TABLE "tenant" 
+            DROP COLUMN IF EXISTS "preferredPaymentProvider",
+            DROP COLUMN IF EXISTS "billingDetails",
+            DROP COLUMN IF EXISTS "paymentMethods",
+            DROP COLUMN IF EXISTS "subscriptionLimits",
+            DROP COLUMN IF EXISTS "businessType",
+            DROP COLUMN IF EXISTS "taxNumber",
+            DROP COLUMN IF EXISTS "website",
+            DROP COLUMN IF EXISTS "notificationSettings",
+            DROP COLUMN IF EXISTS "themeSettings",
+            DROP COLUMN IF EXISTS "lastActivityAt",
+            DROP COLUMN IF EXISTS "suspendedAt",
+            DROP COLUMN IF EXISTS "suspensionReason"
+        `);
+
+        // Drop enum type
+        await queryRunner.query(`DROP TYPE IF EXISTS "tenant_preferredpaymentprovider_enum"`);
+    }
+}

@@ -7,6 +7,7 @@ import {
   IsOptional,
   IsUUID,
   IsBoolean,
+  ValidateIf,
 } from "class-validator";
 import { UserRole } from "../entities/user.entity";
 
@@ -36,7 +37,8 @@ export class CreateUserDto {
   preferredLanguage?: string;
 
   @IsUUID()
-  @IsOptional()
+  @ValidateIf((o) => o.role !== UserRole.SUPER_ADMIN)
+  @IsNotEmpty({ message: "Tenant ID is required for non-super admin users" })
   tenantId?: string;
 
   @IsBoolean()

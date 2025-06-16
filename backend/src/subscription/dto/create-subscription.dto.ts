@@ -16,6 +16,10 @@ export class CreateSubscriptionDto {
   @IsNotEmpty()
   userId: string;
 
+  @IsOptional()
+  @IsString()
+  tenantId?: string;
+
   @IsString()
   @IsNotEmpty()
   planId: string;
@@ -55,4 +59,24 @@ export class CreateSubscriptionDto {
   @IsString()
   @IsOptional()
   currency?: string;
+
+  @IsOptional()
+  @IsObject()
+  billingAddress?: Record<string, any>;
+
+  @IsOptional()
+  @IsString()
+  invoiceEmail?: string;
+
+  @IsOptional()
+  @IsString()
+  discountCode?: string;
+
+  @IsOptional()
+  @IsNumber()
+  discountAmount?: number;
+
+  @IsOptional()
+  @IsObject()
+  usageMetrics?: Record<string, any>;
 }

@@ -70,33 +70,62 @@ export class AuthService {
     await queryRunner.startTransaction();
 
     try {
-      // Check if user already exists in the tenant
+      // Validate tenant requirement for non-super admin users
+      if (createUserDto.role !== UserRole.SUPER_ADMIN && !tenantId && !createUserDto.tenantId) {
+        throw new BadRequestException("Tenant ID is required for non-super admin users");
+      }
+
+      // Use provided tenantId or the one from DTO
+      const effectiveTenantId = tenantId || createUserDto.tenantId;
+
+      // Check if user already exists (globally for super admins, per tenant for others)
+      const whereCondition = createUserDto.role === UserRole.SUPER_ADMIN
+        ? { username: createUserDto.username }
+        : {
+            username: createUserDto.username,
+            tenantId: effectiveTenantId
+          };
+
       const existingUser = await queryRunner.manager.findOne(User, {
-        where: {
-          username: createUserDto.username,
-          ...(tenantId ? { tenantId } : {}),
-        },
+        where: whereCondition,
       });
 
       if (existingUser) {
-        throw new ConflictException("Username already exists");
+        throw new ConflictException(
+          createUserDto.role === UserRole.SUPER_ADMIN
+            ? "Username already exists"
+            : "Username already exists in this tenant"
+        );
       }
 
       // Hash the password
       const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
-      // Find tenant if tenantId is provided
+      // Find and validate tenant
       let tenant = null;
-      if (tenantId) {
+      if (effectiveTenantId) {
         tenant = await queryRunner.manager.findOne(Tenant, {
-          where: { id: tenantId },
+          where: { id: effectiveTenantId },
         });
 
         if (!tenant) {
-          throw new NotFoundException(`Tenant with ID ${tenantId} not found`);
+          throw new NotFoundException(`Tenant with ID ${effectiveTenantId} not found`);
         }
-      } else {
-        // If no tenantId provided, try to find the default tenant
+
+        // Check tenant status
+        if (tenant.status === 'suspended' as any) {
+          throw new BadRequestException("Cannot create users for suspended tenant");
+        }
+
+        if (tenant.status === 'expired' as any) {
+          throw new BadRequestException("Cannot create users for expired tenant");
+        }
+
+        if (tenant.isDeleted) {
+          throw new BadRequestException("Cannot create users for deleted tenant");
+        }
+      } else if (createUserDto.role === UserRole.SUPER_ADMIN) {
+        // Super admins don't need a tenant, but try to find default for consistency
         tenant = await queryRunner.manager.findOne(Tenant, {
           where: { schema: "public" },
         });
@@ -107,7 +136,7 @@ export class AuthService {
         ...createUserDto,
         password: hashedPassword,
         tenantId: tenant?.id,
-        // Set as super admin if it's the first user in the system
+        // Set as super admin if it's the first user in the system or explicitly requested
         isSuperAdmin: createUserDto.role === UserRole.SUPER_ADMIN,
       });
 
@@ -116,6 +145,8 @@ export class AuthService {
 
       // Commit transaction
       await queryRunner.commitTransaction();
+
+      this.logger.log(`User ${savedUser.username} registered successfully for tenant ${tenant?.name || 'system'}`);
 
       // Remove password from response
       const { password, ...result } = savedUser;
@@ -1001,6 +1032,60 @@ export class AuthService {
       this.logger.error(`Google OAuth error: ${error.message}`, error.stack);
       throw new UnauthorizedException("Failed to authenticate with Google");
     }
+  }
+
+  /**
+   * Get available tenants for user registration
+   * @returns List of active tenants
+   */
+  async getAvailableTenants(): Promise<Partial<Tenant>[]> {
+    try {
+      const tenants = await this.tenantRepository.find({
+        where: {
+          status: 'active' as any,
+          isDeleted: false,
+        },
+        select: ['id', 'name', 'displayName', 'subdomain', 'logo'],
+        order: { displayName: 'ASC' },
+      });
+
+      return tenants;
+    } catch (error) {
+      this.logger.error(
+        `Failed to get available tenants: ${error.message}`,
+        error.stack
+      );
+      return [];
+    }
+  }
+
+  /**
+   * Validate tenant for user registration
+   * @param tenantId The tenant ID to validate
+   * @returns Tenant information if valid
+   */
+  async validateTenantForRegistration(tenantId: string): Promise<Tenant> {
+    const tenant = await this.tenantRepository.findOne({
+      where: { id: tenantId },
+    });
+
+    if (!tenant) {
+      throw new NotFoundException(`Tenant with ID ${tenantId} not found`);
+    }
+
+    if (tenant.status === 'suspended' as any) {
+      throw new BadRequestException("This restaurant is currently suspended and not accepting new registrations");
+    }
+
+    if (tenant.status === 'expired' as any) {
+      throw new BadRequestException("This restaurant's subscription has expired and is not accepting new registrations");
+    }
+
+    if (tenant.isDeleted) {
+      throw new NotFoundException("This restaurant is no longer available");
+    }
+
+    return tenant;
   }
 
   /**

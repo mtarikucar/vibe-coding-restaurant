@@ -3,7 +3,7 @@ import React, { forwardRef } from "react";
 export type InputSize = "sm" | "md" | "lg";
 export type InputVariant = "default" | "filled" | "outlined" | "unstyled";
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
   label?: string;
   helperText?: string;
   error?: string;
@@ -52,25 +52,25 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       lg: "px-4 py-2.5 text-lg",
     };
 
-    // Variant classes - Updated for minimal design
+    // Variant classes - Minimal and modern design
     const variantClasses = {
       default:
-        "bg-neutral-100 dark:bg-darkGray-800 border border-neutral-300 dark:border-darkGray-700 focus:border-primary-500 focus:ring-primary-500/20",
+        "bg-white dark:bg-darkGray-800 border border-gray-200 dark:border-darkGray-700 focus:border-orange-500 focus:ring-orange-500/10 hover:border-gray-300 dark:hover:border-darkGray-600",
       filled:
-        "bg-neutral-200 dark:bg-darkGray-700 border border-transparent focus:bg-neutral-100 dark:focus:bg-darkGray-800 focus:border-primary-500 focus:ring-primary-500/20",
+        "bg-gray-50 dark:bg-darkGray-700 border border-transparent focus:bg-white dark:focus:bg-darkGray-800 focus:border-orange-500 focus:ring-orange-500/10",
       outlined:
-        "bg-transparent border border-neutral-300 dark:border-darkGray-700 focus:border-primary-500 focus:ring-primary-500/20",
+        "bg-transparent border border-gray-200 dark:border-darkGray-700 focus:border-orange-500 focus:ring-orange-500/10 hover:border-gray-300",
       unstyled: "bg-transparent border-0 focus:ring-0 p-0",
     };
 
     // Error classes
     const errorClasses = error
-      ? "border-danger-500 focus:border-danger-500 focus:ring-danger-500/20 text-danger-900 dark:text-danger-400"
+      ? "border-red-500 focus:border-red-500 focus:ring-red-500/10 text-red-900 dark:text-red-400"
       : "";
 
     // Disabled classes
     const disabledClasses = disabled
-      ? "opacity-50 cursor-not-allowed bg-neutral-200 dark:bg-darkGray-700"
+      ? "opacity-60 cursor-not-allowed bg-gray-100 dark:bg-darkGray-700"
       : "";
 
     // Width classes
@@ -80,9 +80,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     const leftIconPadding = leftIcon ? "pl-10" : "";
     const rightIconPadding = rightIcon ? "pr-10" : "";
 
-    // Base classes - Updated for minimal design
+    // Base classes - Minimal and clean design
     const baseClasses =
-      "rounded-xl shadow-sm focus:outline-none focus:ring-1 transition-all duration-200 text-primary-900 dark:text-neutral-100 placeholder:text-neutral-500 dark:placeholder:text-neutral-400";
+      "rounded-lg shadow-sm focus:outline-none focus:ring-2 transition-all duration-200 text-gray-900 dark:text-neutral-100 placeholder:text-gray-500 dark:placeholder:text-neutral-400 font-medium";
 
     // Combine all input classes
     const inputClasses = `
@@ -102,10 +102,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className={`block text-sm font-medium text-primary-700 dark:text-neutral-300 mb-2 ${labelClassName}`}
+            className={`block text-sm font-semibold text-gray-700 dark:text-neutral-300 mb-2 ${labelClassName}`}
           >
             {label}
-            {required && <span className="text-danger-500 ml-1">*</span>}
+            {required && <span className="text-red-500 ml-1">*</span>}
           </label>
         )}
 
@@ -143,14 +143,14 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         {error ? (
           <p
             id={`${inputId}-error`}
-            className={`mt-1.5 text-xs text-danger-500 dark:text-danger-400 ${errorClassName}`}
+            className={`mt-2 text-sm text-red-500 dark:text-red-400 font-medium ${errorClassName}`}
           >
             {error}
           </p>
         ) : helperText ? (
           <p
             id={`${inputId}-helper`}
-            className={`mt-1.5 text-xs text-neutral-600 dark:text-neutral-400 ${helperTextClassName}`}
+            className={`mt-2 text-sm text-gray-600 dark:text-neutral-400 ${helperTextClassName}`}
           >
             {helperText}
           </p>
