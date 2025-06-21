@@ -1,7 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
-  darkMode: "class",
   theme: {
     extend: {
       colors: {
@@ -15,8 +14,8 @@ export default {
           500: "#C8C1B2",
           600: "#B8AF9C",
           700: "#A89D86",
-          800: "#363636", // Dark mode secondary background (metal gray)
-          900: "#1E1E1E", // Dark mode primary background (metal gray)
+          800: "#6B6B6B",
+          900: "#4A4A4A",
         },
         primary: {
           50: "#F4F6F7",
@@ -27,8 +26,8 @@ export default {
           500: "#8BA8B3",
           600: "#89A8B2", // Main primary color (darkest)
           700: "#7A969F",
-          800: "#4A4A4A", // Dark mode primary darker
-          900: "#2A2A2A", // Dark mode primary darkest
+          800: "#6B848C",
+          900: "#5C7279",
         },
         secondary: {
           50: "#F6F7F8",
@@ -39,21 +38,8 @@ export default {
           500: "#A5AAB4",
           600: "#9399A5",
           700: "#818896",
-          800: "#505050", // Dark mode secondary darker
-          900: "#303030", // Dark mode secondary darkest
-        },
-        // Dark mode specific gray palette (metal/pastel gray)
-        darkGray: {
-          50: "#F8F8F8",
-          100: "#F0F0F0",
-          200: "#E0E0E0",
-          300: "#C0C0C0",
-          400: "#A0A0A0",
-          500: "#808080",
-          600: "#606060",
-          700: "#404040",
-          800: "#2A2A2A",
-          900: "#1E1E1E",
+          800: "#6B7280",
+          900: "#4B5563",
         },
         // Functional colors adjusted to match the new palette
         success: {

@@ -8,17 +8,17 @@ import errorHandlingService from './errorHandling';
  * @returns Promise with the API response data
  */
 export async function apiCall<T>(
-  apiCall: () => Promise<{ data: T }>,
-  context?: Record<string, any>
+ apiCall: () => Promise<{ data: T }>,
+ context?: Record<string, any>
 ): Promise<T> {
-  try {
-    const response = await apiCall();
-    return response.data;
-  } catch (error) {
-    // Log the error with our error handling service
-    errorHandlingService.handleApiError(error, context);
-    throw error;
-  }
+ try {
+  const response = await apiCall();
+  return response.data;
+ } catch (error) {
+  // Log the error with our error handling service
+  errorHandlingService.handleApiError(error, context);
+  throw error;
+ }
 }
 
 /**
@@ -29,14 +29,14 @@ export async function apiCall<T>(
  * @returns Promise with the API response data
  */
 export async function apiGet<T>(
-  url: string,
-  params?: Record<string, any>,
-  context?: Record<string, any>
+ url: string,
+ params?: Record<string, any>,
+ context?: Record<string, any>
 ): Promise<T> {
-  return apiCall<T>(
-    () => api.get(url, { params }),
-    { ...context, method: 'GET', url }
-  );
+ return apiCall<T>(
+  () => api.get(url, { params }),
+  { ...context, method: 'GET', url }
+ );
 }
 
 /**
@@ -47,14 +47,14 @@ export async function apiGet<T>(
  * @returns Promise with the API response data
  */
 export async function apiPost<T>(
-  url: string,
-  data?: any,
-  context?: Record<string, any>
+ url: string,
+ data?: any,
+ context?: Record<string, any>
 ): Promise<T> {
-  return apiCall<T>(
-    () => api.post(url, data),
-    { ...context, method: 'POST', url }
-  );
+ return apiCall<T>(
+  () => api.post(url, data),
+  { ...context, method: 'POST', url }
+ );
 }
 
 /**
@@ -65,14 +65,14 @@ export async function apiPost<T>(
  * @returns Promise with the API response data
  */
 export async function apiPatch<T>(
-  url: string,
-  data?: any,
-  context?: Record<string, any>
+ url: string,
+ data?: any,
+ context?: Record<string, any>
 ): Promise<T> {
-  return apiCall<T>(
-    () => api.patch(url, data),
-    { ...context, method: 'PATCH', url }
-  );
+ return apiCall<T>(
+  () => api.patch(url, data),
+  { ...context, method: 'PATCH', url }
+ );
 }
 
 /**
@@ -82,13 +82,13 @@ export async function apiPatch<T>(
  * @returns Promise with the API response data
  */
 export async function apiDelete<T>(
-  url: string,
-  context?: Record<string, any>
+ url: string,
+ context?: Record<string, any>
 ): Promise<T> {
-  return apiCall<T>(
-    () => api.delete(url),
-    { ...context, method: 'DELETE', url }
-  );
+ return apiCall<T>(
+  () => api.delete(url),
+  { ...context, method: 'DELETE', url }
+ );
 }
 
 /**
@@ -99,21 +99,21 @@ export async function apiDelete<T>(
  * @returns Promise with the API response data
  */
 export async function apiPut<T>(
-  url: string,
-  data?: any,
-  context?: Record<string, any>
+ url: string,
+ data?: any,
+ context?: Record<string, any>
 ): Promise<T> {
-  return apiCall<T>(
-    () => api.put(url, data),
-    { ...context, method: 'PUT', url }
-  );
+ return apiCall<T>(
+  () => api.put(url, data),
+  { ...context, method: 'PUT', url }
+ );
 }
 
 export default {
-  get: apiGet,
-  post: apiPost,
-  patch: apiPatch,
-  delete: apiDelete,
-  put: apiPut,
-  call: apiCall
+ get: apiGet,
+ post: apiPost,
+ patch: apiPatch,
+ delete: apiDelete,
+ put: apiPut,
+ call: apiCall
 };
