@@ -3,19 +3,19 @@ import {
   NotFoundException,
   BadRequestException,
   ConflictException,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
-import { Invoice, InvoiceStatus, InvoiceType } from './entities/invoice.entity';
-import { CreateInvoiceDto } from './dto/create-invoice.dto';
-import { UpdateInvoiceDto } from './dto/update-invoice.dto';
-import { OrderService } from '../order/order.service';
-import { PaymentService } from '../payment/payment.service';
-import { OrderStatus } from '../order/entities/order.entity';
-import { PaymentStatus } from '../payment/entities/payment.entity';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as PDFDocument from 'pdfkit';
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository, DataSource } from "typeorm";
+import { Invoice, InvoiceStatus, InvoiceType } from "./entities/invoice.entity";
+import { CreateInvoiceDto } from "./dto/create-invoice.dto";
+import { UpdateInvoiceDto } from "./dto/update-invoice.dto";
+import { OrderService } from "../order/order.service";
+import { PaymentService } from "../payment/payment.service";
+import { OrderStatus } from "../order/entities/order.entity";
+import { PaymentStatus } from "../payment/entities/payment.entity";
+import * as fs from "fs";
+import * as path from "path";
+import * as PDFDocument from "pdfkit";
 
 @Injectable()
 export class InvoiceService {
@@ -24,10 +24,14 @@ export class InvoiceService {
     private readonly invoiceRepository: Repository<Invoice>,
     private readonly orderService: OrderService,
     private readonly paymentService: PaymentService,
-    private readonly dataSource: DataSource,
+    private readonly dataSource: DataSource
   ) {}
 
-  async create(createInvoiceDto: CreateInvoiceDto, userId: string, tenantId: string): Promise<Invoice> {
+  async create(
+    createInvoiceDto: CreateInvoiceDto,
+    userId: string,
+    tenantId: string
+  ): Promise<Invoice> {
     // Start a transaction
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -38,9 +42,12 @@ export class InvoiceService {
       const order = await this.orderService.findOne(createInvoiceDto.orderId);
 
       // Check if order is in a valid state for invoicing
-      if (order.status !== OrderStatus.COMPLETED && order.status !== OrderStatus.SERVED) {
+      if (
+        order.status !== OrderStatus.COMPLETED &&
+        order.status !== OrderStatus.SERVED
+      ) {
         throw new BadRequestException(
-          `Order ${order.orderNumber} is not ready for invoicing. Status: ${order.status}`,
+          `Order ${order.orderNumber} is not ready for invoicing. Status: ${order.status}`
         );
       }
 
@@ -51,7 +58,7 @@ export class InvoiceService {
 
       if (existingInvoice) {
         throw new ConflictException(
-          `Invoice for order ${order.orderNumber} already exists`,
+          `Invoice for order ${order.orderNumber} already exists`
         );
       }
 
@@ -122,22 +129,27 @@ export class InvoiceService {
   async findAll(tenantId: string): Promise<Invoice[]> {
     return this.invoiceRepository.find({
       where: { tenantId },
-      relations: ['order', 'payment', 'createdBy'],
-      order: { createdAt: 'DESC' },
+      relations: ["order", "payment", "createdBy"],
+      order: { createdAt: "DESC" },
     });
   }
 
-  async findOne(id: string): Promise<Invoice> {
+  async findOne(id: string, tenantId?: string): Promise<Invoice> {
+    const whereCondition: any = { id };
+    if (tenantId) {
+      whereCondition.tenantId = tenantId;
+    }
+
     const invoice = await this.invoiceRepository.findOne({
-      where: { id },
+      where: whereCondition,
       relations: [
-        'order',
-        'order.items',
-        'order.items.menuItem',
-        'order.table',
-        'order.waiter',
-        'payment',
-        'createdBy',
+        "order",
+        "order.items",
+        "order.items.menuItem",
+        "order.table",
+        "order.waiter",
+        "payment",
+        "createdBy",
       ],
     });
 
@@ -152,26 +164,29 @@ export class InvoiceService {
     const invoice = await this.invoiceRepository.findOne({
       where: { orderId },
       relations: [
-        'order',
-        'order.items',
-        'order.items.menuItem',
-        'order.table',
-        'order.waiter',
-        'payment',
-        'createdBy',
+        "order",
+        "order.items",
+        "order.items.menuItem",
+        "order.table",
+        "order.waiter",
+        "payment",
+        "createdBy",
       ],
     });
 
     if (!invoice) {
       throw new NotFoundException(
-        `Invoice for order with ID ${orderId} not found`,
+        `Invoice for order with ID ${orderId} not found`
       );
     }
 
     return invoice;
   }
 
-  async update(id: string, updateInvoiceDto: UpdateInvoiceDto): Promise<Invoice> {
+  async update(
+    id: string,
+    updateInvoiceDto: UpdateInvoiceDto
+  ): Promise<Invoice> {
     const invoice = await this.findOne(id);
 
     // Don't allow updating if invoice is already issued or paid
@@ -180,7 +195,7 @@ export class InvoiceService {
       invoice.status === InvoiceStatus.PAID
     ) {
       throw new BadRequestException(
-        `Cannot update invoice ${invoice.invoiceNumber} because it is already ${invoice.status}`,
+        `Cannot update invoice ${invoice.invoiceNumber} because it is already ${invoice.status}`
       );
     }
 
@@ -208,10 +223,7 @@ export class InvoiceService {
     invoice.status = status;
 
     // Generate PDF if invoice is now issued or paid
-    if (
-      status === InvoiceStatus.ISSUED ||
-      status === InvoiceStatus.PAID
-    ) {
+    if (status === InvoiceStatus.ISSUED || status === InvoiceStatus.PAID) {
       const fileUrl = await this.generateInvoicePdf(invoice.id);
       invoice.fileUrl = fileUrl;
     }
@@ -228,7 +240,7 @@ export class InvoiceService {
       invoice.status === InvoiceStatus.PAID
     ) {
       throw new BadRequestException(
-        `Cannot delete invoice ${invoice.invoiceNumber} because it is already ${invoice.status}`,
+        `Cannot delete invoice ${invoice.invoiceNumber} because it is already ${invoice.status}`
       );
     }
 
@@ -247,8 +259,8 @@ export class InvoiceService {
     // Get current year and month
     const now = new Date();
     const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+
     // Get count of invoices for this tenant in the current year/month
     const count = await this.invoiceRepository.count({
       where: {
@@ -256,35 +268,35 @@ export class InvoiceService {
         createdAt: new Date(`${year}-${month}-01`),
       },
     });
-    
+
     // Generate invoice number in format: INV-YYYYMM-XXXX
-    const sequenceNumber = String(count + 1).padStart(4, '0');
+    const sequenceNumber = String(count + 1).padStart(4, "0");
     return `INV-${year}${month}-${sequenceNumber}`;
   }
 
   async generateInvoicePdf(invoiceId: string): Promise<string> {
     const invoice = await this.findOne(invoiceId);
-    const uploadsDir = path.join(process.cwd(), 'uploads', 'invoices');
+    const uploadsDir = path.join(process.cwd(), "uploads", "invoices");
 
     // Ensure directory exists
     if (!fs.existsSync(uploadsDir)) {
       fs.mkdirSync(uploadsDir, { recursive: true });
     }
 
-    const fileName = `invoice_${invoice.invoiceNumber.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+    const fileName = `invoice_${invoice.invoiceNumber.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
     const filePath = path.join(uploadsDir, fileName);
 
     return new Promise((resolve, reject) => {
       try {
         const doc = new PDFDocument({
           margin: 50,
-          size: 'A4',
+          size: "A4",
           info: {
             Title: `Invoice ${invoice.invoiceNumber}`,
-            Author: 'Restaurant Management System',
-            Subject: 'Invoice',
-            Keywords: 'invoice, restaurant, billing',
-          }
+            Author: "Restaurant Management System",
+            Subject: "Invoice",
+            Keywords: "invoice, restaurant, billing",
+          },
         });
         const stream = fs.createWriteStream(filePath);
 
@@ -308,15 +320,13 @@ export class InvoiceService {
         // Footer
         this.addInvoiceFooter(doc, invoice);
 
-
-
         doc.end();
 
-        stream.on('finish', () => {
+        stream.on("finish", () => {
           resolve(`uploads/invoices/${fileName}`);
         });
 
-        stream.on('error', (error) => {
+        stream.on("error", (error) => {
           reject(error);
         });
       } catch (error) {
@@ -327,50 +337,51 @@ export class InvoiceService {
 
   private addInvoiceHeader(doc: any, invoice: any): void {
     // Company logo placeholder
-    doc.fontSize(24)
-       .fillColor('#2563eb')
-       .text('RESTAURANT', 50, 50)
-       .fontSize(12)
-       .fillColor('#6b7280')
-       .text('Management System', 50, 80);
+    doc
+      .fontSize(24)
+      .fillColor("#2563eb")
+      .text("RESTAURANT", 50, 50)
+      .fontSize(12)
+      .fillColor("#6b7280")
+      .text("Management System", 50, 80);
 
     // Invoice title and number
-    doc.fontSize(28)
-       .fillColor('#1f2937')
-       .text('INVOICE', 400, 50, { align: 'right' })
-       .fontSize(14)
-       .fillColor('#6b7280')
-       .text(`#${invoice.invoiceNumber}`, 400, 85, { align: 'right' });
+    doc
+      .fontSize(28)
+      .fillColor("#1f2937")
+      .text("INVOICE", 400, 50, { align: "right" })
+      .fontSize(14)
+      .fillColor("#6b7280")
+      .text(`#${invoice.invoiceNumber}`, 400, 85, { align: "right" });
 
     // Add a line separator
-    doc.moveTo(50, 120)
-       .lineTo(550, 120)
-       .strokeColor('#e5e7eb')
-       .stroke();
+    doc.moveTo(50, 120).lineTo(550, 120).strokeColor("#e5e7eb").stroke();
   }
 
   private addCompanyAndCustomerInfo(doc: any, invoice: any): void {
     const startY = 140;
 
     // Company information (left side)
-    doc.fontSize(12)
-       .fillColor('#1f2937')
-       .text('From:', 50, startY)
-       .fontSize(11)
-       .fillColor('#374151')
-       .text('Restaurant Name', 50, startY + 20)
-       .text('123 Restaurant Street', 50, startY + 35)
-       .text('City, State 12345', 50, startY + 50)
-       .text('Phone: (555) 123-4567', 50, startY + 65)
-       .text('Email: info@restaurant.com', 50, startY + 80);
+    doc
+      .fontSize(12)
+      .fillColor("#1f2937")
+      .text("From:", 50, startY)
+      .fontSize(11)
+      .fillColor("#374151")
+      .text("Restaurant Name", 50, startY + 20)
+      .text("123 Restaurant Street", 50, startY + 35)
+      .text("City, State 12345", 50, startY + 50)
+      .text("Phone: (555) 123-4567", 50, startY + 65)
+      .text("Email: info@restaurant.com", 50, startY + 80);
 
     // Customer information (right side)
     if (invoice.customerName || invoice.customerEmail) {
-      doc.fontSize(12)
-         .fillColor('#1f2937')
-         .text('Bill To:', 350, startY)
-         .fontSize(11)
-         .fillColor('#374151');
+      doc
+        .fontSize(12)
+        .fillColor("#1f2937")
+        .text("Bill To:", 350, startY)
+        .fontSize(11)
+        .fillColor("#374151");
 
       let customerY = startY + 20;
       if (invoice.customerName) {
@@ -395,18 +406,31 @@ export class InvoiceService {
     const startY = 280;
 
     // Invoice details
-    doc.fontSize(12)
-       .fillColor('#1f2937')
-       .text('Invoice Details:', 50, startY)
-       .fontSize(11)
-       .fillColor('#374151')
-       .text(`Issue Date: ${new Date(invoice.issueDate).toLocaleDateString()}`, 50, startY + 20)
-       .text(`Order Number: ${invoice.order.orderNumber}`, 50, startY + 35)
-       .text(`Table: ${invoice.order.table?.number || 'N/A'}`, 50, startY + 50)
-       .text(`Waiter: ${invoice.order.waiter?.fullName || 'N/A'}`, 50, startY + 65);
+    doc
+      .fontSize(12)
+      .fillColor("#1f2937")
+      .text("Invoice Details:", 50, startY)
+      .fontSize(11)
+      .fillColor("#374151")
+      .text(
+        `Issue Date: ${new Date(invoice.issueDate).toLocaleDateString()}`,
+        50,
+        startY + 20
+      )
+      .text(`Order Number: ${invoice.order.orderNumber}`, 50, startY + 35)
+      .text(`Table: ${invoice.order.table?.number || "N/A"}`, 50, startY + 50)
+      .text(
+        `Waiter: ${invoice.order.waiter?.fullName || "N/A"}`,
+        50,
+        startY + 65
+      );
 
     if (invoice.dueDate) {
-      doc.text(`Due Date: ${new Date(invoice.dueDate).toLocaleDateString()}`, 350, startY + 20);
+      doc.text(
+        `Due Date: ${new Date(invoice.dueDate).toLocaleDateString()}`,
+        350,
+        startY + 20
+      );
     }
 
     doc.text(`Status: ${invoice.status.toUpperCase()}`, 350, startY + 35);
@@ -422,40 +446,46 @@ export class InvoiceService {
     const amountX = 480;
 
     // Table header
-    doc.fontSize(12)
-       .fillColor('#1f2937')
-       .text('Item', itemCodeX, tableTop)
-       .text('Description', descriptionX, tableTop)
-       .text('Qty', quantityX, tableTop)
-       .text('Price', priceX, tableTop)
-       .text('Amount', amountX, tableTop);
+    doc
+      .fontSize(12)
+      .fillColor("#1f2937")
+      .text("Item", itemCodeX, tableTop)
+      .text("Description", descriptionX, tableTop)
+      .text("Qty", quantityX, tableTop)
+      .text("Price", priceX, tableTop)
+      .text("Amount", amountX, tableTop);
 
     // Header line
-    doc.moveTo(itemCodeX, tableTop + 20)
-       .lineTo(amountX + 70, tableTop + 20)
-       .strokeColor('#e5e7eb')
-       .stroke();
+    doc
+      .moveTo(itemCodeX, tableTop + 20)
+      .lineTo(amountX + 70, tableTop + 20)
+      .strokeColor("#e5e7eb")
+      .stroke();
 
     // Table rows
     let currentY = tableTop + 35;
-    doc.fontSize(10).fillColor('#374151');
+    doc.fontSize(10).fillColor("#374151");
 
     invoice.order.items.forEach((item: any, index: number) => {
       const itemTotal = item.quantity * item.price;
 
-      doc.text(item.menuItem.name, itemCodeX, currentY)
-         .text(item.menuItem.description || '', descriptionX, currentY, { width: 180 })
-         .text(item.quantity.toString(), quantityX, currentY)
-         .text(`$${item.price.toFixed(2)}`, priceX, currentY)
-         .text(`$${itemTotal.toFixed(2)}`, amountX, currentY);
+      doc
+        .text(item.menuItem.name, itemCodeX, currentY)
+        .text(item.menuItem.description || "", descriptionX, currentY, {
+          width: 180,
+        })
+        .text(item.quantity.toString(), quantityX, currentY)
+        .text(`$${item.price.toFixed(2)}`, priceX, currentY)
+        .text(`$${itemTotal.toFixed(2)}`, amountX, currentY);
 
       if (item.notes) {
         currentY += 15;
-        doc.fontSize(9)
-           .fillColor('#6b7280')
-           .text(`Note: ${item.notes}`, descriptionX, currentY, { width: 180 })
-           .fontSize(10)
-           .fillColor('#374151');
+        doc
+          .fontSize(9)
+          .fillColor("#6b7280")
+          .text(`Note: ${item.notes}`, descriptionX, currentY, { width: 180 })
+          .fontSize(10)
+          .fillColor("#374151");
       }
 
       currentY += 25;
@@ -468,10 +498,11 @@ export class InvoiceService {
     });
 
     // Bottom line
-    doc.moveTo(itemCodeX, currentY)
-       .lineTo(amountX + 70, currentY)
-       .strokeColor('#e5e7eb')
-       .stroke();
+    doc
+      .moveTo(itemCodeX, currentY)
+      .lineTo(amountX + 70, currentY)
+      .strokeColor("#e5e7eb")
+      .stroke();
   }
 
   private addTotalsSection(doc: any, invoice: any): void {
@@ -479,36 +510,44 @@ export class InvoiceService {
     const labelX = 400;
     const amountX = 480;
 
-    doc.fontSize(11).fillColor('#374151');
+    doc.fontSize(11).fillColor("#374151");
 
     // Subtotal
-    doc.text('Subtotal:', labelX, startY)
-       .text(`$${invoice.subtotal.toFixed(2)}`, amountX, startY);
+    doc
+      .text("Subtotal:", labelX, startY)
+      .text(`$${invoice.subtotal.toFixed(2)}`, amountX, startY);
 
     // Tax
     if (invoice.taxAmount > 0) {
-      doc.text('Tax:', labelX, startY + 20)
-         .text(`$${invoice.taxAmount.toFixed(2)}`, amountX, startY + 20);
+      doc
+        .text("Tax:", labelX, startY + 20)
+        .text(`$${invoice.taxAmount.toFixed(2)}`, amountX, startY + 20);
     }
 
     // Discount
     if (invoice.discountAmount > 0) {
-      doc.text('Discount:', labelX, startY + 40)
-         .text(`-$${invoice.discountAmount.toFixed(2)}`, amountX, startY + 40);
+      doc
+        .text("Discount:", labelX, startY + 40)
+        .text(`-$${invoice.discountAmount.toFixed(2)}`, amountX, startY + 40);
     }
 
     // Total line
-    const totalY = startY + (invoice.taxAmount > 0 ? 60 : 40) + (invoice.discountAmount > 0 ? 20 : 0);
-    doc.moveTo(labelX, totalY)
-       .lineTo(amountX + 70, totalY)
-       .strokeColor('#e5e7eb')
-       .stroke();
+    const totalY =
+      startY +
+      (invoice.taxAmount > 0 ? 60 : 40) +
+      (invoice.discountAmount > 0 ? 20 : 0);
+    doc
+      .moveTo(labelX, totalY)
+      .lineTo(amountX + 70, totalY)
+      .strokeColor("#e5e7eb")
+      .stroke();
 
     // Total amount
-    doc.fontSize(14)
-       .fillColor('#1f2937')
-       .text('Total:', labelX, totalY + 10)
-       .text(`$${invoice.totalAmount.toFixed(2)}`, amountX, totalY + 10);
+    doc
+      .fontSize(14)
+      .fillColor("#1f2937")
+      .text("Total:", labelX, totalY + 10)
+      .text(`$${invoice.totalAmount.toFixed(2)}`, amountX, totalY + 10);
   }
 
   private addInvoiceFooter(doc: any, invoice: any): void {
@@ -516,16 +555,22 @@ export class InvoiceService {
 
     // Notes
     if (invoice.notes) {
-      doc.fontSize(10)
-         .fillColor('#6b7280')
-         .text('Notes:', 50, footerY)
-         .text(invoice.notes, 50, footerY + 15, { width: 500 });
+      doc
+        .fontSize(10)
+        .fillColor("#6b7280")
+        .text("Notes:", 50, footerY)
+        .text(invoice.notes, 50, footerY + 15, { width: 500 });
     }
 
     // Footer text
-    doc.fontSize(9)
-       .fillColor('#9ca3af')
-       .text('Thank you for your business!', 50, footerY + 50)
-       .text(`Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}`, 50, footerY + 65);
+    doc
+      .fontSize(9)
+      .fillColor("#9ca3af")
+      .text("Thank you for your business!", 50, footerY + 50)
+      .text(
+        `Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}`,
+        50,
+        footerY + 65
+      );
   }
 }

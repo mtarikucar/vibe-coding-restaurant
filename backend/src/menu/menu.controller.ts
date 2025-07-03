@@ -29,8 +29,9 @@ export class MenuController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Post("categories")
-  createCategory(@Body() createCategoryDto: CreateCategoryDto) {
-    return this.menuService.createCategory(createCategoryDto);
+  createCategory(@Body() createCategoryDto: CreateCategoryDto, @Request() req) {
+    const tenantId = req.tenantId;
+    return this.menuService.createCategory(createCategoryDto, tenantId);
   }
 
   @Get("categories")
@@ -81,8 +82,9 @@ export class MenuController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Post("items")
-  createMenuItem(@Body() createMenuItemDto: CreateMenuItemDto) {
-    return this.menuService.createMenuItem(createMenuItemDto);
+  createMenuItem(@Body() createMenuItemDto: CreateMenuItemDto, @Request() req) {
+    const tenantId = req.tenantId;
+    return this.menuService.createMenuItem(createMenuItemDto, tenantId);
   }
 
   @Get("items")

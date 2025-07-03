@@ -9,6 +9,7 @@ import {
 } from "typeorm";
 import { PurchaseOrder } from "./purchase-order.entity";
 import { Stock } from "./stock.entity";
+import { Tenant } from "../../tenant/entities/tenant.entity";
 
 export enum PurchaseOrderItemStatus {
   PENDING = "pending",
@@ -72,6 +73,14 @@ export class PurchaseOrderItem {
 
   @Column({ nullable: true })
   notes: string;
+
+  // Tenant relationship
+  @ManyToOne(() => Tenant)
+  @JoinColumn({ name: "tenantId" })
+  tenant: Tenant;
+
+  @Column({ nullable: true })
+  tenantId: string;
 
   @CreateDateColumn()
   createdAt: Date;

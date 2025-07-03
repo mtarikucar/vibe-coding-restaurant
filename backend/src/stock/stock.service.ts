@@ -72,16 +72,24 @@ export class StockService {
     return this.findOne(savedStock.id);
   }
 
-  async findAll(): Promise<Stock[]> {
+  async findAll(tenantId?: string): Promise<Stock[]> {
+    const whereCondition = tenantId ? { tenantId } : {};
+
     return this.stockRepository.find({
+      where: whereCondition,
       relations: ["menuItem", "menuItem.category"],
       order: { menuItem: { name: "ASC" } },
     });
   }
 
-  async findOne(id: string): Promise<Stock> {
+  async findOne(id: string, tenantId?: string): Promise<Stock> {
+    const whereCondition: any = { id };
+    if (tenantId) {
+      whereCondition.tenantId = tenantId;
+    }
+
     const stock = await this.stockRepository.findOne({
-      where: { id },
+      where: whereCondition,
       relations: ["menuItem", "menuItem.category"],
     });
 

@@ -67,6 +67,7 @@ export class PaymentService {
           ...createPaymentDto,
           status: PaymentStatus.COMPLETED,
           transactionId: `CASH-${Date.now().toString().slice(-6)}`,
+          tenantId: order.tenantId, // Add tenant isolation
         });
 
         // Save payment
@@ -91,6 +92,7 @@ export class PaymentService {
         const payment = this.paymentRepository.create({
           ...createPaymentDto,
           status: PaymentStatus.PENDING,
+          tenantId: order.tenantId, // Add tenant isolation
         });
 
         // Save payment to get an ID
@@ -237,16 +239,24 @@ export class PaymentService {
     }
   }
 
-  async findAll(): Promise<Payment[]> {
+  async findAll(tenantId?: string): Promise<Payment[]> {
+    const whereCondition = tenantId ? { tenantId } : {};
+
     return this.paymentRepository.find({
+      where: whereCondition,
       relations: ["order", "order.table", "order.waiter"],
       order: { createdAt: "DESC" },
     });
   }
 
-  async findOne(id: string): Promise<Payment> {
+  async findOne(id: string, tenantId?: string): Promise<Payment> {
+    const whereCondition: any = { id };
+    if (tenantId) {
+      whereCondition.tenantId = tenantId;
+    }
+
     const payment = await this.paymentRepository.findOne({
-      where: { id },
+      where: whereCondition,
       relations: [
         "order",
         "order.items",

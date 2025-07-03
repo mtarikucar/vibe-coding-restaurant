@@ -25,18 +25,29 @@ export class MenuService {
 
   // Category methods
   async createCategory(
-    createCategoryDto: CreateCategoryDto
+    createCategoryDto: CreateCategoryDto,
+    tenantId?: string
   ): Promise<Category> {
-    // Check if category with the same name already exists
+    // Check if category with the same name already exists in the same tenant
+    const whereCondition: any = { name: createCategoryDto.name };
+    if (tenantId) {
+      whereCondition.tenantId = tenantId;
+    }
+
     const existingCategory = await this.categoryRepository.findOne({
-      where: { name: createCategoryDto.name },
+      where: whereCondition,
     });
 
     if (existingCategory) {
       throw new ConflictException("Category with this name already exists");
     }
 
-    const category = this.categoryRepository.create(createCategoryDto);
+    const categoryData = { ...createCategoryDto };
+    if (tenantId) {
+      categoryData.tenantId = tenantId;
+    }
+
+    const category = this.categoryRepository.create(categoryData);
     return this.categoryRepository.save(category);
   }
 
@@ -199,11 +210,17 @@ export class MenuService {
 
   // Menu item methods
   async createMenuItem(
-    createMenuItemDto: CreateMenuItemDto
+    createMenuItemDto: CreateMenuItemDto,
+    tenantId?: string
   ): Promise<MenuItem> {
-    // Check if category exists
+    // Check if category exists with tenant validation
+    const whereCondition: any = { id: createMenuItemDto.categoryId };
+    if (tenantId) {
+      whereCondition.tenantId = tenantId;
+    }
+
     const category = await this.categoryRepository.findOne({
-      where: { id: createMenuItemDto.categoryId },
+      where: whereCondition,
     });
 
     if (!category) {
@@ -212,7 +229,12 @@ export class MenuService {
       );
     }
 
-    const menuItem = this.menuItemRepository.create(createMenuItemDto);
+    const menuItemData = { ...createMenuItemDto };
+    if (tenantId) {
+      menuItemData.tenantId = tenantId;
+    }
+
+    const menuItem = this.menuItemRepository.create(menuItemData);
     return this.menuItemRepository.save(menuItem);
   }
 

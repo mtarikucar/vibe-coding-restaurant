@@ -6,29 +6,28 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
-} from 'typeorm';
-import { User } from '../../auth/entities/user.entity';
-import { SubscriptionPlan } from './subscription-plan.entity';
-import { Tenant } from '../../tenant/entities/tenant.entity';
+} from "typeorm";
+import { User } from "../../auth/entities/user.entity";
+import { SubscriptionPlan } from "./subscription-plan.entity";
 
 export enum SubscriptionStatus {
-  ACTIVE = 'active',
-  CANCELED = 'canceled',
-  EXPIRED = 'expired',
-  TRIAL = 'trial',
-  PENDING = 'pending',
-  FAILED = 'failed',
+  ACTIVE = "active",
+  CANCELED = "canceled",
+  EXPIRED = "expired",
+  TRIAL = "trial",
+  PENDING = "pending",
+  FAILED = "failed",
 }
 
 export enum PaymentProvider {
-  STRIPE = 'stripe',
-  IYZICO = 'iyzico',
-  MANUAL = 'manual',
+  STRIPE = "stripe",
+  IYZICO = "iyzico",
+  MANUAL = "manual",
 }
 
 @Entity()
 export class Subscription {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   id: string;
 
   @ManyToOne(() => User)
@@ -39,12 +38,6 @@ export class Subscription {
   userId: string;
 
   // Tenant relationship
-  @ManyToOne(() => Tenant)
-  @JoinColumn()
-  tenant: Tenant;
-
-  @Column()
-  tenantId: string;
 
   @ManyToOne(() => SubscriptionPlan)
   @JoinColumn()
@@ -54,16 +47,16 @@ export class Subscription {
   planId: string;
 
   @Column({
-    type: 'enum',
+    type: "enum",
     enum: SubscriptionStatus,
     default: SubscriptionStatus.TRIAL,
   })
   status: SubscriptionStatus;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: "timestamp" })
   startDate: Date;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: "timestamp" })
   endDate: Date;
 
   @Column({ nullable: true })
@@ -76,13 +69,13 @@ export class Subscription {
   subscriptionId: string; // External subscription ID from payment provider
 
   @Column({
-    type: 'enum',
+    type: "enum",
     enum: PaymentProvider,
     nullable: true,
   })
   paymentProvider: PaymentProvider;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: "jsonb", nullable: true })
   paymentDetails: Record<string, any>;
 
   @Column({ nullable: true })
@@ -91,14 +84,14 @@ export class Subscription {
   @Column({ nullable: true })
   nextPaymentDate: Date;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  @Column({ type: "decimal", precision: 10, scale: 2, nullable: true })
   amount: number;
 
-  @Column({ default: 'usd' })
+  @Column({ default: "usd" })
   currency: string;
 
   // Billing and invoice information
-  @Column({ nullable: true, type: 'jsonb' })
+  @Column({ nullable: true, type: "jsonb" })
   billingAddress: Record<string, any>;
 
   @Column({ nullable: true })
@@ -108,11 +101,11 @@ export class Subscription {
   @Column({ nullable: true })
   discountCode: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  @Column({ type: "decimal", precision: 10, scale: 2, nullable: true })
   discountAmount: number;
 
   // Usage tracking
-  @Column({ nullable: true, type: 'jsonb' })
+  @Column({ nullable: true, type: "jsonb" })
   usageMetrics: Record<string, any>;
 
   // Cancellation details

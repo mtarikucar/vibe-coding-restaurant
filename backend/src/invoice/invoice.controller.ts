@@ -50,8 +50,8 @@ export class InvoiceController {
   @Get(":id")
   @Roles(UserRole.ADMIN, UserRole.CASHIER, UserRole.WAITER)
   @UseGuards(RolesGuard)
-  findOne(@Param("id") id: string) {
-    return this.invoiceService.findOne(id);
+  findOne(@Param("id") id: string, @Req() req) {
+    return this.invoiceService.findOne(id, req.user.tenantId);
   }
 
   @Get("order/:orderId")

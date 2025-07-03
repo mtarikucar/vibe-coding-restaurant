@@ -1,15 +1,19 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Table, TableStatus } from './entities/table.entity';
-import { CreateTableDto } from './dto/create-table.dto';
-import { UpdateTableDto } from './dto/update-table.dto';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { Table, TableStatus } from "./entities/table.entity";
+import { CreateTableDto } from "./dto/create-table.dto";
+import { UpdateTableDto } from "./dto/update-table.dto";
 
 @Injectable()
 export class TableService {
   constructor(
     @InjectRepository(Table)
-    private readonly tableRepository: Repository<Table>,
+    private readonly tableRepository: Repository<Table>
   ) {}
 
   async create(createTableDto: CreateTableDto): Promise<Table> {
@@ -19,23 +23,33 @@ export class TableService {
     });
 
     if (existingTable) {
-      throw new ConflictException(`Table with number ${createTableDto.number} already exists`);
+      throw new ConflictException(
+        `Table with number ${createTableDto.number} already exists`
+      );
     }
 
     const table = this.tableRepository.create(createTableDto);
     return this.tableRepository.save(table);
   }
 
-  async findAll(): Promise<Table[]> {
+  async findAll(tenantId?: string): Promise<Table[]> {
+    const whereCondition = tenantId ? { tenantId } : {};
+
     return this.tableRepository.find({
-      order: { number: 'ASC' },
+      where: whereCondition,
+      order: { number: "ASC" },
     });
   }
 
-  async findOne(id: string): Promise<Table> {
+  async findOne(id: string, tenantId?: string): Promise<Table> {
+    const whereCondition: any = { id };
+    if (tenantId) {
+      whereCondition.tenantId = tenantId;
+    }
+
     const table = await this.tableRepository.findOne({
-      where: { id },
-      relations: ['orders'],
+      where: whereCondition,
+      relations: ["orders"],
     });
 
     if (!table) {
@@ -55,7 +69,9 @@ export class TableService {
       });
 
       if (existingTable) {
-        throw new ConflictException(`Table with number ${updateTableDto.number} already exists`);
+        throw new ConflictException(
+          `Table with number ${updateTableDto.number} already exists`
+        );
       }
     }
 
@@ -69,7 +85,7 @@ export class TableService {
 
     // Check if table has active orders
     if (table.orders && table.orders.length > 0) {
-      throw new ConflictException('Cannot delete table with active orders');
+      throw new ConflictException("Cannot delete table with active orders");
     }
 
     await this.tableRepository.remove(table);
@@ -84,24 +100,56 @@ export class TableService {
   async findByStatus(status: string): Promise<Table[]> {
     return this.tableRepository.find({
       where: { status: status as TableStatus },
-      order: { number: 'ASC' },
+      order: { number: "ASC" },
     });
   }
 
   async createInitialTables() {
     // Check if any tables exist
     const tablesCount = await this.tableRepository.count();
-    
+
     if (tablesCount === 0) {
       // Create tables
-      await this.create({ number: 1, capacity: 2, status: TableStatus.AVAILABLE });
-      await this.create({ number: 2, capacity: 2, status: TableStatus.AVAILABLE });
-      await this.create({ number: 3, capacity: 4, status: TableStatus.AVAILABLE });
-      await this.create({ number: 4, capacity: 4, status: TableStatus.AVAILABLE });
-      await this.create({ number: 5, capacity: 6, status: TableStatus.AVAILABLE });
-      await this.create({ number: 6, capacity: 6, status: TableStatus.AVAILABLE });
-      await this.create({ number: 7, capacity: 8, status: TableStatus.AVAILABLE });
-      await this.create({ number: 8, capacity: 8, status: TableStatus.AVAILABLE });
+      await this.create({
+        number: 1,
+        capacity: 2,
+        status: TableStatus.AVAILABLE,
+      });
+      await this.create({
+        number: 2,
+        capacity: 2,
+        status: TableStatus.AVAILABLE,
+      });
+      await this.create({
+        number: 3,
+        capacity: 4,
+        status: TableStatus.AVAILABLE,
+      });
+      await this.create({
+        number: 4,
+        capacity: 4,
+        status: TableStatus.AVAILABLE,
+      });
+      await this.create({
+        number: 5,
+        capacity: 6,
+        status: TableStatus.AVAILABLE,
+      });
+      await this.create({
+        number: 6,
+        capacity: 6,
+        status: TableStatus.AVAILABLE,
+      });
+      await this.create({
+        number: 7,
+        capacity: 8,
+        status: TableStatus.AVAILABLE,
+      });
+      await this.create({
+        number: 8,
+        capacity: 8,
+        status: TableStatus.AVAILABLE,
+      });
     }
   }
 }

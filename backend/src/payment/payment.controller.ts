@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   UseGuards,
+  Req,
 } from "@nestjs/common";
 import { PaymentService } from "./payment.service";
 import { CreatePaymentDto } from "./dto/create-payment.dto";
@@ -15,6 +16,7 @@ import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { UserRole } from "../auth/entities/user.entity";
+import { Request } from "express";
 
 @Controller("payments")
 @UseGuards(JwtAuthGuard)
@@ -31,15 +33,17 @@ export class PaymentController {
   @Get()
   @Roles(UserRole.ADMIN, UserRole.CASHIER)
   @UseGuards(RolesGuard)
-  findAll() {
-    return this.paymentService.findAll();
+  findAll(@Req() req: Request) {
+    const tenantId = (req as any).tenantId;
+    return this.paymentService.findAll(tenantId);
   }
 
   @Get(":id")
   @Roles(UserRole.ADMIN, UserRole.CASHIER)
   @UseGuards(RolesGuard)
-  findOne(@Param("id") id: string) {
-    return this.paymentService.findOne(id);
+  findOne(@Param("id") id: string, @Req() req: Request) {
+    const tenantId = (req as any).tenantId;
+    return this.paymentService.findOne(id, tenantId);
   }
 
   @Patch(":id/status")

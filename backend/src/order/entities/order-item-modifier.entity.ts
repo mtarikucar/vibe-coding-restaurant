@@ -1,13 +1,23 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
-import { OrderItem } from './order-item.entity';
-import { MenuItemModifier } from '../../menu/entities/menu-item-modifier.entity';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+} from "typeorm";
+import { OrderItem } from "./order-item.entity";
+import { MenuItemModifier } from "../../menu/entities/menu-item-modifier.entity";
+import { Tenant } from "../../tenant/entities/tenant.entity";
 
 @Entity()
 export class OrderItemModifier {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @ManyToOne(() => OrderItem, orderItem => orderItem.modifiers, { onDelete: 'CASCADE' })
+  @ManyToOne(() => OrderItem, (orderItem) => orderItem.modifiers, {
+    onDelete: "CASCADE",
+  })
   @JoinColumn()
   orderItem: OrderItem;
 
@@ -30,7 +40,7 @@ export class OrderItemModifier {
   @Column()
   type: string; // Store the modifier type at time of order
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column({ type: "decimal", precision: 10, scale: 2 })
   priceAdjustment: number;
 
   @Column({ nullable: true })
@@ -38,6 +48,14 @@ export class OrderItemModifier {
 
   @Column({ default: 1 })
   quantity: number; // For modifiers that can have quantities
+
+  // Tenant relationship
+  @ManyToOne(() => Tenant)
+  @JoinColumn({ name: "tenantId" })
+  tenant: Tenant;
+
+  @Column({ nullable: true })
+  tenantId: string;
 
   @CreateDateColumn()
   createdAt: Date;

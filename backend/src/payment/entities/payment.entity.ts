@@ -3,12 +3,14 @@ import {
   Column,
   PrimaryGeneratedColumn,
   OneToOne,
+  ManyToOne,
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
 } from "typeorm";
 import { Order } from "../../order/entities/order.entity";
 import { User } from "../../auth/entities/user.entity";
+import { Tenant } from "../../tenant/entities/tenant.entity";
 
 export enum PaymentMethod {
   CASH = "cash",
@@ -71,6 +73,14 @@ export class Payment {
 
   @Column({ nullable: true })
   cashierId: string;
+
+  // Tenant relationship
+  @ManyToOne(() => Tenant)
+  @JoinColumn({ name: "tenantId" })
+  tenant: Tenant;
+
+  @Column({ nullable: true })
+  tenantId: string;
 
   @CreateDateColumn()
   createdAt: Date;

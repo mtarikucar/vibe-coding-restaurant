@@ -34,8 +34,9 @@ export class StockController {
   @Get()
   @Roles(UserRole.ADMIN)
   @UseGuards(RolesGuard)
-  findAll() {
-    return this.stockService.findAll();
+  findAll(@Request() req) {
+    const tenantId = req.tenantId;
+    return this.stockService.findAll(tenantId);
   }
 
   @Get("menu-item/:menuItemId")

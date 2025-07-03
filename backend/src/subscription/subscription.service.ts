@@ -89,7 +89,7 @@ export class SubscriptionService {
       // Check if user exists with tenant
       const user = await this.userRepository.findOne({
         where: { id: createSubscriptionDto.userId },
-        relations: ['tenant'],
+        relations: ["tenant"],
       });
 
       if (!user) {
@@ -113,16 +113,18 @@ export class SubscriptionService {
         );
       }
 
-      // Check if tenant already has an active subscription
+      // Check if user already has an active subscription
       const existingSubscription = await this.subscriptionRepository.findOne({
         where: {
-          tenantId: user.tenantId,
+          userId: user.id,
           status: In([SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIAL]),
         },
       });
 
       if (existingSubscription) {
-        throw new ConflictException("Tenant already has an active subscription");
+        throw new ConflictException(
+          "Tenant already has an active subscription"
+        );
       }
 
       // Determine payment provider based on tenant's country
@@ -131,9 +133,11 @@ export class SubscriptionService {
       // Create subscription
       const subscription = this.subscriptionRepository.create({
         ...createSubscriptionDto,
-        tenantId: user.tenantId,
+        userId: user.id,
         amount: plan.price,
-        currency: createSubscriptionDto.currency || this.getCurrencyByCountry(user.tenant.country),
+        currency:
+          createSubscriptionDto.currency ||
+          this.getCurrencyByCountry(user.tenant.country),
         paymentProvider,
       });
 
@@ -199,22 +203,6 @@ export class SubscriptionService {
 
     if (!subscription) {
       throw new NotFoundException(`Subscription with ID ${id} not found`);
-    }
-
-    return subscription;
-  }
-
-  async findSubscriptionByUser(userId: string): Promise<Subscription> {
-    const subscription = await this.subscriptionRepository.findOne({
-      where: { userId },
-      relations: ["plan"],
-      order: { createdAt: "DESC" },
-    });
-
-    if (!subscription) {
-      throw new NotFoundException(
-        `Subscription for user with ID ${userId} not found`
-      );
     }
 
     return subscription;
@@ -633,7 +621,7 @@ export class SubscriptionService {
     }
 
     const countryLower = country.toLowerCase();
-    if (countryLower === 'turkey' || countryLower === 'tr') {
+    if (countryLower === "turkey" || countryLower === "tr") {
       return PaymentProvider.IYZICO;
     }
 
@@ -645,59 +633,59 @@ export class SubscriptionService {
    */
   private getCurrencyByCountry(country: string): string {
     if (!country) {
-      return 'usd';
+      return "usd";
     }
 
     const countryLower = country.toLowerCase();
 
     const currencyMap: Record<string, string> = {
-      'turkey': 'try',
-      'tr': 'try',
-      'united states': 'usd',
-      'us': 'usd',
-      'usa': 'usd',
-      'united kingdom': 'gbp',
-      'uk': 'gbp',
-      'gb': 'gbp',
-      'germany': 'eur',
-      'de': 'eur',
-      'france': 'eur',
-      'fr': 'eur',
-      'spain': 'eur',
-      'es': 'eur',
-      'italy': 'eur',
-      'it': 'eur',
-      'netherlands': 'eur',
-      'nl': 'eur',
-      'canada': 'cad',
-      'ca': 'cad',
-      'australia': 'aud',
-      'au': 'aud',
-      'japan': 'jpy',
-      'jp': 'jpy',
+      turkey: "try",
+      tr: "try",
+      "united states": "usd",
+      us: "usd",
+      usa: "usd",
+      "united kingdom": "gbp",
+      uk: "gbp",
+      gb: "gbp",
+      germany: "eur",
+      de: "eur",
+      france: "eur",
+      fr: "eur",
+      spain: "eur",
+      es: "eur",
+      italy: "eur",
+      it: "eur",
+      netherlands: "eur",
+      nl: "eur",
+      canada: "cad",
+      ca: "cad",
+      australia: "aud",
+      au: "aud",
+      japan: "jpy",
+      jp: "jpy",
     };
 
-    return currencyMap[countryLower] || 'usd';
+    return currencyMap[countryLower] || "usd";
   }
 
   /**
-   * Find subscription by tenant
+   * Find subscription by user
    */
-  async findSubscriptionByTenant(tenantId: string): Promise<Subscription | null> {
+  async findSubscriptionByUser(userId: string): Promise<Subscription | null> {
     return this.subscriptionRepository.findOne({
-      where: { tenantId },
-      relations: ["plan", "user", "tenant"],
+      where: { userId },
+      relations: ["plan", "user"],
       order: { createdAt: "DESC" },
     });
   }
 
   /**
-   * Check if tenant has active subscription
+   * Check if user has active subscription
    */
-  async hasActiveSubscription(tenantId: string): Promise<boolean> {
+  async hasActiveSubscription(userId: string): Promise<boolean> {
     const subscription = await this.subscriptionRepository.findOne({
       where: {
-        tenantId,
+        userId,
         status: In([SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIAL]),
       },
     });

@@ -1,18 +1,27 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { MenuItem } from './menu-item.entity';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from "typeorm";
+import { MenuItem } from "./menu-item.entity";
+import { Tenant } from "../../tenant/entities/tenant.entity";
 
 export enum ModifierType {
-  SIZE = 'size',
-  EXTRA = 'extra',
-  OPTION = 'option',
-  SAUCE = 'sauce',
-  COOKING_STYLE = 'cooking_style',
-  TEMPERATURE = 'temperature',
+  SIZE = "size",
+  EXTRA = "extra",
+  OPTION = "option",
+  SAUCE = "sauce",
+  COOKING_STYLE = "cooking_style",
+  TEMPERATURE = "temperature",
 }
 
 @Entity()
 export class MenuItemModifier {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn("uuid")
   id: string;
 
   @Column()
@@ -22,13 +31,13 @@ export class MenuItemModifier {
   description: string;
 
   @Column({
-    type: 'enum',
+    type: "enum",
     enum: ModifierType,
     default: ModifierType.EXTRA,
   })
   type: ModifierType;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  @Column({ type: "decimal", precision: 10, scale: 2, default: 0 })
   priceAdjustment: number; // Can be positive or negative
 
   @Column({ default: false })
@@ -46,18 +55,28 @@ export class MenuItemModifier {
   @Column({ default: 0 })
   minSelections: number; // For required option groups
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: "jsonb", nullable: true })
   options: string[]; // For option type modifiers (e.g., ['Small', 'Medium', 'Large'])
 
-  @Column({ type: 'jsonb', nullable: true })
+  @Column({ type: "jsonb", nullable: true })
   translations: Record<string, { name: string; description: string }>; // Multi-language support
 
-  @ManyToOne(() => MenuItem, menuItem => menuItem.modifiers, { onDelete: 'CASCADE' })
+  @ManyToOne(() => MenuItem, (menuItem) => menuItem.modifiers, {
+    onDelete: "CASCADE",
+  })
   @JoinColumn()
   menuItem: MenuItem;
 
   @Column()
   menuItemId: string;
+
+  // Tenant relationship
+  @ManyToOne(() => Tenant)
+  @JoinColumn({ name: "tenantId" })
+  tenant: Tenant;
+
+  @Column({ nullable: true })
+  tenantId: string;
 
   @CreateDateColumn()
   createdAt: Date;

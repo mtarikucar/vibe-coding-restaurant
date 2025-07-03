@@ -1,5 +1,13 @@
-import { Controller, Get, UseGuards, Query, Res, Header } from "@nestjs/common";
-import { Response } from "express";
+import {
+  Controller,
+  Get,
+  UseGuards,
+  Query,
+  Res,
+  Header,
+  Req,
+} from "@nestjs/common";
+import { Response, Request } from "express";
 import { DashboardService } from "./dashboard.service";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
@@ -75,6 +83,13 @@ export class DashboardController {
       endDate
     );
     res.send(csvData);
+  }
+
+  @Get("category-sales")
+  @Roles(UserRole.ADMIN)
+  @UseGuards(RolesGuard)
+  getCategorySales(@Query("period") period: string = "month") {
+    return this.dashboardService.getCategorySales(period);
   }
 
   @Get("export-inventory")

@@ -328,6 +328,57 @@ export class DashboardService {
     });
   }
 
+  async getCategorySales(period: string): Promise<any> {
+    const { startDate, endDate } = this.getDateRange(period);
+
+    // Get payments for the period
+    const payments = await this.paymentRepository.find({
+      where: {
+        status: PaymentStatus.COMPLETED,
+        createdAt: Between(startDate, endDate),
+      },
+      relations: [
+        "order",
+        "order.items",
+        "order.items.menuItem",
+        "order.items.menuItem.category",
+      ],
+      order: { createdAt: "ASC" },
+    });
+
+    // Group by category
+    const salesByCategory = {};
+
+    payments.forEach((payment) => {
+      if (payment.order && payment.order.items) {
+        payment.order.items.forEach((item) => {
+          if (item.menuItem && item.menuItem.category) {
+            const category = item.menuItem.category.name;
+            if (!salesByCategory[category]) {
+              salesByCategory[category] = 0;
+            }
+            salesByCategory[category] += Number(item.price) * item.quantity;
+          }
+        });
+      }
+    });
+
+    // Convert to array and sort by amount
+    const categorySalesArray = Object.entries(salesByCategory)
+      .map(([category, amount]) => ({
+        category,
+        amount,
+      }))
+      .sort((a: any, b: any) => b.amount - a.amount);
+
+    return {
+      categorySales: categorySalesArray,
+      period,
+      startDate,
+      endDate,
+    };
+  }
+
   private getDateRange(period: string): { startDate: Date; endDate: Date } {
     const now = new Date();
     const endDate = new Date(now);

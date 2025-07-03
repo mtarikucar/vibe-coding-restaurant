@@ -57,6 +57,7 @@ export class OrderService {
         notes: createOrderDto.notes,
         status: OrderStatus.PENDING,
         totalAmount: 0,
+        tenantId: table.tenantId, // Add tenant isolation
       });
 
       // Save order
@@ -85,6 +86,7 @@ export class OrderService {
           price: menuItem.price,
           notes: item.notes,
           status: OrderItemStatus.PENDING,
+          tenantId: savedOrder.tenantId, // Add tenant isolation
         });
 
         // Save order item
@@ -126,16 +128,24 @@ export class OrderService {
     }
   }
 
-  async findAll(): Promise<Order[]> {
+  async findAll(tenantId?: string): Promise<Order[]> {
+    const whereCondition = tenantId ? { tenantId } : {};
+
     return this.orderRepository.find({
+      where: whereCondition,
       relations: ["items", "items.menuItem", "table", "waiter"],
       order: { createdAt: "DESC" },
     });
   }
 
-  async findOne(id: string): Promise<Order> {
+  async findOne(id: string, tenantId?: string): Promise<Order> {
+    const whereCondition: any = { id };
+    if (tenantId) {
+      whereCondition.tenantId = tenantId;
+    }
+
     const order = await this.orderRepository.findOne({
-      where: { id },
+      where: whereCondition,
       relations: ["items", "items.menuItem", "table", "waiter"],
     });
 
@@ -335,9 +345,14 @@ export class OrderService {
     return updatedItem;
   }
 
-  async findByStatus(status: string): Promise<Order[]> {
+  async findByStatus(status: string, tenantId?: string): Promise<Order[]> {
+    const whereCondition: any = { status: status as OrderStatus };
+    if (tenantId) {
+      whereCondition.tenantId = tenantId;
+    }
+
     return this.orderRepository.find({
-      where: { status: status as OrderStatus },
+      where: whereCondition,
       relations: ["items", "items.menuItem", "table", "waiter"],
       order: { createdAt: "DESC" },
     });
