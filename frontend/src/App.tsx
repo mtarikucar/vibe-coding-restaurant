@@ -24,7 +24,6 @@ const PublicMenu = lazy(() => import("./pages/public/PublicMenu"));
 
 // Pages
 const Login = lazy(() => import("./pages/auth/Login"));
-const Register = lazy(() => import("./pages/auth/Register"));
 const TenantRegister = lazy(() => import("./pages/auth/TenantRegister"));
 const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/auth/ResetPassword"));
@@ -115,22 +114,8 @@ const router = createBrowserRouter([
      </Suspense>
     ),
    },
-   {
-    path:"register",
-    element: (
-     <Suspense fallback={<Loading />}>
-      <Register />
-     </Suspense>
-    ),
-   },
-   {
-    path:"register-restaurant",
-    element: (
-     <Suspense fallback={<Loading />}>
-      <TenantRegister />
-     </Suspense>
-    ),
-   },
+
+
    {
     path:"forgot-password",
     element: (
@@ -156,6 +141,14 @@ const router = createBrowserRouter([
     ),
    },
   ],
+ },
+ {
+  path:"register-restaurant",
+  element: (
+   <Suspense fallback={<Loading />}>
+    <TenantRegister />
+   </Suspense>
+  ),
  },
  {
   path:"/app",

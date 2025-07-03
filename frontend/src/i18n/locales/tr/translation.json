@@ -80,6 +80,7 @@
     "rememberPassword": "Şifrenizi hatırlıyor musunuz?",
     "forgotPasswordQuestion": "Şifrenizi mi unuttunuz?",
     "passwordResetSent": "E-posta adresiniz kayıtlıysa, kısa süre içinde bir şifre sıfırlama bağlantısı alacaksınız.",
+    "orContinueWith": "Veya şununla devam edin",
     "passwordResetSuccess": "Şifre başarıyla sıfırlandı! Giriş sayfasına yönlendiriliyorsunuz...",
     "returnToLogin": "Giriş sayfasına dön",
     "invalidResetToken": "Geçersiz veya süresi dolmuş sıfırlama kodu",

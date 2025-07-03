@@ -80,6 +80,7 @@
     "rememberPassword": "Remember your password?",
     "forgotPasswordQuestion": "Forgot password?",
     "passwordResetSent": "If your email is registered, you will receive a password reset link shortly.",
+    "orContinueWith": "Or continue with",
     "passwordResetSuccess": "Password reset successful! Redirecting to login...",
     "returnToLogin": "Return to login",
     "invalidResetToken": "Invalid or expired reset token",

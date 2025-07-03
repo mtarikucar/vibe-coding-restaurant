@@ -47,9 +47,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 
   // Size classes
   const sizeClasses = {
-   sm:"px-3 py-1.5 text-sm",
-   md:"px-3 py-2 text-base",
-   lg:"px-4 py-2.5 text-lg",
+   sm:"py-1.5 text-sm",
+   md:"py-2 text-base",
+   lg:"py-2.5 text-lg",
   };
 
   // Variant classes - Minimal and modern design
@@ -76,9 +76,22 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
   // Width classes
   const widthClasses = fullWidth ?"w-full" : "";
 
-  // Icon padding classes
-  const leftIconPadding = leftIcon ?"pl-10" : "";
-  const rightIconPadding = rightIcon ?"pr-10" : "";
+  // Padding classes based on icons
+  const getPaddingClasses = () => {
+   let paddingClass = "";
+
+   if (leftIcon && rightIcon) {
+    paddingClass = "pl-12 pr-12";
+   } else if (leftIcon) {
+    paddingClass = "pl-12 pr-3";
+   } else if (rightIcon) {
+    paddingClass = "pl-3 pr-12";
+   } else {
+    paddingClass = "px-3";
+   }
+
+   return paddingClass;
+  };
 
   // Base classes - Minimal and clean design
   const baseClasses =
@@ -92,10 +105,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
   ${errorClasses}
   ${disabledClasses}
   ${widthClasses}
-  ${leftIconPadding}
-  ${rightIconPadding}
+  ${getPaddingClasses()}
   ${inputClassName}
- `;
+ `.trim();
 
   return (
    <div className={`${fullWidth ?"w-full" : ""} ${containerClassName}`}>
@@ -111,7 +123,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 
     <div className="relative">
      {leftIcon && (
-      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500">
+      <div className="absolute inset-y-0 left-0 flex items-center justify-center w-12 pointer-events-none text-gray-400 z-10">
        {leftIcon}
       </div>
      )}
@@ -134,7 +146,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
      />
 
      {rightIcon && (
-      <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-500">
+      <div className="absolute inset-y-0 right-0 flex items-center justify-center w-12 pointer-events-none text-gray-400 z-10">
        {rightIcon}
       </div>
      )}

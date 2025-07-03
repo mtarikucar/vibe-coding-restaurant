@@ -79,6 +79,7 @@
     "registerNow": "Regístrate ahora",
     "rememberPassword": "¿Recuerdas tu contraseña?",
     "forgotPasswordQuestion": "¿Olvidaste tu contraseña?",
+    "orContinueWith": "O continúa con",
     "passwordResetSent": "Si tu correo está registrado, recibirás un enlace para restablecer tu contraseña en breve.",
     "passwordResetSuccess": "¡Contraseña restablecida con éxito! Redirigiendo al inicio de sesión...",
     "returnToLogin": "Volver al inicio de sesión",

@@ -175,7 +175,6 @@ const Login = () => {
       onChange={(e) => setUsername(e.target.value)}
       required
       fullWidth
-      leftIcon={<UserIcon className="h-5 w-5 text-gray-400" />}
       variant="default"
       size="md"
       className="transition-all duration-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
@@ -191,7 +190,6 @@ const Login = () => {
        onChange={(e) => setPassword(e.target.value)}
        required
        fullWidth
-       leftIcon={<LockClosedIcon className="h-5 w-5 text-gray-400" />}
        variant="default"
        size="md"
        className="transition-all duration-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
@@ -207,14 +205,13 @@ const Login = () => {
      </div>
     </div>
 
-    <Button
-     type="submit"
-     variant="primary"
+    <div
+     onClick={handleSubmit}
      fullWidth
      isLoading={loading}
      disabled={loading || oauthLoading}
      size="lg"
-     className="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+     className="cursor-pointer bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
     >
      {loading ? (
       <div className="flex items-center">
@@ -224,7 +221,7 @@ const Login = () => {
      ) : (
       t("auth.signIn")
      )}
-    </Button>
+    </div>
    </form>
 
    <div className="mt-6">
@@ -264,26 +261,7 @@ const Login = () => {
     </div>
    </div>
 
-   <div className="mt-8 text-center space-y-3">
-    <p className="text-sm text-gray-600">
-     {t("auth.dontHaveAccount")}{""}
-     <Link
-      to="/register"
-      className="font-semibold text-orange-600 hover:text-orange-700 transition-colors"
-     >
-      {t("auth.registerNow")}
-     </Link>
-    </p>
-    <div className="relative">
-     <div className="absolute inset-0 flex items-center">
-      <div className="w-full border-t border-gray-200"></div>
-     </div>
-     <div className="relative flex justify-center text-xs">
-      <span className="px-2 bg-white text-gray-400">
-       {t("auth.forRestaurants")}
-      </span>
-     </div>
-    </div>
+   <div className="mt-8 text-center">
     <p className="text-sm text-gray-600">
      {t("auth.areYouRestaurant")}{""}
      <Link
