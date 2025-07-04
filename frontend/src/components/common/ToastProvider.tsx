@@ -150,17 +150,6 @@ const ToastProvider: React.FC<ToastProviderProps> = ({
        secondary:"#FDF2F2",
       },
      },
-     warning: {
-      style: {
-       background:"#FDF8F0",
-       border:"1px solid #EBB969",
-       color:"#8F692D",
-      },
-      iconTheme: {
-       primary:"#EBB969",
-       secondary:"#FDF8F0",
-      },
-     },
     }}
    />
    {/* Our custom toasts */}

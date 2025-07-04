@@ -30,7 +30,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   warning: 'border-yellow-500',
   info: 'border-cyan-500',
   light: 'border-gray-200',
-  'border-gray-800'
+  dark: 'border-gray-800'
  };
 
  const spinnerClasses = `

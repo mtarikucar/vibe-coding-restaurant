@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, type ErrorInfo, type ReactNode } from 'react';
 import errorHandlingService, { ErrorType, ErrorSeverity } from '../../services/errorHandling';
 
 interface Props {

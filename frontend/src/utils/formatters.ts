@@ -1,5 +1,5 @@
 import i18next from"i18next";
-import { format, formatDistance, formatRelative, isDate } from"date-fns";
+import { format, formatDistance, formatRelative, isDate, type Locale } from"date-fns";
 import { enUS, tr, es, fr } from"date-fns/locale";
 
 // Map of locales for date-fns
