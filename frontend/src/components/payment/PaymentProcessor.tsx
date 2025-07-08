@@ -34,11 +34,17 @@ const PaymentProcessor: React.FC<PaymentProcessorProps> = ({
     const initializePayment = async () => {
       setLoading(true);
       try {
+        if (!user) {
+          onPaymentError("User not authenticated");
+          setLoading(false);
+          return;
+        }
+
         // Create initial payment record
         const payment = await paymentAPI.createPayment(
           orderId,
           paymentMethod,
-          user?.id,
+          user.id,
           orderTotal
         );
         setPaymentId(payment.id);
@@ -71,7 +77,7 @@ const PaymentProcessor: React.FC<PaymentProcessorProps> = ({
         paymentMethod,
         undefined, // paymentMethodId - would come from a form in a real implementation
         undefined, // paymentIntentId - would come from the payment provider in a real implementation
-        user?.id,
+        user.id,
         orderId
       );
 

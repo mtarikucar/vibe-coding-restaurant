@@ -1,0 +1,50 @@
+{
+  "id": "order-id",
+  "orderNumber": "ORD-001",
+  "totalAmount": 100.50,
+  "status": "served",
+  "tableId": "table-id",
+  "waiterId": "waiter-id",
+  "tenantId": "tenant-id",
+  "createdAt": "2024-01-01T10:00:00Z",
+  "updatedAt": "2024-01-01T10:30:00Z",
+  "table": {
+    "id": "table-id",
+    "number": 1,
+    "capacity": 4,
+    "status": "occupied"
+  },
+  "waiter": {
+    "id": "waiter-id",
+    "fullName": "John Doe",
+    "email": "john@restaurant.com"
+  },
+  "items": [
+    {
+      "id": "item-1",
+      "quantity": 2,
+      "price": 25.50,
+      "notes": "Extra spicy",
+      "menuItem": {
+        "id": "menu-item-1",
+        "name": "Chicken Burger",
+        "description": "Grilled chicken burger with fries",
+        "price": 25.50,
+        "category": "Main Course"
+      }
+    },
+    {
+      "id": "item-2",
+      "quantity": 1,
+      "price": 49.50,
+      "notes": "Medium rare",
+      "menuItem": {
+        "id": "menu-item-2",
+        "name": "Beef Steak",
+        "description": "Premium beef steak with vegetables",
+        "price": 49.50,
+        "category": "Main Course"
+      }
+    }
+  ]
+}

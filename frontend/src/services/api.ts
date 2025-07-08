@@ -721,7 +721,7 @@ export const paymentAPI = {
     orderId: string,
     method: string,
     cashierId?: string,
-    amount?: number
+    amount?: number | string
   ) => {
     try {
       // If amount is not provided, fetch it from the order
@@ -731,11 +731,19 @@ export const paymentAPI = {
         paymentAmount = orderResponse.data.totalAmount;
       }
 
+      // Ensure amount is a number and round to 2 decimal places
+      const numericAmount = typeof paymentAmount === 'string'
+        ? parseFloat(paymentAmount)
+        : paymentAmount;
+
+      // Round to 2 decimal places to avoid precision issues
+      const roundedAmount = Math.round((numericAmount || 0) * 100) / 100;
+
       const response = await api.post("/payments", {
         orderId,
         method,
         cashierId,
-        amount: paymentAmount,
+        amount: roundedAmount,
       });
       return response.data;
     } catch (error) {
