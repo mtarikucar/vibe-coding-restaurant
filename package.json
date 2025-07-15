@@ -42,5 +42,8 @@
   "license": "MIT",
   "engines": {
     "node": ">=16.0.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-code": "^1.0.52"
   }
 }

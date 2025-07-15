@@ -61,6 +61,7 @@ const CampaignForm = lazy(() => import("./pages/marketing/CampaignForm"));
 const Invoices = lazy(() => import("./pages/invoice/Invoices"));
 const InvoiceDetail = lazy(() => import("./pages/invoice/InvoiceDetail"));
 const InvoiceForm = lazy(() => import("./pages/invoice/InvoiceForm"));
+const ControlPanel = lazy(() => import("./pages/admin/ControlPanel"));
 
 // Mobile Pages
 const MobileRedirect = lazy(() => import("./pages/mobile/MobileRedirect"));
@@ -319,6 +320,16 @@ const router = createBrowserRouter([
        </Suspense>
       ),
       // Only admin can access performance monitoring
+      handle: { allowedRoles: ["admin"] },
+     },
+     {
+      path:"control-panel",
+      element: (
+       <Suspense fallback={<Loading />}>
+        <ControlPanel />
+       </Suspense>
+      ),
+      // Only admin can access control panel
       handle: { allowedRoles: ["admin"] },
      },
      {

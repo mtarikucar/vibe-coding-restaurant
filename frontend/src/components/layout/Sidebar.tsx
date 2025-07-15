@@ -15,9 +15,6 @@ import {
  TagIcon,
  Cog6ToothIcon,
  BellIcon,
- BuildingStorefrontIcon,
- TruckIcon,
- DocumentDuplicateIcon,
  ChartPieIcon,
  ComputerDesktopIcon,
 } from"@heroicons/react/24/outline";
@@ -109,6 +106,12 @@ const navigationCategories = [
     name:"Performance",
     href:"/app/performance",
     icon: ChartPieIcon,
+    roles: ["admin"],
+   },
+   {
+    name:"Control Panel",
+    href:"/app/control-panel",
+    icon: Cog6ToothIcon,
     roles: ["admin"],
    },
    {
