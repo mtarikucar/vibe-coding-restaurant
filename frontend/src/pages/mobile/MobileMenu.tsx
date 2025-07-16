@@ -72,7 +72,7 @@ const MobileMenu: React.FC = () => {
      <input
       type="text"
       placeholder={t("menu.search")}
-      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
       value={searchQuery}
       onChange={(e) => setSearchQuery(e.target.value)}
      />
@@ -84,7 +84,7 @@ const MobileMenu: React.FC = () => {
     <button
      className={`px-4 py-2 rounded-full mr-2 text-sm font-medium whitespace-nowrap ${
       selectedCategory ==="all"
-       ?"bg-blue-500 text-white"
+       ?"bg-primary-600 text-white"
        :"bg-white text-gray-700 border border-gray-300"
      }`}
      onClick={() => handleCategoryChange("all")}
@@ -96,7 +96,7 @@ const MobileMenu: React.FC = () => {
       key={category.id}
       className={`px-4 py-2 rounded-full mr-2 text-sm font-medium whitespace-nowrap ${
        selectedCategory === category.id
-        ?"bg-blue-500 text-white"
+        ?"bg-primary-600 text-white"
         :"bg-white text-gray-700 border border-gray-300"
       }`}
       onClick={() => handleCategoryChange(category.id)}
@@ -108,14 +108,14 @@ const MobileMenu: React.FC = () => {
 
    {loading ? (
     <div className="flex justify-center items-center p-12">
-     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
     </div>
    ) : filteredItems.length > 0 ? (
     <div className="space-y-4">
      {filteredItems.map((item) => (
       <div
        key={item.id}
-       className="bg-white rounded-lg shadow overflow-hidden"
+       className="bg-white rounded-xl shadow-card overflow-hidden border border-neutral-200"
       >
        <div className="p-4">
         <div className="flex justify-between">
@@ -129,7 +129,7 @@ const MobileMenu: React.FC = () => {
            </p>
           )}
           <div className="mt-2 flex items-center">
-           <span className="text-blue-600 font-medium">
+           <span className="text-primary-600 font-medium">
             {formatCurrency(item.price)}
            </span>
            {!item.isAvailable && (

@@ -70,7 +70,7 @@ const MobileTables: React.FC = () => {
    case TableStatus.OCCUPIED:
     return"bg-red-100 text-red-800 border-red-500";
    case TableStatus.RESERVED:
-    return"bg-blue-100 text-blue-800 border-blue-500";
+    return"bg-primary-100 text-primary-800 border-primary-500";
    default:
     return"bg-gray-100 text-gray-800 border-gray-500";
   }
@@ -86,7 +86,7 @@ const MobileTables: React.FC = () => {
     <button
      className={`px-4 py-2 rounded-full mr-2 text-sm font-medium ${
       statusFilter ==="all"
-       ?"bg-blue-500 text-white"
+       ?"bg-primary-600 text-white"
        :"bg-white text-gray-700 border border-gray-300"
      }`}
      onClick={() => setStatusFilter("all")}
@@ -116,7 +116,7 @@ const MobileTables: React.FC = () => {
     <button
      className={`px-4 py-2 rounded-full mr-2 text-sm font-medium ${
       statusFilter === TableStatus.RESERVED
-       ?"bg-blue-500 text-white"
+       ?"bg-primary-600 text-white"
        :"bg-white text-gray-700 border border-gray-300"
      }`}
      onClick={() => setStatusFilter(TableStatus.RESERVED)}
@@ -127,14 +127,14 @@ const MobileTables: React.FC = () => {
 
    {loading ? (
     <div className="flex justify-center items-center p-12">
-     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
     </div>
    ) : (
     <div className="grid grid-cols-2 gap-4">
      {filteredTables.map((table) => (
       <div
        key={table.id}
-       className={`bg-white rounded-lg shadow overflow-hidden border-t-4 ${getStatusColor(
+       className={`bg-white rounded-xl shadow-card overflow-hidden border-t-4 ${getStatusColor(
         table.status
        )}`}
        onClick={() => handleTableClick(table)}
@@ -155,7 +155,7 @@ const MobileTables: React.FC = () => {
             ?"bg-green-100 text-green-800"
             : table.status === TableStatus.OCCUPIED
             ?"bg-red-100 text-red-800"
-            :"bg-blue-100 text-blue-800"
+            :"bg-primary-100 text-primary-800"
           }`}
          >
           {t(`tables.status.${table.status}`)}

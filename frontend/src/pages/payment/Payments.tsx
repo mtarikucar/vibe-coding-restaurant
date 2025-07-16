@@ -8,21 +8,22 @@ import {
 } from"@heroicons/react/24/outline";
 import { paymentAPI } from"../../services/api";
 import { formatCurrency } from"../../utils/formatters";
+import { Payment, PaymentMethod, PaymentStatus } from"../../types/payment";
 
-interface Payment {
- id: number;
- orderNumber: string;
- tableNumber: number;
- amount: number;
- method:"cash" | "credit_card" | "debit_card";
- status:"pending" | "completed" | "refunded";
- createdAt: string;
- cashier: string;
+interface PaymentListItem {
+ id: string;
+ orderNumber?: string;
+ tableNumber?: number | string;
+ amount: number | string;
+ method: PaymentMethod;
+ status: PaymentStatus;
+ createdAt?: string;
+ cashier?: string;
 }
 
 const Payments = () => {
  const navigate = useNavigate();
- const [payments, setPayments] = useState<Payment[]>([]);
+ const [payments, setPayments] = useState<PaymentListItem[]>([]);
  const [statusFilter, setStatusFilter] = useState<string>("all");
  const [methodFilter, setMethodFilter] = useState<string>("all");
  const [searchQuery, setSearchQuery] = useState<string>("");
@@ -37,44 +38,44 @@ const Payments = () => {
    } catch (error) {
     console.error("Error fetching payments:", error);
     // Fallback to mock data if API fails
-    const mockPayments = [
+    const mockPayments: PaymentListItem[] = [
      {
-      id: 1,
+      id: "1",
       orderNumber:"ORD-001",
       tableNumber: 5,
       amount: 34.97,
-      method:"credit_card" as const,
-      status:"completed" as const,
+      method: PaymentMethod.CREDIT_CARD,
+      status: PaymentStatus.COMPLETED,
       createdAt:"2023-05-17T15:30:00Z",
       cashier:"Jane Smith",
      },
      {
-      id: 2,
+      id: "2",
       orderNumber:"ORD-002",
       tableNumber: 3,
       amount: 20.97,
-      method:"cash" as const,
-      status:"completed" as const,
+      method: PaymentMethod.CASH,
+      status: PaymentStatus.COMPLETED,
       createdAt:"2023-05-17T15:45:00Z",
       cashier:"Jane Smith",
      },
      {
-      id: 3,
+      id: "3",
       orderNumber:"ORD-003",
       tableNumber: 8,
       amount: 20.96,
-      method:"debit_card" as const,
-      status:"completed" as const,
+      method: PaymentMethod.DEBIT_CARD,
+      status: PaymentStatus.COMPLETED,
       createdAt:"2023-05-17T14:15:00Z",
       cashier:"Jane Smith",
      },
      {
-      id: 4,
+      id: "4",
       orderNumber:"ORD-004",
       tableNumber: 2,
       amount: 45.5,
-      method:"credit_card" as const,
-      status:"pending" as const,
+      method: PaymentMethod.CREDIT_CARD,
+      status: PaymentStatus.PENDING,
       createdAt:"2023-05-17T16:00:00Z",
       cashier:"Jane Smith",
      },
@@ -93,34 +94,35 @@ const Payments = () => {
    statusFilter ==="all" || payment.status === statusFilter;
   const matchesMethod =
    methodFilter ==="all" || payment.method === methodFilter;
-  const matchesSearch =
-   payment.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-   payment.tableNumber.toString().includes(searchQuery);
+  const matchesSearch = searchQuery === "" || 
+   (payment.orderNumber?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+   (payment.tableNumber && String(payment.tableNumber).includes(searchQuery));
   return matchesStatus && matchesMethod && matchesSearch;
  });
 
- const getStatusColor = (status: string) => {
+ const getStatusColor = (status: PaymentStatus) => {
   switch (status) {
-   case"pending":
+   case PaymentStatus.PENDING:
     return"bg-yellow-100 text-yellow-800";
-   case"completed":
+   case PaymentStatus.COMPLETED:
     return"bg-green-100 text-green-800";
-   case"refunded":
+   case PaymentStatus.REFUNDED:
     return"bg-red-100 text-red-800";
    default:
     return"bg-gray-100 text-gray-800";
   }
  };
 
- const getMethodIcon = (method: string) => {
+ const getMethodIcon = (method: PaymentMethod) => {
   switch (method) {
-   case"cash":
+   case PaymentMethod.CASH:
     return <BanknotesIcon className="h-5 w-5 text-green-500" />;
-   case"credit_card":
-   case"debit_card":
+   case PaymentMethod.CREDIT_CARD:
+   case PaymentMethod.DEBIT_CARD:
     return <CreditCardIcon className="h-5 w-5 text-blue-500" />;
-   case"stripe":
-   case"paypal":
+   case PaymentMethod.STRIPE:
+   case PaymentMethod.PAYPAL:
+   case PaymentMethod.IYZICO:
     return <CurrencyDollarIcon className="h-5 w-5 text-purple-500" />;
    default:
     return null;
@@ -129,6 +131,11 @@ const Payments = () => {
 
  const handleProcessPayment = (orderId: string) => {
   navigate(`/app/payments/process/${orderId}`);
+ };
+
+ const formatAmount = (amount: number | string): string => {
+  const numAmount = Number(amount || 0);
+  return isNaN(numAmount) ? "0.00" : numAmount.toFixed(2);
  };
 
  return (
@@ -154,9 +161,9 @@ const Payments = () => {
         onChange={(e) => setStatusFilter(e.target.value)}
        >
         <option value="all">All Statuses</option>
-        <option value="pending">Pending</option>
-        <option value="completed">Completed</option>
-        <option value="refunded">Refunded</option>
+        <option value={PaymentStatus.PENDING}>Pending</option>
+        <option value={PaymentStatus.COMPLETED}>Completed</option>
+        <option value={PaymentStatus.REFUNDED}>Refunded</option>
        </select>
       </div>
       <div>
@@ -173,11 +180,11 @@ const Payments = () => {
         onChange={(e) => setMethodFilter(e.target.value)}
        >
         <option value="all">All Methods</option>
-        <option value="cash">Cash</option>
-        <option value="credit_card">Credit Card</option>
-        <option value="debit_card">Debit Card</option>
-        <option value="stripe">Stripe</option>
-        <option value="paypal">PayPal</option>
+        <option value={PaymentMethod.CASH}>Cash</option>
+        <option value={PaymentMethod.CREDIT_CARD}>Credit Card</option>
+        <option value={PaymentMethod.DEBIT_CARD}>Debit Card</option>
+        <option value={PaymentMethod.STRIPE}>Stripe</option>
+        <option value={PaymentMethod.PAYPAL}>PayPal</option>
        </select>
       </div>
       <div>
@@ -201,62 +208,76 @@ const Payments = () => {
    </div>
 
    <div className="bg-white rounded-lg shadow overflow-hidden">
-    <table className="min-w-full divide-y divide-gray-200">
-     <thead className="bg-gray-50">
-      <tr>
-       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-        Order #
-       </th>
-       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-        Table
-       </th>
-       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-        Amount
-       </th>
-       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-        Method
-       </th>
-       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-        Status
-       </th>
-       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-        Date & Time
-       </th>
-       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-        Actions
-       </th>
-      </tr>
-     </thead>
-     <tbody className="bg-white divide-y divide-gray-200">
-      {filteredPayments.map((payment) => (
+    {loading ? (
+     <div className="flex justify-center items-center p-12">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
+     </div>
+    ) : (
+     <table className="min-w-full divide-y divide-gray-200">
+      <thead className="bg-gray-50">
+       <tr>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+         Order #
+        </th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+         Table
+        </th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+         Amount
+        </th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+         Method
+        </th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+         Status
+        </th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+         Date & Time
+        </th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+         Actions
+        </th>
+       </tr>
+      </thead>
+      <tbody className="bg-white divide-y divide-gray-200">
+       {filteredPayments.length === 0 ? (
+        <tr>
+         <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+          No payments found
+         </td>
+        </tr>
+       ) : (
+        filteredPayments.map((payment) => (
        <tr key={payment.id}>
         <td className="px-6 py-4 whitespace-nowrap">
          <div className="text-sm font-medium text-gray-900">
-          {payment.orderNumber}
+          {payment.orderNumber || 'N/A'}
          </div>
         </td>
         <td className="px-6 py-4 whitespace-nowrap">
          <div className="text-sm text-gray-500">
-          Table {payment.tableNumber}
+          Table {payment.tableNumber ? String(payment.tableNumber) : 'N/A'}
          </div>
         </td>
         <td className="px-6 py-4 whitespace-nowrap">
          <div className="text-sm text-gray-900">
-          ${payment.amount.toFixed(2)}
+          ${formatAmount(payment.amount)}
          </div>
         </td>
         <td className="px-6 py-4 whitespace-nowrap">
          <div className="flex items-center text-sm text-gray-500">
           {getMethodIcon(payment.method)}
           <span className="ml-1">
-           {payment.method ==="credit_card"
+           {payment.method === PaymentMethod.CREDIT_CARD
             ?"Credit Card"
-            : payment.method ==="debit_card"
+            : payment.method === PaymentMethod.DEBIT_CARD
             ?"Debit Card"
-            : payment.method ==="stripe"
+            : payment.method === PaymentMethod.STRIPE
             ?"Stripe"
-            : payment.method ==="paypal"
+            : payment.method === PaymentMethod.PAYPAL
             ?"PayPal"
+            : payment.method === PaymentMethod.IYZICO
+            ?"Iyzico"
             :"Cash"}
           </span>
          </div>
@@ -273,19 +294,19 @@ const Payments = () => {
         </td>
         <td className="px-6 py-4 whitespace-nowrap">
          <div className="text-sm text-gray-500">
-          {new Date(payment.createdAt).toLocaleString()}
+          {payment.createdAt ? new Date(payment.createdAt).toLocaleString() : 'N/A'}
          </div>
         </td>
         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-         {payment.status ==="completed" && (
+         {payment.status === PaymentStatus.COMPLETED && (
           <button className="text-red-600 hover:text-red-900 flex items-center">
            <ReceiptRefundIcon className="h-4 w-4 mr-1" />
            Refund
           </button>
          )}
-         {payment.status ==="pending" && (
+         {payment.status === PaymentStatus.PENDING && (
           <button
-           onClick={() => handleProcessPayment(payment.orderId)}
+           onClick={() => handleProcessPayment(payment.id)}
            className="text-green-600 hover:text-green-900 flex items-center"
           >
            <CurrencyDollarIcon className="h-4 w-4 mr-1" />
@@ -293,10 +314,12 @@ const Payments = () => {
           </button>
          )}
         </td>
-       </tr>
-      ))}
-     </tbody>
-    </table>
+        </tr>
+        ))
+       )}
+      </tbody>
+     </table>
+    )}
    </div>
   </div>
  );

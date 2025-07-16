@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
   ConflictException,
+  Logger,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository, DataSource } from "typeorm";
@@ -17,19 +18,48 @@ import { OrderStatus } from "../order/entities/order.entity";
 import { TableService } from "../table/table.service";
 import { TableStatus } from "../table/entities/table.entity";
 import { PaymentGatewayService } from "./services/payment-gateway.service";
+import { PaymentStateService } from "./services/payment-state.service";
+import { PaymentIdempotencyService } from "./services/payment-idempotency.service";
 
 @Injectable()
 export class PaymentService {
+  private readonly logger = new Logger(PaymentService.name);
+
   constructor(
     @InjectRepository(Payment)
     private readonly paymentRepository: Repository<Payment>,
     private readonly orderService: OrderService,
     private readonly tableService: TableService,
     private readonly dataSource: DataSource,
-    private readonly paymentGatewayService: PaymentGatewayService
+    private readonly paymentGatewayService: PaymentGatewayService,
+    private readonly paymentStateService: PaymentStateService,
+    private readonly idempotencyService: PaymentIdempotencyService,
   ) {}
 
-  async create(createPaymentDto: CreatePaymentDto): Promise<Payment> {
+  async create(createPaymentDto: CreatePaymentDto, userId?: string): Promise<Payment> {
+    this.logger.log(`Creating payment for order ${createPaymentDto.orderId} by user ${userId}`);
+
+    // Generate idempotency key
+    const idempotencyKey = this.idempotencyService.generateIdempotencyKey(
+      createPaymentDto.orderId,
+      createPaymentDto.amount,
+      createPaymentDto.method,
+      userId || 'system'
+    );
+
+    // Check for duplicate requests
+    const existingPayment = await this.idempotencyService.checkIdempotency(
+      idempotencyKey,
+      createPaymentDto.orderId,
+      createPaymentDto.amount,
+      createPaymentDto.method,
+    );
+
+    if (existingPayment) {
+      this.logger.log(`Returning existing payment due to idempotency: ${existingPayment.id}`);
+      return existingPayment;
+    }
+
     // Start a transaction
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -39,15 +69,22 @@ export class PaymentService {
       // Check if order exists
       const order = await this.orderService.findOne(createPaymentDto.orderId);
 
-      // Check if order is already paid
-      const existingPayment = await this.paymentRepository.findOne({
+      // Check if order is already paid (with different payment details)
+      const orderPayment = await this.paymentRepository.findOne({
         where: { orderId: order.id },
       });
 
-      if (existingPayment) {
-        throw new ConflictException(
-          `Payment for order ${order.orderNumber} already exists`
-        );
+      if (orderPayment) {
+        throw new ConflictException({
+          message: `Payment for order ${order.orderNumber} already exists`,
+          orderNumber: order.orderNumber,
+          paymentId: orderPayment.id,
+          paymentStatus: orderPayment.status,
+          paymentAmount: orderPayment.amount,
+          paymentMethod: orderPayment.method,
+          createdAt: orderPayment.createdAt,
+          suggestion: `Use GET /api/payments/order/${order.orderNumber} to view the existing payment`,
+        });
       }
 
       // Check if order is ready for payment
@@ -60,43 +97,73 @@ export class PaymentService {
         );
       }
 
+      // Generate unique transaction ID
+      const transactionId = await this.idempotencyService.generateUniqueTransactionId(
+        createPaymentDto.method
+      );
+
       // For cash payments, use the simple flow
       if (createPaymentDto.method === PaymentMethod.CASH) {
         // Create payment
         const payment = this.paymentRepository.create({
           ...createPaymentDto,
           status: PaymentStatus.COMPLETED,
-          transactionId: `CASH-${Date.now().toString().slice(-6)}`,
+          transactionId,
           tenantId: order.tenantId, // Add tenant isolation
         });
 
         // Save payment
-        const savedPayment = await this.paymentRepository.save(payment);
+        const savedPayment = await queryRunner.manager.save(payment);
+
+        // Record state transition
+        await this.paymentStateService.recordTransition(
+          savedPayment,
+          PaymentStatus.PENDING,
+          PaymentStatus.COMPLETED,
+          'Cash payment completed immediately',
+          userId,
+          { method: 'CASH', orderId: order.id }
+        );
 
         // Update order status
-        await this.orderService.updateStatus(order.id, OrderStatus.COMPLETED);
+        await queryRunner.manager.save(
+          await this.orderService.updateStatus(order.id, OrderStatus.COMPLETED)
+        );
 
         // Update table status
-        await this.tableService.updateStatus(
-          order.tableId,
-          TableStatus.AVAILABLE
+        await queryRunner.manager.save(
+          await this.tableService.updateStatus(order.tableId, TableStatus.AVAILABLE)
         );
+
+        // Record idempotency
+        await this.idempotencyService.recordPaymentCreation(idempotencyKey, savedPayment);
 
         // Commit transaction
         await queryRunner.commitTransaction();
 
-        // Return payment with order
+        this.logger.log(`Cash payment completed successfully: ${savedPayment.id}`);
         return this.findOne(savedPayment.id);
       } else {
         // For card or online payments, create a payment intent
         const payment = this.paymentRepository.create({
           ...createPaymentDto,
           status: PaymentStatus.PENDING,
+          transactionId,
           tenantId: order.tenantId, // Add tenant isolation
         });
 
         // Save payment to get an ID
-        const savedPayment = await this.paymentRepository.save(payment);
+        const savedPayment = await queryRunner.manager.save(payment);
+
+        // Record state transition
+        await this.paymentStateService.recordTransition(
+          savedPayment,
+          PaymentStatus.PENDING,
+          PaymentStatus.PENDING,
+          'Payment created and pending gateway processing',
+          userId,
+          { method: createPaymentDto.method, orderId: order.id }
+        );
 
         // Commit transaction - we'll update the payment status later
         await queryRunner.commitTransaction();
@@ -246,6 +313,32 @@ export class PaymentService {
       where: whereCondition,
       relations: ["order", "order.table", "order.waiter"],
       order: { createdAt: "DESC" },
+    });
+  }
+
+  async findByOrderId(orderId: string, tenantId?: string): Promise<Payment | null> {
+    const whereCondition: any = { orderId };
+    if (tenantId) {
+      whereCondition.tenantId = tenantId;
+    }
+
+    return this.paymentRepository.findOne({
+      where: whereCondition,
+      relations: ["order", "order.table", "order.waiter"],
+    });
+  }
+
+  async findByOrderNumber(orderNumber: string, tenantId?: string): Promise<Payment | null> {
+    const whereCondition: any = { 
+      order: { orderNumber } 
+    };
+    if (tenantId) {
+      whereCondition.tenantId = tenantId;
+    }
+
+    return this.paymentRepository.findOne({
+      where: whereCondition,
+      relations: ["order", "order.table", "order.waiter"],
     });
   }
 

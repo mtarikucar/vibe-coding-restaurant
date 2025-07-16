@@ -815,4 +815,399 @@ export class EmailService {
       html,
     });
   }
+
+  /**
+   * Send subscription renewal success email
+   */
+  async sendSubscriptionRenewalSuccessEmail(
+    email: string,
+    planName: string,
+    amount: number,
+    currency: string,
+    nextPaymentDate: Date
+  ): Promise<boolean> {
+    const subject = "Subscription Renewed Successfully";
+    const formattedAmount = `${amount.toFixed(2)} ${currency.toUpperCase()}`;
+    const formattedDate = nextPaymentDate.toLocaleDateString();
+    const appName = this.configService.get<string>(
+      "APP_NAME",
+      "Restaurant Management System"
+    );
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${subject}</title>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background-color: #10b981; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+          .content { background-color: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
+          .footer { text-align: center; margin-top: 20px; color: #666; font-size: 14px; }
+          ul { background-color: white; padding: 15px; border-radius: 4px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Subscription Renewed!</h1>
+          </div>
+          <div class="content">
+            <p>Hello,</p>
+            <p>Your subscription to the <strong>${planName}</strong> plan has been renewed successfully.</p>
+            <p><strong>Renewal Details:</strong></p>
+            <ul>
+              <li>Plan: ${planName}</li>
+              <li>Amount: ${formattedAmount}</li>
+              <li>Next payment date: ${formattedDate}</li>
+            </ul>
+            <p>Your service will continue uninterrupted. Thank you for your continued trust!</p>
+          </div>
+          <div class="footer">
+            <p>This is an automated email, please do not reply.</p>
+            <p>&copy; ${new Date().getFullYear()} ${appName}. All rights reserved.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    return this.sendEmail({
+      to: email,
+      subject,
+      html,
+    });
+  }
+
+  /**
+   * Send subscription renewal failed email
+   */
+  async sendSubscriptionRenewalFailedEmail(
+    email: string,
+    planName: string,
+    errorMessage: string,
+    attemptNumber: number,
+    maxAttempts: number
+  ): Promise<boolean> {
+    const subject = "Subscription Payment Failed";
+    const appName = this.configService.get<string>(
+      "APP_NAME",
+      "Restaurant Management System"
+    );
+    const frontendUrl = this.configService.get<string>(
+      "FRONTEND_URL",
+      "http://localhost:5173"
+    );
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${subject}</title>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background-color: #ef4444; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+          .content { background-color: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
+          .footer { text-align: center; margin-top: 20px; color: #666; font-size: 14px; }
+          .button { display: inline-block; background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; margin: 10px 0; }
+          .warning { background-color: #fef3c7; border: 1px solid #f59e0b; padding: 15px; border-radius: 4px; margin: 15px 0; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Payment Failed</h1>
+          </div>
+          <div class="content">
+            <p>Hello,</p>
+            <p>We were unable to process the payment for your <strong>${planName}</strong> subscription.</p>
+            <div class="warning">
+              <p><strong>Error:</strong> ${errorMessage}</p>
+              <p><strong>Attempt:</strong> ${attemptNumber} of ${maxAttempts}</p>
+            </div>
+            <p>To avoid service interruption, please update your payment method or contact support.</p>
+            <p><a href="${frontendUrl}/subscription" class="button">Update Payment Method</a></p>
+            <p>If you continue to experience issues, please contact our support team.</p>
+          </div>
+          <div class="footer">
+            <p>This is an automated email, please do not reply.</p>
+            <p>&copy; ${new Date().getFullYear()} ${appName}. All rights reserved.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    return this.sendEmail({
+      to: email,
+      subject,
+      html,
+    });
+  }
+
+  /**
+   * Send subscription expired email
+   */
+  async sendSubscriptionExpiredEmail(
+    email: string,
+    planName: string
+  ): Promise<boolean> {
+    const subject = "Your Subscription Has Expired";
+    const appName = this.configService.get<string>(
+      "APP_NAME",
+      "Restaurant Management System"
+    );
+    const frontendUrl = this.configService.get<string>(
+      "FRONTEND_URL",
+      "http://localhost:5173"
+    );
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${subject}</title>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background-color: #f59e0b; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+          .content { background-color: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
+          .footer { text-align: center; margin-top: 20px; color: #666; font-size: 14px; }
+          .button { display: inline-block; background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; margin: 10px 0; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Subscription Expired</h1>
+          </div>
+          <div class="content">
+            <p>Hello,</p>
+            <p>Your <strong>${planName}</strong> subscription has expired.</p>
+            <p>Your access to premium features has been limited. To restore full access, please renew your subscription.</p>
+            <p><a href="${frontendUrl}/subscription/plans" class="button">Renew Subscription</a></p>
+            <p>Thank you for using our platform. We hope to serve you again soon!</p>
+          </div>
+          <div class="footer">
+            <p>This is an automated email, please do not reply.</p>
+            <p>&copy; ${new Date().getFullYear()} ${appName}. All rights reserved.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    return this.sendEmail({
+      to: email,
+      subject,
+      html,
+    });
+  }
+
+  /**
+   * Send upcoming renewal notification email
+   */
+  async sendUpcomingRenewalNotificationEmail(
+    email: string,
+    planName: string,
+    daysUntilRenewal: number,
+    renewalDate: Date,
+    amount: number,
+    currency: string
+  ): Promise<boolean> {
+    const subject = `Your Subscription Renews in ${daysUntilRenewal} Days`;
+    const formattedAmount = `${amount.toFixed(2)} ${currency.toUpperCase()}`;
+    const formattedDate = renewalDate.toLocaleDateString();
+    const appName = this.configService.get<string>(
+      "APP_NAME",
+      "Restaurant Management System"
+    );
+    const frontendUrl = this.configService.get<string>(
+      "FRONTEND_URL",
+      "http://localhost:5173"
+    );
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${subject}</title>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background-color: #2563eb; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+          .content { background-color: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
+          .footer { text-align: center; margin-top: 20px; color: #666; font-size: 14px; }
+          .button { display: inline-block; background-color: #059669; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; margin: 10px 0; }
+          ul { background-color: white; padding: 15px; border-radius: 4px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Renewal Reminder</h1>
+          </div>
+          <div class="content">
+            <p>Hello,</p>
+            <p>This is a friendly reminder that your <strong>${planName}</strong> subscription will renew automatically in <strong>${daysUntilRenewal} days</strong>.</p>
+            <p><strong>Renewal Details:</strong></p>
+            <ul>
+              <li>Plan: ${planName}</li>
+              <li>Amount: ${formattedAmount}</li>
+              <li>Renewal date: ${formattedDate}</li>
+            </ul>
+            <p>No action is required - your subscription will renew automatically. If you need to make changes, you can manage your subscription anytime.</p>
+            <p><a href="${frontendUrl}/subscription" class="button">Manage Subscription</a></p>
+          </div>
+          <div class="footer">
+            <p>This is an automated email, please do not reply.</p>
+            <p>&copy; ${new Date().getFullYear()} ${appName}. All rights reserved.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    return this.sendEmail({
+      to: email,
+      subject,
+      html,
+    });
+  }
+
+  /**
+   * Send payment success email
+   */
+  async sendPaymentSuccessEmail(
+    email: string,
+    planName: string,
+    amount: number,
+    currency: string
+  ): Promise<boolean> {
+    const subject = "Payment Received Successfully";
+    const formattedAmount = `${amount.toFixed(2)} ${currency.toUpperCase()}`;
+    const appName = this.configService.get<string>(
+      "APP_NAME",
+      "Restaurant Management System"
+    );
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${subject}</title>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background-color: #10b981; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+          .content { background-color: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
+          .footer { text-align: center; margin-top: 20px; color: #666; font-size: 14px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Payment Success!</h1>
+          </div>
+          <div class="content">
+            <p>Hello,</p>
+            <p>We have successfully processed your payment for the <strong>${planName}</strong> subscription.</p>
+            <p><strong>Payment Details:</strong></p>
+            <ul>
+              <li>Plan: ${planName}</li>
+              <li>Amount: ${formattedAmount}</li>
+              <li>Date: ${new Date().toLocaleDateString()}</li>
+            </ul>
+            <p>Thank you for your payment!</p>
+          </div>
+          <div class="footer">
+            <p>This is an automated email, please do not reply.</p>
+            <p>&copy; ${new Date().getFullYear()} ${appName}. All rights reserved.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    return this.sendEmail({
+      to: email,
+      subject,
+      html,
+    });
+  }
+
+  /**
+   * Send payment failed email
+   */
+  async sendPaymentFailedEmail(
+    email: string,
+    planName: string,
+    amount: number,
+    currency: string
+  ): Promise<boolean> {
+    const subject = "Payment Failed";
+    const formattedAmount = `${amount.toFixed(2)} ${currency.toUpperCase()}`;
+    const appName = this.configService.get<string>(
+      "APP_NAME",
+      "Restaurant Management System"
+    );
+    const frontendUrl = this.configService.get<string>(
+      "FRONTEND_URL",
+      "http://localhost:5173"
+    );
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${subject}</title>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background-color: #ef4444; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+          .content { background-color: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
+          .footer { text-align: center; margin-top: 20px; color: #666; font-size: 14px; }
+          .button { display: inline-block; background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; margin: 10px 0; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Payment Failed</h1>
+          </div>
+          <div class="content">
+            <p>Hello,</p>
+            <p>We were unable to process your payment for the <strong>${planName}</strong> subscription.</p>
+            <p><strong>Payment Details:</strong></p>
+            <ul>
+              <li>Plan: ${planName}</li>
+              <li>Amount: ${formattedAmount}</li>
+              <li>Date: ${new Date().toLocaleDateString()}</li>
+            </ul>
+            <p>Please check your payment method and try again, or contact support for assistance.</p>
+            <p><a href="${frontendUrl}/subscription" class="button">Update Payment</a></p>
+          </div>
+          <div class="footer">
+            <p>This is an automated email, please do not reply.</p>
+            <p>&copy; ${new Date().getFullYear()} ${appName}. All rights reserved.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    return this.sendEmail({
+      to: email,
+      subject,
+      html,
+    });
+  }
 }

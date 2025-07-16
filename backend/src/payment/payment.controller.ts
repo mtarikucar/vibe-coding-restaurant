@@ -26,8 +26,9 @@ export class PaymentController {
   @Post()
   @Roles(UserRole.ADMIN, UserRole.CASHIER)
   @UseGuards(RolesGuard)
-  create(@Body() createPaymentDto: CreatePaymentDto) {
-    return this.paymentService.create(createPaymentDto);
+  create(@Body() createPaymentDto: CreatePaymentDto, @Req() req: Request) {
+    const user = (req as any).user;
+    return this.paymentService.create(createPaymentDto, user?.id);
   }
 
   @Get()
@@ -36,6 +37,14 @@ export class PaymentController {
   findAll(@Req() req: Request) {
     const tenantId = (req as any).tenantId;
     return this.paymentService.findAll(tenantId);
+  }
+
+  @Get("order/:orderNumber")
+  @Roles(UserRole.ADMIN, UserRole.CASHIER)
+  @UseGuards(RolesGuard)
+  findByOrderNumber(@Param("orderNumber") orderNumber: string, @Req() req: Request) {
+    const tenantId = (req as any).tenantId;
+    return this.paymentService.findByOrderNumber(orderNumber, tenantId);
   }
 
   @Get(":id")

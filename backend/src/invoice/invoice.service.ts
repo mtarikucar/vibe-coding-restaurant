@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
   ConflictException,
+  Logger,
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository, DataSource } from "typeorm";
@@ -19,6 +20,8 @@ import * as PDFDocument from "pdfkit";
 
 @Injectable()
 export class InvoiceService {
+  private readonly logger = new Logger(InvoiceService.name);
+
   constructor(
     @InjectRepository(Invoice)
     private readonly invoiceRepository: Repository<Invoice>,
@@ -32,6 +35,8 @@ export class InvoiceService {
     userId: string,
     tenantId: string
   ): Promise<Invoice> {
+    this.logger.log(`Creating invoice for order ${createInvoiceDto.orderId} by user ${userId} in tenant ${tenantId}`);
+    
     // Start a transaction
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -39,7 +44,15 @@ export class InvoiceService {
 
     try {
       // Check if order exists
+      this.logger.debug(`Fetching order ${createInvoiceDto.orderId}`);
       const order = await this.orderService.findOne(createInvoiceDto.orderId);
+      
+      if (!order) {
+        this.logger.error(`Order ${createInvoiceDto.orderId} not found`);
+        throw new NotFoundException(`Order ${createInvoiceDto.orderId} not found`);
+      }
+      
+      this.logger.debug(`Order ${createInvoiceDto.orderId} found with status ${order.status}`);
 
       // Check if order is in a valid state for invoicing
       if (
@@ -106,19 +119,35 @@ export class InvoiceService {
         savedInvoice.status === InvoiceStatus.ISSUED ||
         savedInvoice.status === InvoiceStatus.PAID
       ) {
-        const fileUrl = await this.generateInvoicePdf(savedInvoice.id);
-        savedInvoice.fileUrl = fileUrl;
-        await this.invoiceRepository.save(savedInvoice);
+        this.logger.debug(`Generating PDF for invoice ${savedInvoice.id} with status ${savedInvoice.status}`);
+        try {
+          const fileUrl = await this.generateInvoicePdf(savedInvoice.id);
+          savedInvoice.fileUrl = fileUrl;
+          await this.invoiceRepository.save(savedInvoice);
+          this.logger.debug(`PDF generated and saved: ${fileUrl}`);
+        } catch (pdfError) {
+          this.logger.error(`Failed to generate PDF for invoice ${savedInvoice.id}: ${pdfError.message}`, pdfError.stack);
+          // Don't throw here, let the invoice be created without PDF
+          // The PDF can be regenerated later
+        }
       }
 
       // Commit transaction
       await queryRunner.commitTransaction();
 
       // Return invoice with relations
+      this.logger.log(`Invoice created successfully: ${savedInvoice.invoiceNumber}`);
       return this.findOne(savedInvoice.id);
     } catch (error) {
       // Rollback transaction on error
+      this.logger.error(`Error creating invoice: ${error.message}`, error.stack);
       await queryRunner.rollbackTransaction();
+      
+      // Re-throw with more context if it's a generic error
+      if (error instanceof Error && !error.message.includes('Invoice') && !error.message.includes('Order')) {
+        throw new Error(`Failed to create invoice: ${error.message}`);
+      }
+      
       throw error;
     } finally {
       // Release query runner
@@ -275,30 +304,60 @@ export class InvoiceService {
   }
 
   async generateInvoicePdf(invoiceId: string): Promise<string> {
-    const invoice = await this.findOne(invoiceId);
-    const uploadsDir = path.join(process.cwd(), "uploads", "invoices");
+    this.logger.log(`Generating PDF for invoice ${invoiceId}`);
+    
+    try {
+      const invoice = await this.findOne(invoiceId);
+      this.logger.debug(`Invoice ${invoiceId} found: ${invoice.invoiceNumber}`);
+      
+      const uploadsDir = path.join(process.cwd(), "uploads", "invoices");
+      this.logger.debug(`Uploads directory: ${uploadsDir}`);
 
-    // Ensure directory exists
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }
+      // Ensure directory exists
+      if (!fs.existsSync(uploadsDir)) {
+        this.logger.debug(`Creating uploads directory: ${uploadsDir}`);
+        try {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+          this.logger.debug(`Successfully created uploads directory`);
+        } catch (mkdirError) {
+          this.logger.error(`Failed to create uploads directory: ${mkdirError.message}`, mkdirError.stack);
+          throw new Error(`Failed to create uploads directory: ${mkdirError.message}`);
+        }
+      }
 
-    const fileName = `invoice_${invoice.invoiceNumber.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
-    const filePath = path.join(uploadsDir, fileName);
-
-    return new Promise((resolve, reject) => {
+      // Check directory permissions
       try {
-        const doc = new PDFDocument({
-          margin: 50,
-          size: "A4",
-          info: {
-            Title: `Invoice ${invoice.invoiceNumber}`,
-            Author: "Restaurant Management System",
-            Subject: "Invoice",
-            Keywords: "invoice, restaurant, billing",
-          },
-        });
-        const stream = fs.createWriteStream(filePath);
+        fs.accessSync(uploadsDir, fs.constants.W_OK);
+        this.logger.debug(`Directory ${uploadsDir} is writable`);
+      } catch (accessError) {
+        this.logger.error(`Directory ${uploadsDir} is not writable: ${accessError.message}`, accessError.stack);
+        throw new Error(`Directory ${uploadsDir} is not writable: ${accessError.message}`);
+      }
+
+      const fileName = `invoice_${invoice.invoiceNumber.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
+      const filePath = path.join(uploadsDir, fileName);
+      this.logger.debug(`PDF file path: ${filePath}`);
+
+      return new Promise((resolve, reject) => {
+        try {
+          const doc = new PDFDocument({
+            margin: 50,
+            size: "A4",
+            info: {
+              Title: `Invoice ${invoice.invoiceNumber}`,
+              Author: "Restaurant Management System",
+              Subject: "Invoice",
+              Keywords: "invoice, restaurant, billing",
+            },
+          });
+          
+          this.logger.debug(`Creating write stream for ${filePath}`);
+          const stream = fs.createWriteStream(filePath);
+          
+          stream.on('error', (streamError) => {
+            this.logger.error(`Write stream error: ${streamError.message}`, streamError.stack);
+            reject(new Error(`PDF write stream error: ${streamError.message}`));
+          });
 
         doc.pipe(stream);
 
@@ -323,16 +382,23 @@ export class InvoiceService {
         doc.end();
 
         stream.on("finish", () => {
+          this.logger.debug(`PDF generation completed successfully: ${fileName}`);
           resolve(`uploads/invoices/${fileName}`);
         });
 
         stream.on("error", (error) => {
-          reject(error);
+          this.logger.error(`PDF stream error: ${error.message}`, error.stack);
+          reject(new Error(`PDF stream error: ${error.message}`));
         });
-      } catch (error) {
-        reject(error);
+      } catch (pdfError) {
+        this.logger.error(`PDF generation error: ${pdfError.message}`, pdfError.stack);
+        reject(new Error(`PDF generation error: ${pdfError.message}`));
       }
     });
+    } catch (error) {
+      this.logger.error(`Error in generateInvoicePdf: ${error.message}`, error.stack);
+      throw new Error(`Failed to generate invoice PDF: ${error.message}`);
+    }
   }
 
   private addInvoiceHeader(doc: any, invoice: any): void {
@@ -467,15 +533,18 @@ export class InvoiceService {
     doc.fontSize(10).fillColor("#374151");
 
     invoice.order.items.forEach((item: any, index: number) => {
-      const itemTotal = item.quantity * item.price;
+      // Ensure price and quantity are numbers
+      const itemPrice = Number(item.price) || 0;
+      const itemQuantity = Number(item.quantity) || 0;
+      const itemTotal = itemQuantity * itemPrice;
 
       doc
         .text(item.menuItem.name, itemCodeX, currentY)
         .text(item.menuItem.description || "", descriptionX, currentY, {
           width: 180,
         })
-        .text(item.quantity.toString(), quantityX, currentY)
-        .text(`$${item.price.toFixed(2)}`, priceX, currentY)
+        .text(itemQuantity.toString(), quantityX, currentY)
+        .text(`$${itemPrice.toFixed(2)}`, priceX, currentY)
         .text(`$${itemTotal.toFixed(2)}`, amountX, currentY);
 
       if (item.notes) {
@@ -510,32 +579,38 @@ export class InvoiceService {
     const labelX = 400;
     const amountX = 480;
 
+    // Ensure all amounts are numbers
+    const subtotal = Number(invoice.subtotal) || 0;
+    const taxAmount = Number(invoice.taxAmount) || 0;
+    const discountAmount = Number(invoice.discountAmount) || 0;
+    const totalAmount = Number(invoice.totalAmount) || 0;
+
     doc.fontSize(11).fillColor("#374151");
 
     // Subtotal
     doc
       .text("Subtotal:", labelX, startY)
-      .text(`$${invoice.subtotal.toFixed(2)}`, amountX, startY);
+      .text(`$${subtotal.toFixed(2)}`, amountX, startY);
 
     // Tax
-    if (invoice.taxAmount > 0) {
+    if (taxAmount > 0) {
       doc
         .text("Tax:", labelX, startY + 20)
-        .text(`$${invoice.taxAmount.toFixed(2)}`, amountX, startY + 20);
+        .text(`$${taxAmount.toFixed(2)}`, amountX, startY + 20);
     }
 
     // Discount
-    if (invoice.discountAmount > 0) {
+    if (discountAmount > 0) {
       doc
         .text("Discount:", labelX, startY + 40)
-        .text(`-$${invoice.discountAmount.toFixed(2)}`, amountX, startY + 40);
+        .text(`-$${discountAmount.toFixed(2)}`, amountX, startY + 40);
     }
 
     // Total line
     const totalY =
       startY +
-      (invoice.taxAmount > 0 ? 60 : 40) +
-      (invoice.discountAmount > 0 ? 20 : 0);
+      (taxAmount > 0 ? 60 : 40) +
+      (discountAmount > 0 ? 20 : 0);
     doc
       .moveTo(labelX, totalY)
       .lineTo(amountX + 70, totalY)
@@ -547,7 +622,7 @@ export class InvoiceService {
       .fontSize(14)
       .fillColor("#1f2937")
       .text("Total:", labelX, totalY + 10)
-      .text(`$${invoice.totalAmount.toFixed(2)}`, amountX, totalY + 10);
+      .text(`$${totalAmount.toFixed(2)}`, amountX, totalY + 10);
   }
 
   private addInvoiceFooter(doc: any, invoice: any): void {
